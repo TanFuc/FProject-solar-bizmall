@@ -1,0 +1,21 @@
+{
+  "backend": "antigravity",
+  "roleBackends": {
+    "coordinator": "antigravity",
+    "worker": "antigravity",
+    "reviewer": "antigravity"
+  },
+  "antigravityRoleModels": {
+    "coordinator": "gemini-3.8-flash-medium",
+    "worker": "gemini-3.8-flash-high",
+    "reviewer": "gemini-3.8-flash-medium"
+  },
+  "antigravityFallbackModels": [
+    "gemini-3.8-flash-low"
+  ],
+  "allowOAuthFallback": false,
+  "executionGuidanceApplied": true,
+  "geminiCliStatus": "Blocked by provider: IneligibleTierError; use native Antigravity Gemini",
+  "scope": "Active WSL workflow; Windows directory is legacy backup",
+  "noIdleQuotaPolling": true
+}

@@ -1,136 +1,69 @@
+import {CmsJourney,CmsProcess} from '@/components/blocks/CmsSections';
+import {getPageVisuals} from '@/lib/api/visuals';
+import {visualMetadata} from '@/lib/api/visual-metadata';
+import {PageHero} from '@/components/layout/PageHero';
 import React from 'react';
 import { Metadata } from 'next';
-import Image from 'next/image';
+import {VisualImage as Image} from '@/components/ui/VisualImage';
 import Link from 'next/link';
 import { constructMetadata } from '@/lib/seo/metadata';
 import { ProcessFiveSteps } from '@/components/blocks/ProcessFiveSteps';
 import { JourneyCtaBanner } from '@/components/blocks/JourneyCtaBanner';
 import { Sun, Zap, BatteryCharging, Plug, Check, ArrowRight } from 'lucide-react';
 
-export const metadata: Metadata = constructMetadata({
-  title: 'Giải Pháp Năng Lượng Xanh Cho Mọi Nhu Cầu | BM SOLAR',
-  description:
-    'Giải pháp điện mặt trời áp mái và lưu trữ năng lượng BESS cho hộ gia đình, doanh nghiệp, nhà xưởng quy mô từ 3kWp đến hàng MWp do BM SOLAR triển khai.',
-  canonicalPath: '/giai-phap',
-  ogImage: '/images/designs/hero-giai-phap.png',
-  keywords: [
-    'giải pháp điện mặt trời',
-    'điện mặt trời gia đình',
-    'điện mặt trời doanh nghiệp',
-    'điện mặt trời nhà xưởng',
-    'pin lưu trữ BESS',
-    'zero export hòa lưới bám tải',
-  ],
-});
+export async function generateMetadata(){return visualMetadata('solutions','/giai-phap');}
 
-export default function SolutionsPage() {
+export default async function SolutionsPage() {
+ const visuals=await getPageVisuals('solutions');const copy=visuals.copy;
   const principleSteps = [
     {
       num: '01',
       icon: Sun,
-      name: 'Tấm pin PV',
-      desc: 'Hấp thụ quang năng',
+      name: copy.content001,
+      desc: copy.content002,
     },
     {
       num: '02',
       icon: Zap,
-      name: 'Inverter',
-      desc: 'Chuyển đổi DC - AC',
+      name: copy.content003,
+      desc: copy.content004,
     },
     {
       num: '03',
       icon: BatteryCharging,
-      name: 'Lưu trữ BESS',
-      desc: 'Tích trữ điện năng',
+      name: copy.content005,
+      desc: copy.content006,
     },
     {
       num: '04',
       icon: Plug,
-      name: 'Thiết bị phụ tải',
-      desc: 'Điểm sử dụng điện',
+      name: copy.content007,
+      desc: copy.content008,
     },
   ];
 
   return (
     <div className="solar-page solar-page-giai-phap w-full flex flex-col bg-white">
       {/* 1. Hero Section matching BM_SOLAR_giai-phap_desktop.png */}
-      <section className="solar-page-hero relative w-full min-h-[380px] lg:min-h-[420px] flex items-center bg-[#071F3D] overflow-hidden">
-        {/* Background photo */}
-        <div className="absolute inset-0 z-0">
-          <Image
-            src="/images/designs/hero-giai-phap.png"
-            alt="Giải pháp năng lượng xanh BM SOLAR"
-            fill
-            priority
-            className="object-cover object-center"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#071F3D]/90 via-[#071F3D]/60 to-transparent z-10" />
-        </div>
-
-        <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-16 w-full">
-          <div className="max-w-2xl space-y-3.5">
-            <span className="text-[11px] font-bold text-white/80 uppercase tracking-widest block">
-              GIẢI PHÁP
-            </span>
-            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-tight">
-              Giải pháp năng lượng xanh <br />
-              <span className="text-[#FF6B19]">cho mọi nhu cầu</span>
-            </h1>
-            <p className="text-xs sm:text-sm lg:text-base text-white/90 leading-relaxed pt-1">
-              Từ hộ gia đình đến nhà xưởng công nghiệp, chúng tôi cung cấp giải pháp tối ưu.
-            </p>
-
-            {/* CTAs */}
-            <div className="flex flex-wrap items-center gap-3 pt-2">
-              <Link
-                href="/lien-he"
-                className="px-6 py-2.5 sm:py-3 rounded-full bg-[#FF6B19] hover:bg-[#ea5d0f] text-white text-xs font-bold shadow-md shadow-[#FF6B19]/30 active:scale-95 transition-all inline-flex items-center gap-2"
-              >
-                <span>Nhận tư vấn giải pháp</span>
-                <span>→</span>
-              </Link>
-              <a
-                href="#cac-goi-giai-phap"
-                className="px-5 py-2.5 sm:py-3 rounded-full border border-white/40 hover:border-white text-white text-xs font-semibold hover:bg-white/10 transition-colors"
-              >
-                Xem các gói
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
+      <PageHero visuals={visuals}/>
 
       {/* 2. Breadcrumb */}
-      <div className="bg-[#F8FAFC] border-b border-slate-100 py-3">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="flex items-center gap-2 text-xs text-slate-500 font-medium">
-            <Link href="/" className="hover:text-brand-primary transition-colors">
-              Trang chủ
-            </Link>
-            <span className="text-slate-300">/</span>
-            <span className="text-slate-800 font-semibold">Giải pháp</span>
-          </nav>
-        </div>
-      </div>
+
 
       {/* 3. Section 01: Các gói giải pháp */}
       <section id="cac-goi-giai-phap" className="py-10 lg:py-14">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
             <div>
-              <p className="text-[11px] font-bold text-[#FF6B19] uppercase tracking-wider mb-1">
-                01 / CÁC GÓI GIẢI PHÁP
-              </p>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-                Giải pháp dành riêng cho bạn
-              </h2>
+              <p className="text-[11px] font-bold text-[#FF6B19] uppercase tracking-wider mb-1">{copy.content009}</p>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{copy.content010}</h2>
             </div>
             <a
               href="#chi-tiet-giai-phap"
               className="text-xs font-bold text-[#FF6B19] hover:underline flex items-center gap-1 shrink-0"
             >
-              <span>Khám phá tất cả gói</span>
-              <span>→</span>
+              <span>{copy.content011}</span>
+              <span>{copy.content012}</span>
             </a>
           </div>
 
@@ -138,47 +71,47 @@ export default function SolutionsPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6 pt-2">
             {/* Card 1: Hộ gia đình */}
             <a
-              href="#ho-gia-dinh"
+              href="#household"
               className="group relative rounded-2xl overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 block bg-slate-900 aspect-[408/270]"
             >
               <Image
-                src="/images/designs/giai-phap-card-1.png"
+                src={visuals.media.home}
                 alt="Giải pháp Hộ gia đình"
                 fill
                 sizes="(max-width: 768px) 100vw, 33vw"
                 className="object-cover group-hover:scale-105 transition-transform duration-500"
               />
-              <span className="sr-only">Giải pháp Hộ gia đình</span>
+              <span className="sr-only">{copy.content013}</span>
             </a>
 
             {/* Card 2: Doanh nghiệp */}
             <a
-              href="#doanh-nghiep"
+              href="#business"
               className="group relative rounded-2xl overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 block bg-slate-900 aspect-[408/270]"
             >
               <Image
-                src="/images/designs/giai-phap-card-2.png"
+                src={visuals.media.office}
                 alt="Giải pháp Doanh nghiệp"
                 fill
                 sizes="(max-width: 768px) 100vw, 33vw"
                 className="object-cover group-hover:scale-105 transition-transform duration-500"
               />
-              <span className="sr-only">Giải pháp Doanh nghiệp</span>
+              <span className="sr-only">{copy.content014}</span>
             </a>
 
             {/* Card 3: Nhà xưởng */}
             <a
-              href="#nha-xuong"
+              href="#industrial"
               className="group relative rounded-2xl overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 block bg-slate-900 aspect-[408/270]"
             >
               <Image
-                src="/images/designs/giai-phap-card-3.png"
+                src={visuals.media.factory}
                 alt="Giải pháp Nhà xưởng"
                 fill
                 sizes="(max-width: 768px) 100vw, 33vw"
                 className="object-cover group-hover:scale-105 transition-transform duration-500"
               />
-              <span className="sr-only">Giải pháp Nhà xưởng</span>
+              <span className="sr-only">{copy.content015}</span>
             </a>
           </div>
         </div>
@@ -189,27 +122,23 @@ export default function SolutionsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
             <div>
-              <p className="text-[11px] font-bold text-[#FF6B19] uppercase tracking-wider mb-1">
-                02 / TƯ VẤN HỆ THỐNG
-              </p>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-                Từ nhu cầu đến hệ thống phù hợp
-              </h2>
+              <p className="text-[11px] font-bold text-[#FF6B19] uppercase tracking-wider mb-1">{copy.content016}</p>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{copy.content017}</h2>
             </div>
             <Link
               href="/lien-he"
               className="text-xs font-bold text-[#FF6B19] hover:underline flex items-center gap-1 shrink-0"
             >
-              <span>Nhận tư vấn</span>
-              <span>→</span>
+              <span>{copy.content018}</span>
+              <span>{copy.content019}</span>
             </Link>
           </div>
 
           {/* Row 1: Hộ gia đình (Image Left, Content Right) */}
-          <div id="ho-gia-dinh" className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center bg-[#FBFDFF] p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs">
+          <div id="household" className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center bg-[#FBFDFF] p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs">
             <div className="relative rounded-2xl overflow-hidden aspect-[600/360] bg-slate-100 shadow-sm">
               <Image
-                src="/images/designs/giai-phap-feature-1.png"
+                src={visuals.media.home}
                 alt="Điện mặt trời áp mái cho không gian sống"
                 fill
                 sizes="(max-width: 1024px) 100vw, 50vw"
@@ -217,33 +146,27 @@ export default function SolutionsPage() {
               />
             </div>
             <div className="space-y-4">
-              <span className="text-[11px] font-bold text-[#FF6B19] uppercase tracking-wider">
-                01 / HỘ GIA ĐÌNH
-              </span>
-              <h3 className="text-xl sm:text-2xl font-extrabold text-slate-900">
-                Điện mặt trời áp mái cho không gian sống
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                Giải pháp tiết kiệm điện năng cho hộ gia đình với chi phí hợp lý và hoàn vốn nhanh.
-              </p>
+              <span className="text-[11px] font-bold text-[#FF6B19] uppercase tracking-wider">{copy.content020}</span>
+              <h3 className="text-xl sm:text-2xl font-extrabold text-slate-900">{copy.content021}</h3>
+              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">{copy.content022}</p>
               <ul className="space-y-2.5 pt-1 text-xs sm:text-sm text-slate-700 font-medium">
                 <li className="flex items-center gap-2.5">
                   <span className="w-5 h-5 rounded-full bg-orange-100 text-[#FF6B19] flex items-center justify-center shrink-0">
                     <Check className="w-3.5 h-3.5" />
                   </span>
-                  <span>Tiết kiệm chi phí điện sinh hoạt</span>
+                  <span>{copy.content023}</span>
                 </li>
                 <li className="flex items-center gap-2.5">
                   <span className="w-5 h-5 rounded-full bg-orange-100 text-[#FF6B19] flex items-center justify-center shrink-0">
                     <Check className="w-3.5 h-3.5" />
                   </span>
-                  <span>Chủ động nguồn điện liên tục</span>
+                  <span>{copy.content024}</span>
                 </li>
                 <li className="flex items-center gap-2.5">
                   <span className="w-5 h-5 rounded-full bg-orange-100 text-[#FF6B19] flex items-center justify-center shrink-0">
                     <Check className="w-3.5 h-3.5" />
                   </span>
-                  <span>Bảo vệ môi trường sống xanh</span>
+                  <span>{copy.content025}</span>
                 </li>
               </ul>
               <div className="pt-2">
@@ -251,43 +174,37 @@ export default function SolutionsPage() {
                   href="/lien-he"
                   className="px-6 py-2.5 rounded-full bg-[#FF6B19] hover:bg-[#ea5d0f] text-white text-xs font-bold inline-flex items-center gap-2 transition-all shadow-md shadow-[#FF6B19]/20"
                 >
-                  <span>Khám phá giải pháp</span>
-                  <span>→</span>
+                  <span>{copy.content026}</span>
+                  <span>{copy.content027}</span>
                 </Link>
               </div>
             </div>
           </div>
 
           {/* Row 2: Doanh nghiệp (Content Left, Image Right) */}
-          <div id="doanh-nghiep" className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center bg-[#FBFDFF] p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs">
+          <div id="business" className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center bg-[#FBFDFF] p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs">
             <div className="space-y-4 order-2 lg:order-1">
-              <span className="text-[11px] font-bold text-[#FF6B19] uppercase tracking-wider">
-                02 / DOANH NGHIỆP
-              </span>
-              <h3 className="text-xl sm:text-2xl font-extrabold text-slate-900">
-                Tối ưu chi phí điện cho hoạt động kinh doanh
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                Tối ưu chi phí vận hành cho văn phòng, khách sạn, trung tâm thương mại.
-              </p>
+              <span className="text-[11px] font-bold text-[#FF6B19] uppercase tracking-wider">{copy.content028}</span>
+              <h3 className="text-xl sm:text-2xl font-extrabold text-slate-900">{copy.content029}</h3>
+              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">{copy.content030}</p>
               <ul className="space-y-2.5 pt-1 text-xs sm:text-sm text-slate-700 font-medium">
                 <li className="flex items-center gap-2.5">
                   <span className="w-5 h-5 rounded-full bg-orange-100 text-[#FF6B19] flex items-center justify-center shrink-0">
                     <Check className="w-3.5 h-3.5" />
                   </span>
-                  <span>Giảm áp lực chi phí tiền điện</span>
+                  <span>{copy.content031}</span>
                 </li>
                 <li className="flex items-center gap-2.5">
                   <span className="w-5 h-5 rounded-full bg-orange-100 text-[#FF6B19] flex items-center justify-center shrink-0">
                     <Check className="w-3.5 h-3.5" />
                   </span>
-                  <span>Nâng cao uy tín thương hiệu</span>
+                  <span>{copy.content032}</span>
                 </li>
                 <li className="flex items-center gap-2.5">
                   <span className="w-5 h-5 rounded-full bg-orange-100 text-[#FF6B19] flex items-center justify-center shrink-0">
                     <Check className="w-3.5 h-3.5" />
                   </span>
-                  <span>Tối ưu hóa nguồn tài chính</span>
+                  <span>{copy.content033}</span>
                 </li>
               </ul>
               <div className="pt-2">
@@ -295,14 +212,14 @@ export default function SolutionsPage() {
                   href="/lien-he"
                   className="px-6 py-2.5 rounded-full bg-[#FF6B19] hover:bg-[#ea5d0f] text-white text-xs font-bold inline-flex items-center gap-2 transition-all shadow-md shadow-[#FF6B19]/20"
                 >
-                  <span>Khám phá giải pháp</span>
-                  <span>→</span>
+                  <span>{copy.content034}</span>
+                  <span>{copy.content035}</span>
                 </Link>
               </div>
             </div>
             <div className="relative rounded-2xl overflow-hidden aspect-[600/360] bg-slate-100 shadow-sm order-1 lg:order-2">
               <Image
-                src="/images/designs/giai-phap-feature-2.png"
+                src={visuals.media.home}
                 alt="Tối ưu chi phí điện cho hoạt động kinh doanh"
                 fill
                 sizes="(max-width: 1024px) 100vw, 50vw"
@@ -312,10 +229,10 @@ export default function SolutionsPage() {
           </div>
 
           {/* Row 3: Nhà xưởng (Image Left, Content Right) */}
-          <div id="nha-xuong" className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center bg-[#FBFDFF] p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs">
+          <div id="industrial" className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center bg-[#FBFDFF] p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs">
             <div className="relative rounded-2xl overflow-hidden aspect-[600/360] bg-slate-100 shadow-sm">
               <Image
-                src="/images/designs/giai-phap-feature-3.png"
+                src={visuals.media.home}
                 alt="Hệ thống năng lượng quy mô công nghiệp"
                 fill
                 sizes="(max-width: 1024px) 100vw, 50vw"
@@ -323,33 +240,27 @@ export default function SolutionsPage() {
               />
             </div>
             <div className="space-y-4">
-              <span className="text-[11px] font-bold text-[#FF6B19] uppercase tracking-wider">
-                03 / NHÀ XƯỞNG
-              </span>
-              <h3 className="text-xl sm:text-2xl font-extrabold text-slate-900">
-                Hệ thống năng lượng quy mô công nghiệp
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                Hệ thống công suất lớn giúp doanh nghiệp đạt chứng chỉ xanh và tiết kiệm chi phí.
-              </p>
+              <span className="text-[11px] font-bold text-[#FF6B19] uppercase tracking-wider">{copy.content036}</span>
+              <h3 className="text-xl sm:text-2xl font-extrabold text-slate-900">{copy.content037}</h3>
+              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">{copy.content038}</p>
               <ul className="space-y-2.5 pt-1 text-xs sm:text-sm text-slate-700 font-medium">
                 <li className="flex items-center gap-2.5">
                   <span className="w-5 h-5 rounded-full bg-orange-100 text-[#FF6B19] flex items-center justify-center shrink-0">
                     <Check className="w-3.5 h-3.5" />
                   </span>
-                  <span>Giảm tải hệ thống điện lưới</span>
+                  <span>{copy.content039}</span>
                 </li>
                 <li className="flex items-center gap-2.5">
                   <span className="w-5 h-5 rounded-full bg-orange-100 text-[#FF6B19] flex items-center justify-center shrink-0">
                     <Check className="w-3.5 h-3.5" />
                   </span>
-                  <span>Đạt chuẩn xuất khẩu quốc tế</span>
+                  <span>{copy.content040}</span>
                 </li>
                 <li className="flex items-center gap-2.5">
                   <span className="w-5 h-5 rounded-full bg-orange-100 text-[#FF6B19] flex items-center justify-center shrink-0">
                     <Check className="w-3.5 h-3.5" />
                   </span>
-                  <span>Tự chủ nguồn năng lượng</span>
+                  <span>{copy.content041}</span>
                 </li>
               </ul>
               <div className="pt-2">
@@ -357,8 +268,8 @@ export default function SolutionsPage() {
                   href="/lien-he"
                   className="px-6 py-2.5 rounded-full bg-[#FF6B19] hover:bg-[#ea5d0f] text-white text-xs font-bold inline-flex items-center gap-2 transition-all shadow-md shadow-[#FF6B19]/20"
                 >
-                  <span>Khám phá giải pháp</span>
-                  <span>→</span>
+                  <span>{copy.content042}</span>
+                  <span>{copy.content043}</span>
                 </Link>
               </div>
             </div>
@@ -371,19 +282,15 @@ export default function SolutionsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
             <div>
-              <p className="text-[11px] font-bold text-[#FF6B19] uppercase tracking-wider mb-1">
-                03 / NGUYÊN LÝ HOẠT ĐỘNG
-              </p>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-                Từ nguồn điện đến điểm sử dụng
-              </h2>
+              <p className="text-[11px] font-bold text-[#FF6B19] uppercase tracking-wider mb-1">{copy.content044}</p>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{copy.content045}</h2>
             </div>
             <a
               href="#chi-tiet-giai-phap"
               className="text-xs font-bold text-[#FF6B19] hover:underline flex items-center gap-1 shrink-0"
             >
-              <span>Tìm hiểu chi tiết</span>
-              <span>→</span>
+              <span>{copy.content046}</span>
+              <span>{copy.content047}</span>
             </a>
           </div>
 
@@ -407,19 +314,10 @@ export default function SolutionsPage() {
       </section>
 
       {/* 6. Section 04: 5 bước rõ ràng — Dễ theo dõi */}
-      <ProcessFiveSteps
-        tag="04 / QUY TRÌNH TRIỂN KHAI"
-        title="5 bước rõ ràng — Dễ theo dõi"
-        rightLinkText="Quy trình chi tiết →"
-        rightLinkHref="/lien-he"
-      />
+      <CmsProcess copy={copy}/>
 
       {/* 7. Section 05: Bottom CTA Banner */}
-      <JourneyCtaBanner
-        primaryCtaText="Nhận tư vấn giải pháp →"
-        secondaryCtaText="Xem các dự án"
-        secondaryCtaHref="/du-an"
-      />
+      <CmsJourney copy={copy} mediaUrl={visuals.media.factory}/>
     </div>
   );
 }

@@ -20,9 +20,9 @@ import {
 } from 'lucide-react';
 
 interface SolutionDetailPageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 export async function generateStaticParams() {
@@ -33,7 +33,8 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: SolutionDetailPageProps): Promise<Metadata> {
-  const solution = await getSolutionBySlug(params.slug);
+  const { slug } = await params;
+  const solution = await getSolutionBySlug(slug);
   if (!solution) {
     return constructMetadata({ title: 'Không Tìm Thấy Giải Pháp' });
   }
@@ -53,7 +54,8 @@ export async function generateMetadata({ params }: SolutionDetailPageProps): Pro
 }
 
 export default async function SolutionDetailPage({ params }: SolutionDetailPageProps) {
-  const solution = await getSolutionBySlug(params.slug);
+  const { slug } = await params;
+  const solution = await getSolutionBySlug(slug);
 
   if (!solution) {
     notFound();

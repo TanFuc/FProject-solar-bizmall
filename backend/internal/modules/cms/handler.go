@@ -45,7 +45,7 @@ func (h *Handler) RegisterRoutes(r chi.Router) {
 
 		// Shell & Theme
 		pr.Get("/admin/site-settings", h.GetSiteSettings)
-		pr.Put("/admin/site-settings", h.UpdateSiteSettings)
+		pr.With(identity.RequirePermission("cms.page.update")).Put("/admin/site-settings", h.UpdateSiteSettings)
 		pr.Get("/admin/theme", h.GetTheme)
 		pr.Put("/admin/theme", h.UpdateTheme)
 
@@ -68,15 +68,15 @@ func (h *Handler) RegisterRoutes(r chi.Router) {
 		pr.Delete("/admin/navigation/items/{id}", h.DeleteNavigationItem)
 
 		// Pages & Publishing Lifecycle
-		pr.Get("/admin/pages", h.ListPages)
-		pr.Post("/admin/pages", h.CreatePage)
-		pr.Get("/admin/pages/{id}", h.GetPage)
-		pr.Put("/admin/pages/{id}", h.UpdatePage)
-		pr.Post("/admin/pages/{id}/revisions", h.CreatePageRevision)
-		pr.Post("/admin/pages/{id}/publish", h.PublishPage)
-		pr.Post("/admin/pages/{id}/unpublish", h.UnpublishPage)
-		pr.Get("/admin/pages/{id}/revisions", h.ListPageRevisions)
-		pr.Post("/admin/pages/{id}/restore/{revisionNo}", h.RestorePageRevision)
+		pr.With(identity.RequirePermission("cms.page.read")).Get("/admin/pages", h.ListPages)
+		pr.With(identity.RequirePermission("cms.page.create")).Post("/admin/pages", h.CreatePage)
+		pr.With(identity.RequirePermission("cms.page.read")).Get("/admin/pages/{id}", h.GetPage)
+		pr.With(identity.RequirePermission("cms.page.update")).Put("/admin/pages/{id}", h.UpdatePage)
+		pr.With(identity.RequirePermission("cms.page.update")).Post("/admin/pages/{id}/revisions", h.CreatePageRevision)
+		pr.With(identity.RequirePermission("cms.page.publish")).Post("/admin/pages/{id}/publish", h.PublishPage)
+		pr.With(identity.RequirePermission("cms.page.publish")).Post("/admin/pages/{id}/unpublish", h.UnpublishPage)
+		pr.With(identity.RequirePermission("cms.page.read")).Get("/admin/pages/{id}/revisions", h.ListPageRevisions)
+		pr.With(identity.RequirePermission("cms.page.update")).Post("/admin/pages/{id}/restore/{revisionNo}", h.RestorePageRevision)
 		pr.Get("/admin/pages/{id}/preview-token", h.GeneratePreviewToken)
 	})
 }
@@ -361,7 +361,13 @@ func (h *Handler) GetPublicPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Compute ETag based on revision ID
-	etag := fmt.Sprintf(`W/"%s-%d"`, revision.ID, revision.RevisionNo)
+	hydrated, err := json.Marshal(blocks)
+	if err != nil {
+		errors.WriteJSON(w, r, errors.Internal("Failed to encode published media"))
+		return
+	}
+	digest := sha256.Sum256(hydrated)
+	etag := fmt.Sprintf(`W/"%s-%d-%x"`, revision.ID, revision.RevisionNo, digest[:8])
 	if match := r.Header.Get("If-None-Match"); match == etag {
 		w.WriteHeader(http.StatusNotModified)
 		return

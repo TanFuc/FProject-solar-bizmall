@@ -39,10 +39,11 @@ func (h *Handler) RegisterRoutes(r chi.Router) {
 	// Admin media routes
 	r.Group(func(pr chi.Router) {
 		pr.Use(identity.RequireAuth(h.cfg))
-		pr.Get("/admin/media", h.ListMedia)
-		pr.Get("/admin/media/{id}", h.GetMedia)
-		pr.Post("/admin/media/upload", h.Upload)
-		pr.Delete("/admin/media/{id}", h.DeleteMedia)
+		pr.With(identity.RequirePermission("cms.page.update")).Put("/admin/media/{id}/replacement", h.ReplaceMedia)
+		pr.With(identity.RequirePermission("cms.page.read")).Get("/admin/media", h.ListMedia)
+		pr.With(identity.RequirePermission("cms.page.read")).Get("/admin/media/{id}", h.GetMedia)
+		pr.With(identity.RequirePermission("cms.page.update")).Post("/admin/media/upload", h.Upload)
+		pr.With(identity.RequirePermission("cms.page.update")).Delete("/admin/media/{id}", h.DeleteMedia)
 	})
 }
 
@@ -63,11 +64,15 @@ func (h *Handler) Upload(w http.ResponseWriter, r *http.Request) {
 	}
 	maxBytes := int64(maxMB) << 20
 
+	r.Body = http.MaxBytesReader(w, r.Body, maxBytes+(1<<20))
 	if err := r.ParseMultipartForm(maxBytes); err != nil {
 		errors.WriteJSON(w, r, errors.BadRequest("UPLOAD_TOO_LARGE", fmt.Sprintf("File exceeds maximum upload size (%dMB)", maxMB)))
 		return
 	}
 
+	if r.MultipartForm != nil {
+		defer r.MultipartForm.RemoveAll()
+	}
 	file, header, err := r.FormFile("file")
 	if err != nil {
 		errors.WriteJSON(w, r, errors.BadRequest("MISSING_FILE", "Form field 'file' is required"))

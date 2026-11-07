@@ -1,9 +1,10 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { BranchItem, ContactChannelItem } from '@/types/bmsolar-api';
+import { BranchItem, ContactChannelItem, BrandConfig } from '@/types/bmsolar-api';
 
 interface BranchContextType {
+  brand?:BrandConfig;
   activeBranch: BranchItem | null;
   branches: BranchItem[];
   setActiveBranchSlug: (slug: string) => void;
@@ -20,9 +21,13 @@ const BranchContext = createContext<BranchContextType | undefined>(undefined);
 export function BranchProvider({
   children,
   initialBranches,
+  globalChannels=[],
+  brand,
 }: {
   children: React.ReactNode;
   initialBranches: BranchItem[];
+  globalChannels?:ContactChannelItem[];
+  brand?:BrandConfig;
 }) {
   const [branches] = useState<BranchItem[]>(initialBranches);
   const [activeBranchSlug, setActiveBranchSlugState] = useState<string>('quy-nhon');
@@ -48,8 +53,8 @@ export function BranchProvider({
 
   const activeBranch = branches.find((b) => b.slug === activeBranchSlug) || branches[0] || null;
 
-  const activeHotline = activeBranch?.channels.find((c) => c.type === 'phone') || null;
-  const activeZalo = activeBranch?.channels.find((c) => c.type === 'zalo') || null;
+  const activeHotline = activeBranch?.channels.find((c) => c.type === 'phone') || globalChannels.find(c=>c.type==='phone') || null;
+  const activeZalo = activeBranch?.channels.find((c) => c.type === 'zalo') || globalChannels.find(c=>c.type==='zalo') || null;
 
   const openConsultationModal = (note?: string) => {
     setConsultationNote(note || '');
@@ -63,6 +68,7 @@ export function BranchProvider({
   return (
     <BranchContext.Provider
       value={{
+        brand,
         activeBranch,
         branches,
         setActiveBranchSlug,

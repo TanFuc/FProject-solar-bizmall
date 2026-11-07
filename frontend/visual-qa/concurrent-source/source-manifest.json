@@ -1,0 +1,57 @@
+[
+  {
+    "path": "C:\\Users\\Local_2\\OneDrive\\Desktop\\Project-NEW\\FProject-solar-bizmall\\frontend\\src\\app\\page.tsx",
+    "sha256": "AAEF8775294B1942D0C8C00FAAAFC7AF388644989D47BDE9453A8146DEBB213A",
+    "modified": "2026-11-07T14:26:07.5137692Z"
+  },
+  {
+    "path": "C:\\Users\\Local_2\\OneDrive\\Desktop\\Project-NEW\\FProject-solar-bizmall\\frontend\\src\\app\\du-an\\page.tsx",
+    "sha256": "688A6AB262EC716B91B118A509F29CF0862CE4EB3334F6EE9E5E1D12B9B9ABEC",
+    "modified": "2026-11-07T14:26:07.5061987Z"
+  },
+  {
+    "path": "C:\\Users\\Local_2\\OneDrive\\Desktop\\Project-NEW\\FProject-solar-bizmall\\frontend\\src\\app\\du-an\\[slug]\\page.tsx",
+    "sha256": "E0832EB098BA321750734DC89D18AE9BB1BEAE7623A70EEA52D2654B8517D36B",
+    "modified": "2026-11-07T00:51:37.5521849Z"
+  },
+  {
+    "path": "C:\\Users\\Local_2\\OneDrive\\Desktop\\Project-NEW\\FProject-solar-bizmall\\frontend\\src\\app\\giai-phap\\page.tsx",
+    "sha256": "DE4B5643AD35843E22EE9C6327616EF53DA7AC37F8DA42F73DAA545C0DDF725A",
+    "modified": "2026-11-07T14:26:07.5061987Z"
+  },
+  {
+    "path": "C:\\Users\\Local_2\\OneDrive\\Desktop\\Project-NEW\\FProject-solar-bizmall\\frontend\\src\\app\\giai-phap\\[slug]\\page.tsx",
+    "sha256": "C65741D547E5697412172FAA44D09B7372EC6C6A26BDB81060EE1EAC4EC1CF91",
+    "modified": "2026-11-07T00:52:04.4404250Z"
+  },
+  {
+    "path": "C:\\Users\\Local_2\\OneDrive\\Desktop\\Project-NEW\\FProject-solar-bizmall\\frontend\\src\\app\\gioi-thieu\\page.tsx",
+    "sha256": "FFE926E571070B3E1A6AADC85147677E94E1528EED8AD29E78A550DECC314490",
+    "modified": "2026-11-07T14:26:07.5117598Z"
+  },
+  {
+    "path": "C:\\Users\\Local_2\\OneDrive\\Desktop\\Project-NEW\\FProject-solar-bizmall\\frontend\\src\\app\\lien-he\\page.tsx",
+    "sha256": "D0372166A21C485B1ED201EC061B6113F8DD1D8B44A7385EAA99792888FA2565",
+    "modified": "2026-11-07T14:26:07.5137692Z"
+  },
+  {
+    "path": "C:\\Users\\Local_2\\OneDrive\\Desktop\\Project-NEW\\FProject-solar-bizmall\\frontend\\src\\app\\san-pham\\page.tsx",
+    "sha256": "4279A49E012D526145CC216BA6D86FC7CFF7AC2C97B6FE6107BE557FD8D923FB",
+    "modified": "2026-11-07T14:26:07.5153309Z"
+  },
+  {
+    "path": "C:\\Users\\Local_2\\OneDrive\\Desktop\\Project-NEW\\FProject-solar-bizmall\\frontend\\src\\app\\san-pham\\[slug]\\page.tsx",
+    "sha256": "AE65917BC6306C9474B264F210CF4DA86333020F25D374A86548D7046D1382A3",
+    "modified": "2026-11-07T00:51:20.5963440Z"
+  },
+  {
+    "path": "C:\\Users\\Local_2\\OneDrive\\Desktop\\Project-NEW\\FProject-solar-bizmall\\frontend\\src\\app\\tin-tuc\\page.tsx",
+    "sha256": "82C3266C3A2E7C1645A340DA36CDBF5F712054E3BA54A172EAA211717D97CF33",
+    "modified": "2026-11-07T14:26:07.5158361Z"
+  },
+  {
+    "path": "C:\\Users\\Local_2\\OneDrive\\Desktop\\Project-NEW\\FProject-solar-bizmall\\frontend\\src\\app\\tin-tuc\\[slug]\\page.tsx",
+    "sha256": "3A5DBC4F3C85D7DF1B172377997D5516370017190C5FB47FD9A37B76B478B578",
+    "modified": "2026-11-07T01:01:23.6229830Z"
+  }
+]

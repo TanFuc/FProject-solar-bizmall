@@ -1,0 +1,18 @@
+import fs from 'node:fs/promises';
+const root=new URL('./',import.meta.url);const base='http://localhost:3000';const api='http://127.0.0.1:3001/api/v1';
+const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+function attrs(tag){return Object.fromEntries([...tag.matchAll(/([\w:-]+)\s*=\s*["']([^"']*)["']/g)].map(m=>[m[1],m[2]]));}
+function meta(html,name){for(const t of html.match(/<meta\b[^>]*>/g)||[]){let a=attrs(t);if(a.name===name||a.property===name)return a.content||'';}return '';}
+function link(html,rel){for(const t of html.match(/<link\b[^>]*>/g)||[]){let a=attrs(t);if(a.rel===rel)return a.href||'';}return '';}
+async function get(url){let result;for(let n=0;n<3;n++){result=await fetch(url,{redirect:'follow'});if(result.status!==429)return result;await pause(1100);}return result;}
+const routes=['/','/gioi-thieu','/giai-phap','/san-pham','/du-an','/tin-tuc','/lien-he'];
+for(const [endpoint,path]of [['products','san-pham'],['projects','du-an'],['articles','tin-tuc']]){const response=await get(`${api}/public/${endpoint}?pageSize=100`);if(!response.ok)throw Error(endpoint+' lookup '+response.status);const json=await response.json();routes.push(...json.data.map(item=>`/${path}/${item.slug}`));await pause(150);}
+routes.push('/giai-phap/ho-gia-dinh','/giai-phap/doanh-nghiep','/giai-phap/nha-xuong','/san-pham?category=bien-tan-inverter','/san-pham?q=Deye&sort=name_asc','/du-an?q=hybrid','/admin','/admin/media','/san-pham/qa-item-does-not-exist');
+const result=[];const internal=new Set();
+for(const route of [...new Set(routes)]){let start=Date.now();const response=await get(base+route);const html=await response.text();let canonical=link(html,'canonical');let h1Count=(html.match(/<h1(?:\s|>)/g)||[]).length;let title=(html.match(/<title>([\s\S]*?)<\/title>/)||[])[1]||'';let jsonLdErrors=0;for(const m of html.matchAll(/<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g)){try{JSON.parse(m[1]);}catch{jsonLdErrors++;}}
+for(const tag of html.match(/<a\b[^>]*>/g)||[]){let href=attrs(tag).href;if(href?.startsWith('/')&&!href.startsWith('//'))internal.add(href.split('#')[0]);}
+result.push({route,status:response.status,ms:Date.now()-start,title,h1Count,description:meta(html,'description'),canonical,robots:meta(html,'robots'),ogTitle:meta(html,'og:title'),ogImage:meta(html,'og:image'),icon:link(html,'icon'),lang:(html.match(/<html[^>]*lang="([^"]*)"/)||[])[1],jsonLdErrors,runtimeError:/Unhandled Runtime Error|API error 429|nextjs__container_errors_label/.test(html)});await pause(180);}
+const resourceResults=[];for(const path of ['/robots.txt','/sitemap.xml',...new Set(result.map(r=>r.icon).filter(Boolean))]){const response=await get(new URL(path,base));const text=await response.text();resourceResults.push({path,status:response.status,contentType:response.headers.get('content-type'),bytes:text.length,...(path==='/sitemap.xml'?{locations:[...text.matchAll(/<loc>([^<]*)<\/loc>/g)].map(m=>m[1])}:{})});await pause(150);}
+const missing=[];for(const href of internal){if(routes.includes(href)||href.includes('?')||href.startsWith('/api')||href.includes('.'))continue;const response=await get(base+href);if(!response.ok)missing.push({href,status:response.status});await pause(180);}
+await fs.writeFile(new URL('http-audit.json',root),JSON.stringify({checkedAt:new Date().toISOString(),routes:result,resources:resourceResults,missingInternalLinks:missing},null,2));
+console.log(JSON.stringify({routes:result.length,errors:result.filter(r=>r.runtimeError||r.status>=500).map(r=>({route:r.route,status:r.status})),missingInternalLinks:missing,resources:resourceResults.map(r=>({path:r.path,status:r.status}))}));

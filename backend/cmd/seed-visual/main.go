@@ -112,6 +112,9 @@ func run() error {
 	assets := make(map[string]models.MediaAsset)
 	for _, input := range m.Assets {
 		originalName := "seed-" + m.Version + "-" + input.File
+		if input.Key == "logo" {
+			originalName = "seed-" + m.Version + "-logo-transparent-v2.png"
+		}
 		var existing models.MediaAsset
 		err = db.Where("original_name = ? AND status = ?", originalName, "ready").First(&existing).Error
 		if err == nil {
@@ -121,9 +124,29 @@ func run() error {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return err
 		}
-		data, err := os.ReadFile(filepath.Join(filepath.Dir(path), input.File))
-		if err != nil {
-			return err
+		var data []byte
+		if input.Key == "logo" {
+			// Prefer genuine original transparent logo from frontend/public/images/logo.png
+			candidates := []string{
+				"../frontend/public/images/logo.png",
+				"frontend/public/images/logo.png",
+				filepath.Join(filepath.Dir(path), "logo-transparent.png"),
+				filepath.Join(filepath.Dir(path), input.File),
+			}
+			for _, candidate := range candidates {
+				if d, readErr := os.ReadFile(candidate); readErr == nil && len(d) > 0 {
+					data = d
+					break
+				}
+			}
+			if len(data) == 0 {
+				return fmt.Errorf("unable to read genuine transparent logo from original frontend/public/images/logo.png")
+			}
+		} else {
+			data, err = os.ReadFile(filepath.Join(filepath.Dir(path), input.File))
+			if err != nil {
+				return err
+			}
 		}
 		header := &multipart.FileHeader{Filename: originalName, Size: int64(len(data)), Header: make(textproto.MIMEHeader)}
 		result, err := service.SaveUploadedFile(structReader{bytes.NewReader(data)}, header, nil)
@@ -145,13 +168,72 @@ func run() error {
 		assets[input.Key] = result.Asset
 		fmt.Printf("uploaded %s -> %s\n", input.Key, result.AssetURL)
 	}
+	var footerSettings models.SiteSetting
+	if err := db.First(&footerSettings).Error; err != nil {
+		return err
+	}
+	var footer map[string]json.RawMessage
+	if err := json.Unmarshal([]byte(footerSettings.FooterConfigJSON), &footer); err != nil {
+		return err
+	}
+	type footerLink struct {
+		Label string `json:"label"`
+		URL   string `json:"url"`
+	}
+	type footerGroup struct {
+		Title string       `json:"title"`
+		Links []footerLink `json:"links"`
+	}
+	var groups []footerGroup
+	if data, ok := footer["groups"]; ok {
+		if err := json.Unmarshal(data, &groups); err != nil {
+			return err
+		}
+	}
+	aliases := map[string]string{"/ho-so-nang-luc": "/gioi-thieu#cau-chuyen-thuong-hieu", "/doi-tac": "/gioi-thieu#tam-nhin", "/giai-phap/ho-gia-dinh": "/giai-phap#household", "/giai-phap/doanh-nghiep": "/giai-phap#business", "/giai-phap/nha-xuong": "/giai-phap#industrial", "/chinh-sach-bao-hanh": "/lien-he", "/quy-trinh-lap-dat": "/giai-phap#quy-trinh"}
+	changed := false
+	for i := range groups {
+		for j := range groups[i].Links {
+			if target, ok := aliases[groups[i].Links[j].URL]; ok {
+				groups[i].Links[j].URL = target
+				changed = true
+			}
+		}
+	}
+	if changed {
+		data, err := json.Marshal(groups)
+		if err != nil {
+			return err
+		}
+		footer["groups"] = data
+		encoded, err := json.Marshal(footer)
+		if err != nil {
+			return err
+		}
+		if err := db.Model(&footerSettings).Update("footer_config_json", string(encoded)).Error; err != nil {
+			return err
+		}
+	}
 	logo := assets["logo"]
 	var settings models.SiteSetting
 	if err := db.First(&settings).Error; err != nil {
 		return err
 	}
-	if err := db.Model(&models.SiteSetting{}).Where("id = ? AND (logo_media_id IS NULL OR logo_media_id = '')", settings.ID).Update("logo_media_id", logo.ID).Error; err != nil {
-		return err
+	replaceLogo := settings.LogoMediaID == nil || *settings.LogoMediaID == ""
+	if settings.LogoMediaID != nil && *settings.LogoMediaID != "" {
+		var oldLogo models.MediaAsset
+		if err := db.First(&oldLogo, "id = ?", *settings.LogoMediaID).Error; err == nil {
+			// Update only if existing logo is seed-owned (starts with "seed-")
+			if strings.HasPrefix(oldLogo.OriginalName, "seed-") {
+				replaceLogo = true
+			}
+		}
+	}
+	if replaceLogo && logo.ID != "" {
+		if err := db.Model(&models.SiteSetting{}).Where("id = ?", settings.ID).Update("logo_media_id", logo.ID).Error; err != nil {
+			return err
+		}
+		fmt.Printf("seed logo updated -> id: %s, url: %s\n", logo.ID, cfg.ResolveMediaURL(logo.StorageKey))
 	}
 	gallery := galleryData{Items: make([]galleryItem, 0, len(m.Assets))}
 	for _, input := range m.Assets {
@@ -200,6 +282,10 @@ func run() error {
 					return err
 				}
 			}
+			if old.CreatedBy != nil {
+				fmt.Printf("preserved administrator-owned page %s\n", input.Key)
+				return nil
+			}
 			asset := assets[input.HeroAsset]
 			hero := seedHero{Eyebrow: input.Eyebrow, Benefits: input.Benefits, Title: input.Title, AccentPhrase: input.Accent, Subtitle: input.Subtitle, DesktopMediaID: asset.ID, MobileMediaID: asset.ID, CTA: &cms.CtaButton{Label: input.CTA, Target: cms.CtaTarget{Kind: "leadForm", FormKey: "consultation"}}}
 			heroJSON, err := json.Marshal(struct {
@@ -235,6 +321,21 @@ func run() error {
 				}
 			}
 			filtered = append([]cms.Block{{ID: "seed_visual_v3_hero", Type: "heroCarousel", Version: 1, Enabled: true, SortOrder: 1, Visibility: "all", Data: heroJSON}}, filtered...)
+			if input.Key == "products" {
+				data, err := json.Marshal(cms.CategoryShowcaseData{CategoryIDs: categoryIDs, DisplayMode: "grid"})
+				if err != nil {
+					return err
+				}
+				found := false
+				for _, block := range filtered {
+					if block.Type == "categoryShowcase" {
+						found = true
+					}
+				}
+				if !found {
+					filtered = append(filtered, cms.Block{ID: "seed_visual_v3_categories", Type: "categoryShowcase", Version: 1, Enabled: true, SortOrder: 2, Visibility: "all", Data: data})
+				}
+			}
 			filtered = append(filtered, cms.Block{ID: "seed_visual_v3_media", Type: "projectGallery", Version: 1, Enabled: true, SortOrder: 999, Visibility: "all", Data: galleryJSON})
 			if input.Key == "home" {
 				brandJSON, err := json.Marshal(struct {
@@ -352,13 +453,23 @@ func run() error {
 			return err
 		}
 		scenes := []string{"home", "factory", "office", "ev"}
-		for index, row := range projects {
+		for _, row := range projects {
 			replace, err := replaceable(tx, row.CoverMediaID)
 			if err != nil {
 				return err
 			}
+			if row.CoverMediaID != nil {
+				var cover models.MediaAsset
+				if err := tx.First(&cover, "id = ?", *row.CoverMediaID).Error; err == nil && strings.HasPrefix(cover.OriginalName, "seed-visual-v3-") {
+					replace = true
+				}
+			}
 			if replace {
-				asset := assets[scenes[index%len(scenes)]]
+				scene := "home"
+				if strings.Contains(row.Slug, "kcn") || strings.Contains(row.Slug, "nha-xuong") {
+					scene = "factory"
+				}
+				asset := assets[scene]
 				if err := tx.Model(&row).Update("cover_media_id", asset.ID).Error; err != nil {
 					return err
 				}

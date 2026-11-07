@@ -10,22 +10,114 @@ import {
   ProjectItem,
   ArticleItem,
   CreateLeadPayload,
+  ProductCategoryItem,
+  AudienceItem,
 } from '@/types/bmsolar-api';
-import {
-  fallbackSiteShell,
-  fallbackHomePage,
-  fallbackProducts,
-  fallbackProjects,
-  fallbackArticles,
-} from './mockData';
+
+export interface BrandSummary {
+  id: string;
+  slug: string;
+  name: string;
+  logoUrl?: string;
+}
 
 const apiOrigin = (process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001').replace(/\/$/, '');
 const API_BASE_URL = apiOrigin.endsWith('/api/v1') ? apiOrigin : `${apiOrigin}/api/v1`;
 
+// Bounded in-memory cache for truly shared stable public catalog metadata (TTL: 30 seconds)
+// CMS pages and SiteShell rely strictly on in-flight de-duplication per render and are not cached here.
+interface CacheEntry<T> {
+  data: T;
+  expiresAt: number;
+}
+const stableCache = new Map<string, CacheEntry<unknown>>();
+const CACHE_TTL_MS = 30_000;
+
+function getCached<T>(key: string): T | undefined {
+  const entry = stableCache.get(key);
+  if (!entry) return undefined;
+  if (Date.now() > entry.expiresAt) {
+    stableCache.delete(key);
+    return undefined;
+  }
+  return entry.data as T;
+}
+
+function setCached<T>(key: string, data: T, ttlMs = CACHE_TTL_MS): void {
+  if (stableCache.size > 200) {
+    const oldestKey = stableCache.keys().next().value;
+    if (oldestKey) stableCache.delete(oldestKey);
+  }
+  stableCache.set(key, { data, expiresAt: Date.now() + ttlMs });
+}
+
+/**
+ * Invalidate in-memory cached responses and pending in-flight requests.
+ * Route integration guidance: Call this when CMS publishes new products/categories
+ * or updates site settings so clients immediately see fresh data.
+ */
+export function invalidatePublicCache(pattern?: string): void {
+  if (!pattern) {
+    stableCache.clear();
+    inFlightRequests.clear();
+  } else {
+    for (const key of stableCache.keys()) {
+      if (key.includes(pattern)) {
+        stableCache.delete(key);
+      }
+    }
+    for (const key of inFlightRequests.keys()) {
+      if (key.includes(pattern)) {
+        inFlightRequests.delete(key);
+      }
+    }
+  }
+}
+
+// In-flight request de-duplication: avoid dispatching duplicate GET requests concurrently
+const inFlightRequests = new Map<string, Promise<Response>>();
+
+async function publicFetch(url: string, options?: RequestInit): Promise<Response> {
+  const isGet = !options?.method || options.method.toUpperCase() === 'GET';
+
+  if (isGet && inFlightRequests.has(url)) {
+    const pending = inFlightRequests.get(url)!;
+    return pending.then((res) => res.clone());
+  }
+
+  const fetchPromise = (async () => {
+    for (let attempt = 0; ; attempt++) {
+      const { next, ...rest } = options || {};
+      const response = await fetch(url, attempt ? { ...rest, cache: 'no-store' } : options);
+
+      if (response.status !== 429 || attempt >= 2) {
+        return response;
+      }
+
+      // Retry-After header with exponential backoff and randomized jitter to prevent retry storms
+      const retryHeader = response.headers.get('Retry-After');
+      const baseSeconds = retryHeader ? Math.min(3, Math.max(1, Number(retryHeader) || 1)) : 1;
+      const backoffMs = baseSeconds * 1000 * Math.pow(1.5, attempt) + Math.random() * 200;
+      await new Promise((resolve) => setTimeout(resolve, backoffMs));
+    }
+  })();
+
+  if (isGet) {
+    inFlightRequests.set(url, fetchPromise);
+    fetchPromise
+      .catch(() => {})
+      .finally(() => {
+        inFlightRequests.delete(url);
+      });
+  }
+
+  return fetchPromise;
+}
+
 async function safeFetch<T>(endpoint: string, options?: RequestInit, fallback?: T): Promise<T> {
   try {
     const url = `${API_BASE_URL}${endpoint}`;
-    const res = await fetch(url, {
+    const res = await publicFetch(url, {
       ...options,
       headers: {
         'Content-Type': 'application/json',
@@ -50,11 +142,11 @@ async function safeFetch<T>(endpoint: string, options?: RequestInit, fallback?: 
 }
 
 export async function getSiteShell(): Promise<SiteShellData> {
-  return safeFetch<SiteShellData>('/public/site-shell', undefined, fallbackSiteShell);
+  return safeFetch<SiteShellData>('/public/site-shell');
 }
 
 export async function getPageBySlug(slug: string): Promise<CMSPageData> {
-  return safeFetch<CMSPageData>(`/public/pages/${slug}`, undefined, fallbackHomePage);
+  return safeFetch<CMSPageData>(`/public/pages/${slug}`);
 }
 
 export async function getProducts(params?: {
@@ -64,6 +156,7 @@ export async function getProducts(params?: {
   brand?: string;
   audience?: string;
   sort?: string;
+  search?: string;
 }): Promise<PaginatedResponse<ProductCard>> {
   const query = new URLSearchParams();
   if (params?.page) query.set('page', params.page.toString());
@@ -72,19 +165,20 @@ export async function getProducts(params?: {
   if (params?.brand) query.set('brand', params.brand);
   if (params?.audience) query.set('audience', params.audience);
   if (params?.sort) query.set('sort', params.sort);
+  if (params?.search) query.set('search',params.search);
 
   const fallback: PaginatedResponse<ProductCard> = {
-    data: fallbackProducts,
+    data: [],
     meta: {
       page: params?.page || 1,
       pageSize: params?.pageSize || 12,
-      total: fallbackProducts.length,
+      total: 0,
       totalPages: 1,
     },
   };
 
   try {
-    const res = await fetch(`${API_BASE_URL}/public/products?${query.toString()}`, {
+    const res = await publicFetch(`${API_BASE_URL}/public/products?${query.toString()}`, {
       next: { revalidate: process.env.NODE_ENV === 'development' ? 0 : 60 },
     });
     if (!res.ok) return fallback;
@@ -95,23 +189,18 @@ export async function getProducts(params?: {
 }
 
 export async function getProductBySlug(slug: string): Promise<ProductDetail | null> {
-  const found = fallbackProducts.find((p) => p.slug === slug);
-  const fallback: ProductDetail | null = found
-    ? {
-        ...found,
-        description: `${found.name} là dòng sản phẩm cao cấp được BM SOLAR nhập khẩu chính hãng, bảo hành dài hạn và hỗ trợ kỹ thuật 24/7.`,
-        media: [{ id: 'm1', mediaUrl: found.coverMediaUrl || '', sortOrder: 1 }],
-        audiences: [{ code: 'household', label: 'Hộ gia đình' }],
-      }
-    : null;
+  const fallback: ProductDetail | null = null;
 
   try {
-    const res = await fetch(`${API_BASE_URL}/public/products/${slug}`, {
+    const res = await publicFetch(`${API_BASE_URL}/public/products/${slug}`, {
       next: { revalidate: process.env.NODE_ENV === 'development' ? 0 : 60 },
     });
     if (!res.ok) return fallback;
-    const json = (await res.json()) as ApiResponse<ProductDetail>;
-    return json.data;
+    const json:unknown=await res.json();if(!object(json)||!object(json.data))return null;
+    const raw=json.data;const card=productFromApi(raw);if(!card)return null;
+    const gallery=Array.isArray(raw.gallery)?raw.gallery.filter((url):url is string=>typeof url==='string'):[];
+    const specifications:Record<string,string>={};if(object(raw.specifications))for(const [key,value]of Object.entries(raw.specifications)){if(typeof value==='string'||typeof value==='number')specifications[key]=String(value);}
+    return {...card,description:typeof raw.description==='string'?raw.description:'',media:gallery.map((url,index)=>({id:url,mediaUrl:url,sortOrder:index})),audiences:[],specsParsed:specifications};
   } catch {
     return fallback;
   }
@@ -122,25 +211,27 @@ export async function getProjects(params?: {
   pageSize?: number;
   type?: string;
   province?: string;
+  search?:string;
 }): Promise<PaginatedResponse<ProjectItem>> {
   const query = new URLSearchParams();
   if (params?.page) query.set('page', params.page.toString());
   if (params?.pageSize) query.set('pageSize', params.pageSize.toString());
-  if (params?.type) query.set('type', params.type);
+  if (params?.type) query.set('projectType', params.type);
   if (params?.province) query.set('province', params.province);
+  if (params?.search) query.set('search',params.search);
 
   const fallback: PaginatedResponse<ProjectItem> = {
-    data: fallbackProjects,
+    data: [],
     meta: {
       page: params?.page || 1,
       pageSize: params?.pageSize || 12,
-      total: fallbackProjects.length,
+      total: 0,
       totalPages: 1,
     },
   };
 
   try {
-    const res = await fetch(`${API_BASE_URL}/public/projects?${query.toString()}`, {
+    const res = await publicFetch(`${API_BASE_URL}/public/projects?${query.toString()}`, {
       next: { revalidate: process.env.NODE_ENV === 'development' ? 0 : 60 },
     });
     if (!res.ok) return fallback;
@@ -151,14 +242,16 @@ export async function getProjects(params?: {
 }
 
 export async function getProjectBySlug(slug: string): Promise<ProjectItem | null> {
-  const found = fallbackProjects.find((p) => p.slug === slug) || null;
+  const found = null;
   try {
-    const res = await fetch(`${API_BASE_URL}/public/projects/${slug}`, {
+    const res = await publicFetch(`${API_BASE_URL}/public/projects/${slug}`, {
       next: { revalidate: process.env.NODE_ENV === 'development' ? 0 : 60 },
     });
     if (!res.ok) return found;
-    const json = (await res.json()) as ApiResponse<ProjectItem>;
-    return json.data;
+    const json:unknown=await res.json();if(!object(json)||!object(json.data))return null;
+    const raw=json.data;const item=projectFromApi(raw);if(!item)return null;
+    if(object(raw.projectType)&&typeof raw.projectType.name==='string'&&typeof raw.projectType.slug==='string')item.projectType={name:raw.projectType.name,slug:raw.projectType.slug};
+    if(object(raw.province)&&typeof raw.province.name==='string'&&typeof raw.province.code==='string')item.province={name:raw.province.name,code:raw.province.code};return item;
   } catch {
     return found;
   }
@@ -175,17 +268,17 @@ export async function getArticles(params?: {
   if (params?.tag) query.set('tag', params.tag);
 
   const fallback: PaginatedResponse<ArticleItem> = {
-    data: fallbackArticles,
+    data: [],
     meta: {
       page: params?.page || 1,
       pageSize: params?.pageSize || 12,
-      total: fallbackArticles.length,
+      total: 0,
       totalPages: 1,
     },
   };
 
   try {
-    const res = await fetch(`${API_BASE_URL}/public/articles?${query.toString()}`, {
+    const res = await publicFetch(`${API_BASE_URL}/public/articles?${query.toString()}`, {
       next: { revalidate: process.env.NODE_ENV === 'development' ? 0 : 60 },
     });
     if (!res.ok) return fallback;
@@ -196,14 +289,14 @@ export async function getArticles(params?: {
 }
 
 export async function getArticleBySlug(slug: string): Promise<ArticleItem | null> {
-  const found = fallbackArticles.find((a) => a.slug === slug) || null;
+  const found = null;
   try {
-    const res = await fetch(`${API_BASE_URL}/public/articles/${slug}`, {
+    const res = await publicFetch(`${API_BASE_URL}/public/articles/${slug}`, {
       next: { revalidate: process.env.NODE_ENV === 'development' ? 0 : 60 },
     });
     if (!res.ok) return found;
-    const json = (await res.json()) as ApiResponse<ArticleItem>;
-    return json.data;
+    const json:unknown=await res.json();if(!object(json)||!object(json.data))return null;
+    const item=articleFromApi(json.data);return item?{...item,bodyJson:typeof json.data.bodyJson==='string'?json.data.bodyJson:undefined}:null;
   } catch {
     return found;
   }
@@ -230,10 +323,9 @@ export async function submitLeadRequest(payload: CreateLeadPayload): Promise<{ s
       };
     }
 
-    return {
-      success: true,
-      message: 'Cảm ơn quý khách! Kỹ sư BM SOLAR sẽ liên hệ tư vấn khảo sát trong vòng 15 phút.',
-    };
+    const received:unknown=await res.json();
+    if(!object(received)||!object(received.data)||typeof received.data.referenceCode!=='string'||!received.data.referenceCode){return {success:false,message:'Chưa nhận được xác nhận lưu yêu cầu. Vui lòng thử lại.'};}
+    return {success:true,message:'Yêu cầu của bạn đã được ghi nhận.'};
   } catch {
     // A network failure must never be presented as a saved lead.
     return {
@@ -259,23 +351,86 @@ export async function getFaqs() {
 }
 
 
-export async function getProductCategories() {
- const res=await fetch(`${API_BASE_URL}/public/product-categories`,{next:{revalidate:process.env.NODE_ENV==='development'?0:60}});
- if(!res.ok) throw new Error('Product categories unavailable');
- const json:unknown=await res.json();
- return object(json)?items(json.data,category)||[]:[];
-}
-export async function getAudiences() {
- const res=await fetch(`${API_BASE_URL}/public/audiences`,{next:{revalidate:process.env.NODE_ENV==='development'?0:60}});
- if(!res.ok) throw new Error('Audiences unavailable');
- const json:unknown=await res.json();
- return object(json)?items(json.data,audience)||[]:[];
+export async function getProductCategories(): Promise<ProductCategoryItem[]> {
+  const cacheKey = 'meta:product-categories';
+  const cached = getCached<ProductCategoryItem[]>(cacheKey);
+  if (cached) return cached;
+
+  const res = await publicFetch(`${API_BASE_URL}/public/product-categories`, {
+    next: { revalidate: process.env.NODE_ENV === 'development' ? 0 : 60 },
+  });
+  if (!res.ok) throw new Error(`Product categories unavailable: ${res.status}`);
+  const json: unknown = await res.json();
+  const result: ProductCategoryItem[] = object(json) ? items(json.data, category) || [] : [];
+  if (result.length > 0) setCached(cacheKey, result);
+  return result;
 }
 
-export async function getBrands() {
- const res=await fetch(`${API_BASE_URL}/public/brands`,{next:{revalidate:process.env.NODE_ENV==='development'?0:60}});
- if(!res.ok)return [];
- const json:unknown=await res.json();if(!object(json)||!Array.isArray(json.data))return [];
- const brands=json.data.flatMap(row=>object(row)&&typeof row.id==='string'&&typeof row.slug==='string'&&typeof row.name==='string'?[{id:row.id,slug:row.slug,name:row.name,logoUrl:typeof row.logoUrl==='string'?row.logoUrl:undefined}]:[]);
- return Array.from(new Map(brands.map(brand=>[brand.name.toLowerCase(),brand])).values());
+export async function getAudiences(): Promise<AudienceItem[]> {
+  const cacheKey = 'meta:audiences';
+  const cached = getCached<AudienceItem[]>(cacheKey);
+  if (cached) return cached;
+
+  const res = await publicFetch(`${API_BASE_URL}/public/audiences`, {
+    next: { revalidate: process.env.NODE_ENV === 'development' ? 0 : 60 },
+  });
+  if (!res.ok) throw new Error(`Audiences unavailable: ${res.status}`);
+  const json: unknown = await res.json();
+  const result: AudienceItem[] = object(json) ? items(json.data, audience) || [] : [];
+  if (result.length > 0) setCached(cacheKey, result);
+  return result;
+}
+
+export async function getBrands(): Promise<BrandSummary[]> {
+  const cacheKey = 'meta:brands';
+  const cached = getCached<BrandSummary[]>(cacheKey);
+  if (cached) return cached;
+
+  const res = await publicFetch(`${API_BASE_URL}/public/brands`, {
+    next: { revalidate: process.env.NODE_ENV === 'development' ? 0 : 60 },
+  });
+  if (!res.ok) return [];
+  const json: unknown = await res.json();
+  if (!object(json) || !Array.isArray(json.data)) return [];
+  const brands = json.data.flatMap((row) =>
+    object(row) && typeof row.id === 'string' && typeof row.slug === 'string' && typeof row.name === 'string'
+      ? [{ id: row.id, slug: row.slug, name: row.name, logoUrl: typeof row.logoUrl === 'string' ? row.logoUrl : undefined }]
+      : []
+  );
+  const result: BrandSummary[] = Array.from(new Map(brands.map((brand) => [brand.name.toLowerCase(), brand])).values());
+  if (result.length > 0) setCached(cacheKey, result);
+  return result;
+}
+
+async function filterOptions(path: string, valueKey: string, labelKey: string): Promise<{ value: string; label: string }[]> {
+  const cacheKey = `filter:${path}:${valueKey}:${labelKey}`;
+  const cached = getCached<{ value: string; label: string }[]>(cacheKey);
+  if (cached) return cached;
+
+  const res = await publicFetch(`${API_BASE_URL}/public/${path}`, {
+    next: { revalidate: process.env.NODE_ENV === 'development' ? 0 : 60 },
+  });
+  if (!res.ok) return [];
+  const json: unknown = await res.json();
+  if (!object(json) || !Array.isArray(json.data)) return [];
+  const result = json.data.flatMap((row) => {
+    if (!object(row)) return [];
+    const value = row[valueKey],
+      label = row[labelKey];
+    return typeof value === 'string' && typeof label === 'string' ? [{ value, label }] : [];
+  });
+  if (result.length > 0) setCached(cacheKey, result);
+  return result;
+}
+
+export function getProjectTypes(): Promise<{ value: string; label: string }[]> {
+  return filterOptions('project-types', 'slug', 'name');
+}
+
+export function getProvinces(): Promise<{ value: string; label: string }[]> {
+  return filterOptions('provinces', 'code', 'name');
+}
+
+export function getArticleTags(): Promise<{ value: string; label: string }[]> {
+  return filterOptions('tags', 'slug', 'displayName');
 }

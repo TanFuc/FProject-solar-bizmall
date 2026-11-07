@@ -3,6 +3,7 @@ package projects
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 	"time"
 
 	"bmsolar-backend/internal/common/errors"
@@ -109,6 +110,9 @@ func (h *Handler) ListPublicProjects(w http.ResponseWriter, r *http.Request) {
 		dbQuery = dbQuery.Where("province_id IN (SELECT id FROM provinces WHERE code = ?)", provinceCode)
 	}
 
+	if search := strings.TrimSpace(query.Get("search")); search != "" {
+		dbQuery = dbQuery.Where("title LIKE ? OR summary LIKE ?", "%"+search+"%", "%"+search+"%")
+	}
 	var total int64
 	dbQuery.Count(&total)
 

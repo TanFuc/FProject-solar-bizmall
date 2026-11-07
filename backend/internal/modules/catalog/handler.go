@@ -309,7 +309,14 @@ func (h *Handler) GetPublicProductDetail(w http.ResponseWriter, r *http.Request)
 
 	gallery := make([]string, 0, len(prod.Media))
 	for _, m := range prod.Media {
-		gallery = append(gallery, h.cfg.AppBaseURL+"/media/"+m.MediaID)
+		url, err := media.ResolvePublicURL(h.db, h.cfg, m.MediaID)
+		if err != nil {
+			errors.WriteJSON(w, r, errors.Internal("Failed to resolve media"))
+			return
+		}
+		if url != "" {
+			gallery = append(gallery, url)
+		}
 	}
 
 	resp := ProductDetailResponse{

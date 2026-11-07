@@ -1,0 +1,114 @@
+[
+  {
+    "name": "home",
+    "emptyButtons": 0,
+    "h1Count": 1,
+    "height": 800,
+    "overflow": 0,
+    "width": 360
+  },
+  {
+    "name": "about",
+    "emptyButtons": 0,
+    "h1Count": 1,
+    "height": 800,
+    "overflow": 0,
+    "width": 360
+  },
+  {
+    "name": "solutions",
+    "emptyButtons": 0,
+    "h1Count": 1,
+    "height": 800,
+    "overflow": 0,
+    "width": 360
+  },
+  {
+    "name": "products",
+    "emptyButtons": 0,
+    "h1Count": 1,
+    "height": 800,
+    "overflow": 0,
+    "width": 360
+  },
+  {
+    "name": "projects",
+    "emptyButtons": 0,
+    "h1Count": 1,
+    "height": 800,
+    "overflow": 0,
+    "width": 360
+  },
+  {
+    "name": "news",
+    "emptyButtons": 0,
+    "h1Count": 1,
+    "height": 800,
+    "overflow": 0,
+    "width": 360
+  },
+  {
+    "name": "contact",
+    "emptyButtons": 0,
+    "h1Count": 1,
+    "height": 800,
+    "overflow": 0,
+    "width": 360
+  },
+  {
+    "name": "home",
+    "emptyButtons": 0,
+    "h1Count": 1,
+    "height": 1024,
+    "overflow": 0,
+    "width": 768
+  },
+  {
+    "name": "about",
+    "emptyButtons": 0,
+    "h1Count": 1,
+    "height": 1024,
+    "overflow": 0,
+    "width": 768
+  },
+  {
+    "name": "solutions",
+    "emptyButtons": 0,
+    "h1Count": 1,
+    "height": 1024,
+    "overflow": 0,
+    "width": 768
+  },
+  {
+    "name": "products",
+    "emptyButtons": 0,
+    "h1Count": 1,
+    "height": 1024,
+    "overflow": 0,
+    "width": 768
+  },
+  {
+    "name": "projects",
+    "emptyButtons": 0,
+    "h1Count": 1,
+    "height": 1024,
+    "overflow": 0,
+    "width": 768
+  },
+  {
+    "name": "news",
+    "emptyButtons": 0,
+    "h1Count": 1,
+    "height": 1024,
+    "overflow": 0,
+    "width": 768
+  },
+  {
+    "name": "contact",
+    "emptyButtons": 0,
+    "h1Count": 1,
+    "height": 1024,
+    "overflow": 0,
+    "width": 768
+  }
+]

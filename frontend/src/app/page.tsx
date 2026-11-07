@@ -58,6 +58,8 @@ export default async function HomePage() {
       <NewsSection title={copy.news} articles={items(newsBlock?.data.articles, article) || articles.data} />
       <BrandStrip brands={brands} headline={typeof page.blocks.find(b=>b.type==='socialGrid')?.data.headline==='string' ? String(page.blocks.find(b=>b.type==='socialGrid')?.data.headline) : undefined} />
       <ConsultationFormBlock
+        mediaUrl={slides[0]?.desktopMediaUrl}
+        benefits={highlights.map(item=>item.label).filter((title):title is string=>Boolean(title))}
         headline={copy.consultation || (typeof leadBlock?.data.headline === 'string' ? leadBlock.data.headline : undefined)}
         subheading={copy.consultationSubtitle || (typeof leadBlock?.data.subheading === 'string' ? leadBlock.data.subheading : undefined)}
       />

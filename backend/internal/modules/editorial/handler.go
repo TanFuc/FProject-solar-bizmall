@@ -30,6 +30,7 @@ func NewHandler(db *gorm.DB, cfg *config.Config) *Handler {
 func (h *Handler) RegisterRoutes(r chi.Router) {
 	// Public routes
 	r.Get("/public/articles", h.ListPublicArticles)
+	r.Get("/public/tags", h.ListPublishedTags)
 	r.Get("/public/articles/{slug}", h.GetPublicArticleDetail)
 	r.Get("/public/tags/{slug}", h.GetPublicTag)
 
@@ -411,4 +412,18 @@ func (h *Handler) AdminUnpublishArticle(w http.ResponseWriter, r *http.Request) 
 			"status": "draft",
 		},
 	})
+}
+
+func (h *Handler) ListPublishedTags(w http.ResponseWriter, r *http.Request) {
+	var tags []models.Tag
+	if err := h.db.Model(&models.Tag{}).Distinct("tags.*").Joins("JOIN content_tags ct ON ct.tag_id = tags.id AND ct.entity_type = ?", "article").Joins("JOIN articles a ON a.id = ct.entity_id AND a.status = ?", "published").Order("tags.display_name asc").Find(&tags).Error; err != nil {
+		errors.WriteJSON(w, r, errors.Internal("Failed to list published article tags"))
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(struct {
+		Data []models.Tag `json:"data"`
+	}{tags}); err != nil {
+		return
+	}
 }

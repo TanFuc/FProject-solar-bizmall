@@ -8,16 +8,19 @@ import { NavigationItemTree } from '@/types/bmsolar-api';
 import { useBranch } from '@/lib/contacts/branchContext';
 import { useTranslation } from '@/lib/i18n';
 import { resolveInternalRoute } from '@/lib/utils/routes';
-import { Menu, ChevronDown, Search, ArrowRight } from 'lucide-react';
+import { Menu, ChevronDown, Search } from 'lucide-react';
 import { MobileDrawer } from './MobileDrawer';
+import { useMobileDrawerState } from './mobileDrawerState';
+import { RouteProgressBar } from '@/components/ui/RouteProgressBar';
 
 interface HeaderProps {
- brand?: import('@/types/bmsolar-api').SiteShellData['brand'];
+  brand?: import('@/types/bmsolar-api').SiteShellData['brand'];
   navigation: NavigationItemTree[];
 }
 
 export function Header({ navigation, brand }: HeaderProps) {
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const { isOpen: isDrawerOpen, open: openDrawer, close: closeDrawer } = useMobileDrawerState();
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { openConsultationModal } = useBranch();
   const { t, isEnglish } = useTranslation();
   const pathname = usePathname();
@@ -45,18 +48,62 @@ export function Header({ navigation, brand }: HeaderProps) {
 
   return (
     <>
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-xs transition-all">
+      {isSearchOpen && (
+        <div
+          className="solar-search-overlay"
+          onKeyDown={(event) => {
+            if (event.key === 'Escape') setIsSearchOpen(false);
+          }}
+        >
+          <div role="dialog" aria-modal="true" aria-labelledby="solar-search-heading">
+            <div>
+              <h2 id="solar-search-heading">Tìm kiếm sản phẩm</h2>
+              <button
+                type="button"
+                aria-label="Đóng tìm kiếm"
+                onClick={() => setIsSearchOpen(false)}
+              >
+                ×
+              </button>
+            </div>
+            <form action="/san-pham">
+              <label htmlFor="solar-search-query">Tên sản phẩm hoặc mã thiết bị</label>
+              <div>
+                <input
+                  id="solar-search-query"
+                  type="search"
+                  name="q"
+                  required
+                  autoFocus
+                  maxLength={120}
+                />
+                <button type="submit">Tìm kiếm</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-xs transition-all relative">
+        {/* Global Route Navigation Progress Indicator */}
+        <RouteProgressBar />
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-          {/* Brand Logo */}
-          <Link href="/" className="flex items-center gap-3 shrink-0 py-2 group">
+          {/* Brand Logo: Clean transparent logo from CMS without white box or duplicate text */}
+          <Link
+            href="/"
+            className="flex items-center gap-3 shrink-0 py-2 group focus-visible:ring-2 focus-visible:ring-brand-primary rounded-md"
+            aria-label={brand?.name || 'BM SOLAR'}
+          >
             <Image
-              src="/images/logo.png"
-              alt="BM SOLAR — Tổng Thầu EPC Điện Mặt Trời"
+              src={brand?.logo.url || '/images/logo.png'}
+              alt={brand?.logo.alt || brand?.name || 'BM SOLAR'}
               width={160}
               height={52}
-              className="h-9 md:h-11 w-auto object-contain transition-transform group-hover:scale-102"
+              className="h-9 md:h-11 w-auto object-contain transition-transform duration-200 group-hover:scale-[1.02]"
               priority
             />
+            {/* Screen-reader only fallback to avoid visual duplicate text alongside the logo image */}
             <span className="sr-only">{brand?.name || 'BM SOLAR'}</span>
           </Link>
 
@@ -78,7 +125,7 @@ export function Header({ navigation, brand }: HeaderProps) {
                   >
                     <span>{getNavLabel(item)}</span>
                     {item.children && item.children.length > 0 && (
-                      <ChevronDown className="w-3.5 h-3.5 text-slate-400 group-hover:text-brand-primary transition-transform group-hover:rotate-180" />
+                      <ChevronDown className="w-3.5 h-3.5 text-slate-400 group-hover:text-brand-primary transition-transform duration-200 group-hover:rotate-180" />
                     )}
                   </Link>
 
@@ -107,8 +154,9 @@ export function Header({ navigation, brand }: HeaderProps) {
           <div className="flex items-center gap-3">
             {/* Search Button */}
             <button
-              onClick={() => openConsultationModal('Tìm kiếm hoặc tư vấn giải pháp')}
-              className="p-2.5 rounded-full text-slate-600 hover:text-brand-primary hover:bg-slate-100 transition-colors"
+              type="button"
+              onClick={() => setIsSearchOpen(true)}
+              className="p-2.5 rounded-full text-slate-600 hover:text-brand-primary hover:bg-slate-100 transition-colors focus-visible:ring-2 focus-visible:ring-brand-primary"
               aria-label="Tìm kiếm"
             >
               <Search className="w-4 h-4" />
@@ -116,8 +164,9 @@ export function Header({ navigation, brand }: HeaderProps) {
 
             {/* Orange Consultation Pill CTA */}
             <button
+              type="button"
               onClick={() => openConsultationModal('Yêu cầu tư vấn từ Header')}
-              className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-accent-orange to-amber-500 hover:from-amber-500 hover:to-accent-orange text-white text-xs font-bold tracking-wide shadow-md shadow-accent-orange/25 active:scale-95 transition-all"
+              className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-accent-orange to-amber-500 hover:from-amber-500 hover:to-accent-orange text-white text-xs font-bold tracking-wide shadow-md shadow-accent-orange/25 active:scale-95 transition-all duration-200 focus-visible:ring-2 focus-visible:ring-accent-orange"
             >
               <span>{isEnglish ? 'Request Quote' : 'Yêu cầu tư vấn'}</span>
               <span className="text-base font-normal leading-none">+</span>
@@ -125,9 +174,11 @@ export function Header({ navigation, brand }: HeaderProps) {
 
             {/* Mobile Hamburger Menu Toggle */}
             <button
-              onClick={() => setIsDrawerOpen(true)}
+              type="button"
+              onClick={openDrawer}
               className="lg:hidden p-2 rounded-lg text-ink hover:text-brand-primary hover:bg-surface focus:outline-none focus:ring-2 focus:ring-brand-primary transition-colors"
               aria-label="Mở menu điều hướng"
+              aria-expanded={isDrawerOpen}
             >
               <Menu className="w-6 h-6" />
             </button>
@@ -135,10 +186,10 @@ export function Header({ navigation, brand }: HeaderProps) {
         </div>
       </header>
 
-      {/* Slide-over Mobile Navigation Drawer */}
+      {/* Slide-over Mobile Navigation Drawer (Single global instance) */}
       <MobileDrawer
         isOpen={isDrawerOpen}
-        onClose={() => setIsDrawerOpen(false)}
+        onClose={closeDrawer}
         navigation={navigation}
       />
     </>

@@ -1,259 +1,263 @@
-import { getAudiences } from '@/lib/api/client';
+import { CmsJourney } from '@/components/blocks/CmsSections';
+import Link from 'next/link';
+import { ArrowRight, RotateCcw } from 'lucide-react';
+import { getProducts, getAudiences, getProductCategories } from '@/lib/api/client';
+import { getPageVisuals } from '@/lib/api/visuals';
+import { visualMetadata } from '@/lib/api/visual-metadata';
+import { PageHero, SectionHeading } from '@/components/layout/PageHero';
 import { CategoryStrip } from '@/components/blocks/CategoryStrip';
 import { SolutionShowcase } from '@/components/blocks/SolutionShowcase';
-import React from 'react';
-import { Metadata } from 'next';
-import Image from 'next/image';
-import Link from 'next/link';
-import { constructMetadata } from '@/lib/seo/metadata';
+import { VisualImage } from '@/components/ui/VisualImage';
+import { AutoSubmitSelect } from '@/components/ui/AutoSubmitSelect';
+import { Pagination } from '@/components/ui/Pagination';
+import { CatalogPendingIndicator } from '@/components/ui/CatalogPendingIndicator';
 
-import { JourneyCtaBanner } from '@/components/blocks/JourneyCtaBanner';
-import { ChevronDown, Search } from 'lucide-react';
+import type { Metadata } from 'next';
 
-export const metadata: Metadata = constructMetadata({
-  title: 'Thiết Bị Chính Hãng — Hiệu Suất Đỉnh Cao | BM SOLAR',
-  description:
-    'Phân phối thiết bị điện mặt trời chính hãng Tier 1 Bloomberg: Biến tần Deye, Huawei, Tấm pin Canadian Solar, Jinko 550W+ và Pin lưu trữ Lithium Dyness BESS.',
-  canonicalPath: '/san-pham',
-  ogImage: '/images/designs/hero-san-pham.png',
-  keywords: [
-    'thiết bị điện mặt trời',
-    'tấm pin Canadian Solar',
-    'biến tần Deye',
-    'inverter Huawei',
-    'pin lưu trữ Dyness',
-  ],
-});
-
-interface ProductsPageProps {
-  searchParams?: {
-    category?: string;
-  };
+export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
+  const resolved = (await searchParams) || {};
+  const hasFilter = Boolean(
+    resolved.category ||
+    resolved.audience ||
+    resolved.brand ||
+    resolved.sort ||
+    resolved.q ||
+    (resolved.page && Number(resolved.page) > 1)
+  );
+  return visualMetadata('products', '/san-pham', { noIndex: hasFilter });
 }
 
-export default async function ProductsPage({ searchParams }: ProductsPageProps) {
-  const audienceRows = await getAudiences();
-  const currentCategory = searchParams?.category || 'all';
+interface Props {
+  searchParams?: Promise<{
+    category?: string;
+    audience?: string;
+    brand?: string;
+    sort?: string;
+    q?: string;
+    page?: string;
+  }>;
+}
 
-  const categoryCards = [
-    { name: 'Tấm pin quang điện', img: '/images/designs/cat-panel.png', slug: 'tam-pin-nang-luong-mat-troi' },
-    { name: 'Biến tần Inverter', img: '/images/designs/cat-inverter.png', slug: 'bien-tan-inverter' },
-    { name: 'Pin lưu trữ BESS', img: '/images/designs/cat-battery.png', slug: 'pin-luu-tru-lithium' },
-    { name: 'Trạm sạc xe điện', img: '/images/designs/cat-charger.png', slug: 'tram-sac-xe-dien' },
-    { name: 'Phụ kiện & Hệ khung', img: '/images/designs/cat-accessories.png', slug: 'phu-kien-lap-dat' },
-  ];
+export default async function ProductsPage({ searchParams }: Props) {
+  const resolvedSearchParams = (await searchParams) || {};
+  const page = Math.max(1, Number(resolvedSearchParams.page) || 1);
+  const [visuals, listing, allCategories, audiences] = await Promise.all([
+    getPageVisuals('products'),
+    getProducts({
+      page,
+      pageSize: 9,
+      category: resolvedSearchParams.category,
+      audience: resolvedSearchParams.audience,
+      brand: resolvedSearchParams.brand,
+      sort: resolvedSearchParams.sort,
+      search: resolvedSearchParams.q,
+    }),
+    getProductCategories(),
+    getAudiences(),
+  ]);
 
-  const categoryTabs = [
-    { label: 'Tất cả', slug: 'all' },
-    { label: 'Tấm pin PV', slug: 'tam-pin' },
-    { label: 'Biến tần Inverter', slug: 'inverter' },
-    { label: 'Pin lưu trữ', slug: 'bess' },
-    { label: 'Trạm sạc EV', slug: 'tram-sac' },
-  ];
+  const copy = visuals.copy;
+  const block = visuals.page.blocks.find((b) => b.type === 'categoryShowcase');
+  const ids = Array.isArray(block?.data.categoryIds)
+    ? block.data.categoryIds.filter((v): v is string => typeof v === 'string')
+    : [];
+  const categories = ids.length
+    ? ids.flatMap((id) => allCategories.filter((c) => c.id === id))
+    : allCategories;
 
-  const products = [
-    { id: 'sp1', title: 'Tấm pin Jinko Solar 550W', brand: 'Jinko Solar', spec: 'Hiệu suất 21.5% • Bảo hành 25 năm', img: '/images/designs/san-pham-1.png', slug: 'tam-pin-jinko-solar-tiger-neo-550w' },
-    { id: 'sp2', title: 'Biến tần Deye Hybrid 5kW', brand: 'Deye', spec: '1 pha 5kW • Tích hợp MPPT kép', img: '/images/designs/san-pham-2.png', slug: 'inverter-deye-hybrid-5kw-1-pha' },
-    { id: 'sp3', title: 'Biến tần Huawei SUN2000 10kW', brand: 'Huawei', spec: '3 pha 10kW • Hiệu suất 98.6%', img: '/images/designs/san-pham-3.png', slug: 'inverter-huawei-sun2000-10ktl-m1' },
-    { id: 'sp4', title: 'Pin lưu trữ Dyness 5.12kWh', brand: 'Dyness', spec: 'LiFePO4 • 6000 chu kỳ sạc xả', img: '/images/designs/san-pham-4.png', slug: 'pin-luu-tru-dyness-b4850-5kwh' },
-    { id: 'sp5', title: 'Trạm sạc AC 22kW EV', brand: 'BM EV', spec: 'Chuẩn Type 2 • Chống nước IP65', img: '/images/designs/san-pham-5.png', slug: 'tram-sac-xe-dien-ac-22kw' },
-    { id: 'sp6', title: 'Tấm pin Canadian Solar 600W', brand: 'Canadian Solar', spec: 'Hi-Ku7 Mono • Bạc mặt trời', img: '/images/designs/san-pham-6.png', slug: 'tam-pin-canadian-solar-600w-bifacial' },
-    { id: 'sp7', title: 'Biến tần Growatt MID 20kW', brand: 'Growatt', spec: '3 pha 20kW • AFCI bảo vệ cháy', img: '/images/designs/san-pham-7.png', slug: 'inverter-growatt-mid-20ktl3-x' },
-    { id: 'sp8', title: 'Hệ thống phụ kiện & tủ điện', brand: 'BM Standard', spec: 'Đạt chuẩn IEC 61439 • Chống sét Lan', img: '/images/designs/san-pham-8.png', slug: 'tu-dien-chuyen-dung-solar-chong-set' },
-  ];
+  const href = (key: string, value?: string) => {
+    const query = new URLSearchParams();
+    for (const [name, text] of Object.entries(resolvedSearchParams)) {
+      if (text && name !== 'page') query.set(name, text);
+    }
+    if (value) query.set(key, value);
+    else query.delete(key);
+    const qs = query.toString();
+    return qs ? `/san-pham?${qs}` : '/san-pham';
+  };
+
+  const hasActiveFilters = Boolean(
+    resolvedSearchParams.category || resolvedSearchParams.audience || resolvedSearchParams.brand || resolvedSearchParams.sort || resolvedSearchParams.q
+  );
 
   return (
-    <div className="solar-page solar-page-san-pham w-full flex flex-col bg-white">
-      {/* 1. Hero Section matching BM_SOLAR_san-pham_desktop.png */}
-      <section className="solar-page-hero relative w-full min-h-[380px] lg:min-h-[420px] flex items-center bg-[#071F3D] overflow-hidden">
-        <div className="absolute inset-0 z-0">
-          <Image
-            src="/images/designs/hero-san-pham.png"
-            alt="Thiết bị chính hãng BM SOLAR"
-            fill
-            priority
-            className="object-cover object-center"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#071F3D]/90 via-[#071F3D]/60 to-transparent z-10" />
+    <div className="solar-page solar-page-san-pham">
+      {/* Page Hero remains stable during client filtering */}
+      <PageHero visuals={visuals} />
+
+      <section className="solar-container solar-page-section">
+        <SectionHeading
+          eyebrow={copy.sectionEyebrow}
+          title={copy.sectionTitle}
+          link="/lien-he"
+          label={copy.sectionLink}
+        />
+
+        <div className="solar-catalog-categories">
+          <CategoryStrip categories={categories} />
         </div>
 
-        <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-16 w-full">
-          <div className="max-w-2xl space-y-3.5">
-            <span className="text-[11px] font-bold text-white/80 uppercase tracking-widest block">
-              THIẾT BỊ & CÔNG NGHỆ
-            </span>
-            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-tight">
-              Thiết bị chính hãng <br />
-              <span className="text-[#FF6B19]">Hiệu suất đỉnh cao</span>
-            </h1>
-            <p className="text-xs sm:text-sm lg:text-base text-white/90 leading-relaxed pt-1">
-              Phân phối chính hãng các dòng tấm pin, biến tần Inverter, pin lưu trữ và trạm sạc hàng đầu thế giới.
-            </p>
-
-            <div className="flex flex-wrap items-center gap-3 pt-2">
-              <Link
-                href="/lien-he"
-                className="px-6 py-2.5 sm:py-3 rounded-full bg-[#FF6B19] hover:bg-[#ea5d0f] text-white text-xs font-bold shadow-md shadow-[#FF6B19]/30 active:scale-95 transition-all inline-flex items-center gap-2"
-              >
-                <span>Nhận báo giá thiết bị</span>
-                <span>→</span>
-              </Link>
-              <Link
-                href="/giai-phap"
-                className="px-5 py-2.5 sm:py-3 rounded-full border border-white/40 hover:border-white text-white text-xs font-semibold hover:bg-white/10 transition-colors"
-              >
-                Xem giải pháp
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 2. Breadcrumb */}
-      <div className="bg-[#F8FAFC] border-b border-slate-100 py-3">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="flex items-center gap-2 text-xs text-slate-500 font-medium">
-            <Link href="/" className="hover:text-brand-primary transition-colors">
-              Trang chủ
-            </Link>
-            <span className="text-slate-300">/</span>
-            <span className="text-slate-800 font-semibold">Sản phẩm</span>
-          </nav>
-        </div>
-      </div>
-
-      {/* 3. Section 01: Danh mục thiết bị (5 Category Tiles) */}
-      <section className="py-10 lg:py-14 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
-            <div>
-              <p className="text-[11px] font-bold text-[#FF6B19] uppercase tracking-wider mb-1">
-                01 / DANH MỤC THIẾT BỊ
-              </p>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-                Hệ sinh thái thiết bị điện mặt trời
-              </h2>
-            </div>
+        <div className="solar-catalog-layout">
+          {/* Sidebar filters with client transitions and scroll preservation */}
+          <aside className="solar-catalog-sidebar" aria-label="Bộ lọc sản phẩm">
+            <h3>Danh mục</h3>
             <Link
-              href="/lien-he"
-              className="text-xs font-bold text-[#FF6B19] hover:underline flex items-center gap-1 shrink-0"
+              href={href('category')}
+              scroll={false}
+              aria-current={!resolvedSearchParams.category ? 'page' : undefined}
+              className="transition-colors"
             >
-              <span>Tư vấn chọn thiết bị</span>
-              <span>→</span>
+              Tất cả
             </Link>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 pt-2">
-            {categoryCards.map((cat) => (
+            {categories.map((category) => (
               <Link
-                key={cat.slug}
-                href={`/san-pham?category=${cat.slug}`}
-                className="group relative rounded-2xl overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 block bg-slate-50 border border-slate-100 aspect-[235/180]"
+                key={category.id}
+                href={href('category', category.slug)}
+                scroll={false}
+                aria-current={resolvedSearchParams.category === category.slug ? 'page' : undefined}
+                className="transition-colors"
               >
-                <Image
-                  src={cat.img}
-                  alt={cat.name}
-                  fill
-                  sizes="(max-width: 640px) 50vw, 20vw"
-                  className="object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                <span className="sr-only">{cat.name}</span>
+                {category.name}
               </Link>
             ))}
-          </div>
-        </div>
-      </section>
 
-      {/* 4. Section 02: Tất cả sản phẩm (Grid matching BM_SOLAR_san-pham_desktop.png) */}
-      <section className="py-10 lg:py-14 bg-[#F8FAFC] border-t border-slate-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
-            <div>
-              <p className="text-[11px] font-bold text-[#FF6B19] uppercase tracking-wider mb-1">
-                02 / THIẾT BỊ CHÍNH HÃNG
-              </p>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-                Thiết bị & Phụ kiện năng lượng mặt trời
-              </h2>
-            </div>
+            <h3 className="mt-7">Ứng dụng</h3>
             <Link
-              href="/lien-he"
-              className="text-xs font-bold text-[#FF6B19] hover:underline flex items-center gap-1 shrink-0"
+              href={href('audience')}
+              scroll={false}
+              aria-current={!resolvedSearchParams.audience ? 'page' : undefined}
+              className="transition-colors"
             >
-              <span>Tải bảng giá tổng hợp</span>
-              <span>→</span>
+              Tất cả
             </Link>
-          </div>
+            {audiences.map((audience) => (
+              <Link
+                key={audience.id}
+                href={href('audience', audience.code)}
+                scroll={false}
+                aria-current={resolvedSearchParams.audience === audience.code ? 'page' : undefined}
+                className="transition-colors"
+              >
+                {audience.label}
+              </Link>
+            ))}
 
-          {/* Filter Bar */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-            {categoryTabs.map((tab) => {
-              const active = currentCategory === tab.slug;
-              return (
+            {hasActiveFilters && (
+              <div className="mt-8 pt-4 border-t border-slate-200">
                 <Link
-                  key={tab.slug}
-                  href={tab.slug === 'all' ? '/san-pham' : `/san-pham?category=${tab.slug}`}
-                  className={`px-4 py-2 rounded-full text-xs font-semibold shrink-0 transition-all ${
-                    active
-                      ? 'bg-[#FF6B19] text-white shadow-xs'
-                      : 'bg-white text-slate-600 hover:bg-slate-200 border border-slate-200/80'
-                  }`}
+                  href="/san-pham"
+                  scroll={false}
+                  className="inline-flex items-center gap-1.5 text-xs text-ink-muted hover:text-accent-orange font-medium transition-colors"
                 >
-                  {tab.label}
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  Xóa tất cả bộ lọc
                 </Link>
-              );
-            })}
-          </div>
+              </div>
+            )}
+          </aside>
 
-          {/* Product Cards Grid: 4 columns desktop, 2 columns mobile */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 pt-3">
-            {products.map((p) => (
-              <Link
-                key={p.id}
-                href={`/san-pham/${p.slug}`}
-                className="group relative rounded-2xl overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 block bg-white aspect-[300/380] border border-slate-200/80"
-              >
-                <Image
-                  src={p.img}
-                  alt={p.title}
-                  fill
-                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                  className="object-cover group-hover:scale-105 transition-transform duration-500"
+          {/* Catalog listing area */}
+          <div>
+            <div className="solar-catalog-toolbar">
+              <div className="flex items-center gap-3">
+                <p>
+                  <strong>{copy.listTitle}</strong>
+                  <span>{listing.meta.total} sản phẩm</span>
+                </p>
+                <CatalogPendingIndicator />
+              </div>
+
+              <form action="/san-pham" className="flex items-center gap-2">
+                {Object.entries(resolvedSearchParams)
+                  .filter(([name]) => name !== 'sort' && name !== 'page')
+                  .map(([name, value]) => (
+                    <input key={name} type="hidden" name={name} value={value} />
+                  ))}
+                <AutoSubmitSelect
+                  name="sort"
+                  value={resolvedSearchParams.sort || ''}
+                  label="Sắp xếp"
+                  options={[
+                    { value: '', label: 'Mới nhất' },
+                    { value: 'name_asc', label: 'Tên A–Z' },
+                    { value: 'name_desc', label: 'Tên Z–A' },
+                  ]}
                 />
-                <span className="sr-only">
-                  {p.title} - {p.brand} ({p.spec})
-                </span>
-              </Link>
-            ))}
-          </div>
+              </form>
+            </div>
 
-          {/* Pagination */}
-          <div className="flex items-center justify-center gap-2 pt-6">
-            <button className="w-8 h-8 rounded-full bg-[#FF6B19] text-white text-xs font-bold shadow-xs">
-              1
-            </button>
-            <button className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors">
-              2
-            </button>
-            <button className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors">
-              3
-            </button>
-            <button className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors">
-              &gt;
-            </button>
+            {/* Products grid */}
+            <div className="solar-listing-products">
+              {listing.data.map((product) => (
+                <Link
+                  key={product.id}
+                  href={`/san-pham/${product.slug}`}
+                  className="solar-listing-product group transition-all duration-200 hover:-translate-y-1 hover:shadow-lg focus-visible:ring-2 focus-visible:ring-brand-primary"
+                >
+                  <div className="solar-listing-product-photo">
+                    <VisualImage
+                      src={product.coverMediaUrl}
+                      alt={product.name}
+                      fill
+                      sizes="(max-width:767px) 50vw, 24vw"
+                      className="object-contain transition-transform duration-300 group-hover:scale-105"
+                    />
+                  </div>
+                  <div>
+                    <h3>{product.name}</h3>
+                    <p>{product.summary}</p>
+                    <span className="transition-transform group-hover:translate-x-1">
+                      {copy.detailLink}
+                      <ArrowRight size={14} />
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+
+            {/* Recoverable empty state */}
+            {!listing.data.length && (
+              <div className="solar-empty flex flex-col items-center justify-center py-12 px-4 rounded-xl bg-surface border border-slate-200 text-center my-6" role="status">
+                <p className="text-base font-semibold text-ink mb-1">
+                  Chưa có sản phẩm phù hợp với bộ lọc đã chọn.
+                </p>
+                <p className="text-xs text-ink-muted mb-4 max-w-sm">
+                  Quý khách vui lòng thử tìm kiếm với từ khóa khác hoặc xóa bộ lọc để xem toàn bộ danh mục sản phẩm.
+                </p>
+                <Link
+                  href="/san-pham"
+                  scroll={false}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-primary hover:bg-brand-dark text-white text-xs font-semibold shadow-sm transition-colors"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  Xem tất cả sản phẩm
+                </Link>
+              </div>
+            )}
+
+            <Pagination
+              path="/san-pham"
+              page={page}
+              totalPages={listing.meta.totalPages}
+              params={resolvedSearchParams}
+            />
           </div>
         </div>
       </section>
 
-      {/* 5. Blue Process Section */}
-      <SolutionShowcase audiences={audienceRows} />
+      <section className="solar-related-section">
+        <div className="solar-container">
+          <SectionHeading
+            eyebrow={copy.relatedEyebrow}
+            title={copy.relatedTitle}
+            link="/giai-phap"
+            label={copy.relatedLink}
+          />
+          <SolutionShowcase audiences={audiences} />
+        </div>
+      </section>
 
-      {/* 6. Bottom CTA Banner */}
-      <JourneyCtaBanner
-        primaryCtaText="Nhận báo giá thiết bị ngay →"
-        secondaryCtaText="Xem các dự án"
-        secondaryCtaHref="/du-an"
-      />
+      <CmsJourney copy={copy} mediaUrl={visuals.media.factory} />
     </div>
   );
 }

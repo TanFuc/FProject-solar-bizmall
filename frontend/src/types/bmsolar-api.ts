@@ -93,6 +93,8 @@ export interface SiteShellData {
   };
   navigation: NavigationItemTree[];
   footer: {
+    groups?:Array<{title:string;links:Array<{label:string;url:string}>}>;
+    socialLinks?:ContactChannelItem[];
     companyName?: string;
     taxCode?: string;
     address?: string;

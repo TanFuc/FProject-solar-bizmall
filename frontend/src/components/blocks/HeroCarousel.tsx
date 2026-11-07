@@ -22,8 +22,8 @@ export function HeroCarousel({ slides = [], fallbackMediaUrl = '/images/designs/
   const { t } = useTranslation();
   const current = slides[index % Math.max(slides.length, 1)];
   if (!current) return null;
-  const desktop = current.desktopMediaUrl || fallbackMediaUrl;
-  const mobile = current.mobileMediaUrl || desktop;
+  const desktop = (current.desktopMediaUrl && current.desktopMediaUrl.trim() !== '') ? current.desktopMediaUrl : (fallbackMediaUrl || '/images/designs/hero-home.png');
+  const mobile = (current.mobileMediaUrl && current.mobileMediaUrl.trim() !== '') ? current.mobileMediaUrl : desktop;
   return <section className="solar-hero">
     <div className="solar-hero-media">
       {desktop && <Image src={desktop} alt="" fill priority sizes="100vw" className="object-cover hidden sm:block" />}

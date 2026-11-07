@@ -1,0 +1,639 @@
+[
+  {
+    "route": "/",
+    "width": 1440,
+    "height": 900,
+    "actualHeight": 2614,
+    "referenceOriginalSize": [
+      1024,
+      1536
+    ],
+    "referenceNormalizedHeight": 2160,
+    "nativeCaptureSizes": [
+      [
+        1432,
+        895
+      ],
+      [
+        1432,
+        895
+      ],
+      [
+        1432,
+        895
+      ],
+      [
+        1432,
+        895
+      ]
+    ],
+    "captureNormalization": "native JPEG uniformly resized to DOM viewport; approximate comparison only",
+    "overflow": 0,
+    "stitchGaps": [],
+    "artifact": "visual-qa/home/1440"
+  },
+  {
+    "route": "/gioi-thieu",
+    "width": 1440,
+    "height": 900,
+    "actualHeight": 3985,
+    "referenceOriginalSize": [
+      1440,
+      3938
+    ],
+    "referenceNormalizedHeight": 3938,
+    "nativeCaptureSizes": [
+      [
+        1432,
+        895
+      ],
+      [
+        1432,
+        895
+      ],
+      [
+        1432,
+        895
+      ],
+      [
+        1432,
+        895
+      ],
+      [
+        1432,
+        895
+      ]
+    ],
+    "captureNormalization": "native JPEG uniformly resized to DOM viewport; approximate comparison only",
+    "overflow": 0,
+    "stitchGaps": [],
+    "artifact": "visual-qa/about/1440"
+  },
+  {
+    "route": "/giai-phap",
+    "width": 1440,
+    "height": 900,
+    "actualHeight": 4015,
+    "referenceOriginalSize": [
+      1440,
+      4120
+    ],
+    "referenceNormalizedHeight": 4120,
+    "nativeCaptureSizes": [
+      [
+        1432,
+        895
+      ],
+      [
+        1432,
+        895
+      ],
+      [
+        1432,
+        895
+      ],
+      [
+        1432,
+        895
+      ],
+      [
+        1432,
+        895
+      ]
+    ],
+    "captureNormalization": "native JPEG uniformly resized to DOM viewport; approximate comparison only",
+    "overflow": 0,
+    "stitchGaps": [],
+    "artifact": "visual-qa/solutions/1440"
+  },
+  {
+    "route": "/san-pham",
+    "width": 1440,
+    "height": 900,
+    "actualHeight": 2903,
+    "referenceOriginalSize": [
+      1440,
+      3130
+    ],
+    "referenceNormalizedHeight": 3130,
+    "nativeCaptureSizes": [
+      [
+        1432,
+        895
+      ],
+      [
+        1432,
+        895
+      ],
+      [
+        1432,
+        895
+      ],
+      [
+        1432,
+        895
+      ]
+    ],
+    "captureNormalization": "native JPEG uniformly resized to DOM viewport; approximate comparison only",
+    "overflow": 0,
+    "stitchGaps": [],
+    "artifact": "visual-qa/products/1440"
+  },
+  {
+    "route": "/du-an",
+    "width": 1440,
+    "height": 900,
+    "actualHeight": 2323,
+    "referenceOriginalSize": [
+      1440,
+      2903
+    ],
+    "referenceNormalizedHeight": 2903,
+    "nativeCaptureSizes": [
+      [
+        1432,
+        895
+      ],
+      [
+        1432,
+        895
+      ],
+      [
+        1432,
+        895
+      ]
+    ],
+    "captureNormalization": "native JPEG uniformly resized to DOM viewport; approximate comparison only",
+    "overflow": 0,
+    "stitchGaps": [],
+    "artifact": "visual-qa/projects/1440"
+  },
+  {
+    "route": "/tin-tuc",
+    "width": 1440,
+    "height": 900,
+    "actualHeight": 2363,
+    "referenceOriginalSize": [
+      1440,
+      3354
+    ],
+    "referenceNormalizedHeight": 3354,
+    "nativeCaptureSizes": [
+      [
+        1432,
+        895
+      ],
+      [
+        1432,
+        895
+      ],
+      [
+        1432,
+        895
+      ]
+    ],
+    "captureNormalization": "native JPEG uniformly resized to DOM viewport; approximate comparison only",
+    "overflow": 0,
+    "stitchGaps": [],
+    "artifact": "visual-qa/news/1440"
+  },
+  {
+    "route": "/lien-he",
+    "width": 1440,
+    "height": 900,
+    "actualHeight": 2823,
+    "referenceOriginalSize": [
+      1440,
+      2951
+    ],
+    "referenceNormalizedHeight": 2951,
+    "nativeCaptureSizes": [
+      [
+        1432,
+        895
+      ],
+      [
+        1432,
+        895
+      ],
+      [
+        1432,
+        895
+      ],
+      [
+        1432,
+        895
+      ]
+    ],
+    "captureNormalization": "native JPEG uniformly resized to DOM viewport; approximate comparison only",
+    "overflow": 0,
+    "stitchGaps": [],
+    "artifact": "visual-qa/contact/1440"
+  },
+  {
+    "route": "/",
+    "width": 390,
+    "height": 844,
+    "actualHeight": 3468,
+    "referenceOriginalSize": [
+      724,
+      2172
+    ],
+    "referenceNormalizedHeight": 1170,
+    "nativeCaptureSizes": [
+      [
+        382,
+        827
+      ],
+      [
+        382,
+        827
+      ],
+      [
+        382,
+        827
+      ],
+      [
+        382,
+        827
+      ],
+      [
+        382,
+        827
+      ]
+    ],
+    "captureNormalization": "native JPEG uniformly resized to DOM viewport; approximate comparison only",
+    "overflow": 0,
+    "stitchGaps": [
+      [
+        764,
+        802
+      ],
+      [
+        1502,
+        1540
+      ],
+      [
+        2240,
+        2278
+      ]
+    ],
+    "artifact": "visual-qa/home/390"
+  },
+  {
+    "route": "/gioi-thieu",
+    "width": 390,
+    "height": 844,
+    "actualHeight": 5356,
+    "referenceOriginalSize": [
+      390,
+      5624
+    ],
+    "referenceNormalizedHeight": 5624,
+    "nativeCaptureSizes": [
+      [
+        382,
+        827
+      ],
+      [
+        382,
+        827
+      ],
+      [
+        382,
+        827
+      ],
+      [
+        382,
+        827
+      ],
+      [
+        382,
+        827
+      ],
+      [
+        382,
+        827
+      ],
+      [
+        382,
+        827
+      ],
+      [
+        382,
+        827
+      ]
+    ],
+    "captureNormalization": "native JPEG uniformly resized to DOM viewport; approximate comparison only",
+    "overflow": 0,
+    "stitchGaps": [
+      [
+        764,
+        802
+      ],
+      [
+        1502,
+        1540
+      ],
+      [
+        2240,
+        2278
+      ],
+      [
+        2978,
+        3016
+      ],
+      [
+        3716,
+        3754
+      ],
+      [
+        4454,
+        4492
+      ]
+    ],
+    "artifact": "visual-qa/about/390"
+  },
+  {
+    "route": "/giai-phap",
+    "width": 390,
+    "height": 844,
+    "actualHeight": 5623,
+    "referenceOriginalSize": [
+      390,
+      5639
+    ],
+    "referenceNormalizedHeight": 5639,
+    "nativeCaptureSizes": [
+      [
+        382,
+        827
+      ],
+      [
+        382,
+        827
+      ],
+      [
+        382,
+        827
+      ],
+      [
+        382,
+        827
+      ],
+      [
+        382,
+        827
+      ],
+      [
+        382,
+        827
+      ],
+      [
+        382,
+        827
+      ],
+      [
+        382,
+        827
+      ]
+    ],
+    "captureNormalization": "native JPEG uniformly resized to DOM viewport; approximate comparison only",
+    "overflow": 0,
+    "stitchGaps": [
+      [
+        764,
+        802
+      ],
+      [
+        1502,
+        1540
+      ],
+      [
+        2240,
+        2278
+      ],
+      [
+        2978,
+        3016
+      ],
+      [
+        3716,
+        3754
+      ],
+      [
+        4454,
+        4492
+      ]
+    ],
+    "artifact": "visual-qa/solutions/390"
+  },
+  {
+    "route": "/san-pham",
+    "width": 390,
+    "height": 844,
+    "actualHeight": 4019,
+    "referenceOriginalSize": [
+      390,
+      4476
+    ],
+    "referenceNormalizedHeight": 4476,
+    "nativeCaptureSizes": [
+      [
+        382,
+        827
+      ],
+      [
+        382,
+        827
+      ],
+      [
+        382,
+        827
+      ],
+      [
+        382,
+        827
+      ],
+      [
+        382,
+        827
+      ],
+      [
+        382,
+        827
+      ]
+    ],
+    "captureNormalization": "native JPEG uniformly resized to DOM viewport; approximate comparison only",
+    "overflow": 0,
+    "stitchGaps": [
+      [
+        764,
+        802
+      ],
+      [
+        1502,
+        1540
+      ],
+      [
+        2240,
+        2278
+      ],
+      [
+        2978,
+        3016
+      ]
+    ],
+    "artifact": "visual-qa/products/390"
+  },
+  {
+    "route": "/du-an",
+    "width": 390,
+    "height": 844,
+    "actualHeight": 3590,
+    "referenceOriginalSize": [
+      390,
+      4072
+    ],
+    "referenceNormalizedHeight": 4072,
+    "nativeCaptureSizes": [
+      [
+        382,
+        827
+      ],
+      [
+        382,
+        827
+      ],
+      [
+        382,
+        827
+      ],
+      [
+        382,
+        827
+      ],
+      [
+        382,
+        827
+      ]
+    ],
+    "captureNormalization": "native JPEG uniformly resized to DOM viewport; approximate comparison only",
+    "overflow": 0,
+    "stitchGaps": [
+      [
+        764,
+        802
+      ],
+      [
+        1502,
+        1540
+      ],
+      [
+        2240,
+        2278
+      ]
+    ],
+    "artifact": "visual-qa/projects/390"
+  },
+  {
+    "route": "/tin-tuc",
+    "width": 390,
+    "height": 844,
+    "actualHeight": 2693,
+    "referenceOriginalSize": [
+      390,
+      4173
+    ],
+    "referenceNormalizedHeight": 4173,
+    "nativeCaptureSizes": [
+      [
+        382,
+        827
+      ],
+      [
+        382,
+        827
+      ],
+      [
+        382,
+        827
+      ],
+      [
+        382,
+        827
+      ]
+    ],
+    "captureNormalization": "native JPEG uniformly resized to DOM viewport; approximate comparison only",
+    "overflow": 0,
+    "stitchGaps": [
+      [
+        764,
+        802
+      ],
+      [
+        1502,
+        1540
+      ]
+    ],
+    "artifact": "visual-qa/news/390"
+  },
+  {
+    "route": "/lien-he",
+    "width": 390,
+    "height": 844,
+    "actualHeight": 3974,
+    "referenceOriginalSize": [
+      390,
+      4737
+    ],
+    "referenceNormalizedHeight": 4737,
+    "nativeCaptureSizes": [
+      [
+        382,
+        827
+      ],
+      [
+        382,
+        827
+      ],
+      [
+        382,
+        827
+      ],
+      [
+        382,
+        827
+      ],
+      [
+        382,
+        827
+      ],
+      [
+        382,
+        827
+      ]
+    ],
+    "captureNormalization": "native JPEG uniformly resized to DOM viewport; approximate comparison only",
+    "overflow": 0,
+    "stitchGaps": [
+      [
+        764,
+        802
+      ],
+      [
+        1502,
+        1540
+      ],
+      [
+        2240,
+        2278
+      ],
+      [
+        2978,
+        3016
+      ]
+    ],
+    "artifact": "visual-qa/contact/390"
+  }
+]

@@ -1,6 +1,19 @@
 import { Metadata } from 'next';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://bmsolar.vn';
+function getSiteUrl(): string {
+  if (process.env.NEXT_PUBLIC_SITE_URL) {
+    return process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, '');
+  }
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`.replace(/\/$/, '');
+  }
+  if (process.env.NODE_ENV === 'development') {
+    return 'http://localhost:3000';
+  }
+  return 'https://bmsolar.vn';
+}
+
+const SITE_URL = getSiteUrl();
 
 interface SEOProps {
   title?: string;
@@ -8,8 +21,14 @@ interface SEOProps {
   canonicalPath?: string;
   ogImage?: string;
   keywords?: string[];
+  noIndex?: boolean;
 }
 
+/**
+ * Constructs standard Next.js metadata with verified canonicals,
+ * OpenGraph, Twitter, icons, and language alternates.
+ * Strips duplicate brand suffixes to prevent double branding with template.
+ */
 export function constructMetadata({
   title = 'BM SOLAR — Tổng Thầu EPC Điện Mặt Trời & Lưu Trữ Năng Lượng',
   description = 'BM SOLAR chuyên tư vấn, thiết kế và thi công trọn gói điện mặt trời mái nhà hòa lưới, pin lưu trữ BESS và trạm sạc EV tại Quy Nhơn, TP.HCM.',
@@ -24,27 +43,42 @@ export function constructMetadata({
     'pin lưu trữ lithium BESS',
     'tổng thầu EPC solar',
   ],
+  noIndex = false,
 }: SEOProps = {}): Metadata {
-  const canonicalUrl = `${SITE_URL}${canonicalPath === '/' ? '' : canonicalPath}`;
-  const imageUrl = ogImage.startsWith('http') ? ogImage : `${SITE_URL}${ogImage}`;
+  const cleanPath = canonicalPath.startsWith('/') ? canonicalPath : `/${canonicalPath}`;
+  const canonicalUrl = `${SITE_URL}${cleanPath === '/' ? '' : cleanPath.replace(/\/$/, '')}`;
+  const imageUrl = ogImage.startsWith('http') ? ogImage : `${SITE_URL}${ogImage.startsWith('/') ? '' : '/'}${ogImage}`;
+
+  // Prevent title/template duplication: remove trailing ' | BM SOLAR...' from child page titles
+  const cleanTitle = title.replace(/\s*\|\s*BM\s+SOLAR(?:\s+Việt\s+Nam)?$/i, '').trim();
+  const effectiveTitle = cleanTitle.length > 0 ? cleanTitle : title;
 
   return {
+    metadataBase: new URL(SITE_URL),
     title: {
-      default: title,
+      default: effectiveTitle,
       template: '%s | BM SOLAR Việt Nam',
     },
     description,
     keywords,
-    metadataBase: new URL(SITE_URL),
+    icons: {
+      icon: [
+        { url: '/images/logo.png', sizes: 'any', type: 'image/png' },
+      ],
+      shortcut: '/images/logo.png',
+      apple: [
+        { url: '/images/logo.png', sizes: '180x180', type: 'image/png' },
+      ],
+    },
     alternates: {
       canonical: canonicalUrl,
       languages: {
         'vi-VN': canonicalUrl,
-        'en-US': `${canonicalUrl}${canonicalUrl.includes('?') ? '&' : '?'}lang=en`,
+        'x-default': canonicalUrl,
       },
     },
     openGraph: {
-      title,
+      title: effectiveTitle,
       description,
       url: canonicalUrl,
       siteName: 'BM SOLAR Việt Nam',
@@ -53,7 +87,7 @@ export function constructMetadata({
           url: imageUrl,
           width: 1200,
           height: 630,
-          alt: title,
+          alt: effectiveTitle,
         },
       ],
       locale: 'vi_VN',
@@ -61,59 +95,25 @@ export function constructMetadata({
     },
     twitter: {
       card: 'summary_large_image',
-      title,
+      title: effectiveTitle,
       description,
       images: [imageUrl],
     },
-    robots: {
-      index: true,
-      follow: true,
-      googleBot: {
-        index: true,
-        follow: true,
-        'max-video-preview': -1,
-        'max-image-preview': 'large',
-        'max-snippet': -1,
-      },
-    },
+    robots: noIndex
+      ? {
+          index: false,
+          follow: false,
+        }
+      : {
+          index: true,
+          follow: true,
+          googleBot: {
+            index: true,
+            follow: true,
+            'max-video-preview': -1,
+            'max-image-preview': 'large',
+            'max-snippet': -1,
+          },
+        },
   };
 }
-
-export function generateOrganizationSchema() {
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'LocalBusiness',
-    name: 'Công ty TNHH Năng Lượng BM SOLAR',
-    alternateName: 'BM SOLAR Việt Nam',
-    url: 'https://bmsolar.vn',
-    logo: 'https://bmsolar.vn/images/logo.png',
-    image: 'https://bmsolar.vn/images/logo.png',
-    description: 'Tổng thầu EPC điện mặt trời, pin lưu trữ BESS và trạm sạc xe điện uy tín tại Việt Nam.',
-    telephone: '+84932456789',
-    email: 'kinhdoanh@bmsolar.vn',
-    priceRange: '$$$',
-    address: [
-      {
-        '@type': 'PostalAddress',
-        streetAddress: '01 Lê Duẩn, P. Lý Thường Kiệt',
-        addressLocality: 'TP. Quy Nhơn',
-        addressRegion: 'Bình Định',
-        addressCountry: 'VN',
-      },
-      {
-        '@type': 'PostalAddress',
-        streetAddress: '568 Quang Trung, Phường 11',
-        addressLocality: 'Quận Gò Vấp',
-        addressRegion: 'TP. Hồ Chí Minh',
-        addressCountry: 'VN',
-      },
-    ],
-    openingHoursSpecification: {
-      '@type': 'OpeningHoursSpecification',
-      dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
-      opens: '07:30',
-      closes: '17:30',
-    },
-  };
-}
-

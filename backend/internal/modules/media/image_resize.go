@@ -28,7 +28,7 @@ func fitImage(source image.Image, maxW, maxH int) image.Image {
 			blend := func(a, c, d, e uint8) uint8 {
 				return uint8(math.Round((float64(a)*(1-fx)+float64(c)*fx)*(1-fy) + (float64(d)*(1-fx)+float64(e)*fx)*fy))
 			}
-			out.SetNRGBA(x, y, color.NRGBA{R: blend(a.R, c.R, d.R, e.R), G: blend(a.G, c.G, d.G, e.G), B: blend(a.B, c.B, d.B, e.B), A: 255})
+			out.SetNRGBA(x, y, color.NRGBA{R: blend(a.R, c.R, d.R, e.R), G: blend(a.G, c.G, d.G, e.G), B: blend(a.B, c.B, d.B, e.B), A: blend(a.A, c.A, d.A, e.A)})
 		}
 	}
 	return out

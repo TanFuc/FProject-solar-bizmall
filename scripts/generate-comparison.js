@@ -95,3 +95,4 @@ function showTab(slug, btn) {
 
 fs.writeFileSync('test-results/visual-comparison-report.html', html, 'utf-8');
 console.log('Report generated at test-results/visual-comparison-report.html');
+

@@ -1,4 +1,5 @@
 'use client';
+import {channelUrl} from '@/lib/contacts/channelUrl';
 
 import React from 'react';
 import { useBranch } from '@/lib/contacts/branchContext';
@@ -9,6 +10,7 @@ import { Phone, Mail } from 'lucide-react';
 export function TopBar() {
   const { branches, activeBranch, setActiveBranchSlug, activeHotline } = useBranch();
   const { t } = useTranslation();
+  const email=activeBranch?.channels.find(channel=>channel.type==='email');
 
   return (
     <aside
@@ -40,21 +42,21 @@ export function TopBar() {
         <div className="flex items-center gap-4 text-xs">
           {activeHotline && (
             <a
-              href={activeHotline.actionUrl || `tel:${activeHotline.target}`}
+              href={channelUrl(activeHotline)}
               className="flex items-center gap-1.5 text-white/90 hover:text-white transition-colors"
             >
               <Phone className="w-3.5 h-3.5 text-accent-orange" />
-              <span>{activeHotline.formatted || '1900 026 689'}</span>
+              <span>{activeHotline.formatted || activeHotline.target}</span>
             </a>
           )}
 
-          <a
-            href="mailto:info@bmsolar.vn"
+          {email&&<a
+            href={channelUrl(email)}
             className="flex items-center gap-1.5 text-white/80 hover:text-white transition-colors"
           >
             <Mail className="w-3.5 h-3.5 text-accent-orange/80" />
-            <span>info@bmsolar.vn</span>
-          </a>
+            <span>{email.target}</span>
+          </a>}
 
           {/* Language Switcher */}
           <div className="flex items-center gap-2.5 border-l border-white/15 pl-3">

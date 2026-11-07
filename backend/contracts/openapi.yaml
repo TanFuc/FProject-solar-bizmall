@@ -373,6 +373,96 @@ paths:
         '200':
           description: Status transition executed and logged
 
+  /admin/media/upload:
+    post:
+      operationId: uploadMedia
+      tags: [Media]
+      summary: Upload, process and register media with real resized variants
+      description: Requires cms.page.update. The local configuration limits files to 25 MiB. R2 errors fail the request.
+      security: [{BearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: {type: string, format: binary}
+      responses:
+        '201':
+          description: Registered asset and actual variant URLs
+        '400': {description: Invalid file or upload limit exceeded}
+        '401': {description: Authentication required}
+        '403': {description: Missing cms.page.update permission}
+        '500': {description: Storage or database failure}
+  /admin/media:
+    get:
+      operationId: listMedia
+      tags: [Media]
+      summary: Paginated registered media library
+      security: [{BearerAuth: []}]
+      description: Requires cms.page.read. URL points to the original asset; published references resolve replacements.
+      responses:
+        '200': {description: Media rows with URLs, metadata and variant dimensions}
+        '401': {description: Authentication required}
+        '403': {description: Missing cms.page.read permission}
+  /admin/media/{id}/replacement:
+    put:
+      operationId: replaceMediaUsage
+      tags: [Media]
+      summary: Replace an image across published references or restore its original
+      security: [{BearerAuth: []}]
+      parameters:
+        - {name: id, in: path, required: true, schema: {type: string}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [replacementId]
+              properties:
+                replacementId:
+                  type: [string, 'null']
+                  description: Ready target asset ID; explicit null restores the source image.
+      responses:
+        '200':
+          description: Updated effective URL; original files and revisions remain intact
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [id, replacementId, url]
+                    properties:
+                      id: {type: string}
+                      replacementId: {type: [string, 'null']}
+                      url: {type: string}
+        '400': {description: Missing or invalid replacementId}
+        '401': {description: Authentication required}
+        '403': {description: Missing cms.page.update permission}
+        '404': {description: Source or replacement not found}
+        '422': {description: Cyclic or excessive replacement chain}
+  /public/brands:
+    get:
+      operationId: listPublicBrands
+      tags: [Public]
+      summary: Catalog brands with resolved optional logo URLs
+      responses:
+        '200': {description: Brand id, slug, name and optional logoUrl}
+  /public/tags:
+    get:
+      operationId: listPublishedArticleTags
+      tags: [Public]
+      summary: Tags linked to published articles
+      responses:
+        '200': {description: Tag records including slug and displayName}
+
 components:
   securitySchemes:
     BearerAuth:

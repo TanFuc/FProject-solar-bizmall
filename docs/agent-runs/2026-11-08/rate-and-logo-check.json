@@ -1,0 +1,19 @@
+{
+  "getRequests": 100,
+  "statusCounts": {
+    "200": 100
+  },
+  "logo": {
+    "url": "https://images.bizmallgroup.com/01M6W6CBT88R2QD2XK42KJTCKD.png",
+    "status": 200,
+    "format": "png",
+    "hasAlpha": true,
+    "alphaMin": 0
+  },
+  "thumbnail": {
+    "status": 200,
+    "format": "png",
+    "hasAlpha": true,
+    "alphaMin": 0
+  }
+}

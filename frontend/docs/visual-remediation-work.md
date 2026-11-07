@@ -51,3 +51,8 @@ Remaining:
 9 Write mandatory docs/page-anatomy/<route>.md, visual-qa/report.md with exact refmapping, source vs actual widths, status/missing data/assets. Capture all7desktop1440/mobile390 (+360/768 responsiveness) via CUA only. Existing shell Playwright scripts should NOT be used because browser control all via CUA. Generate comparison/diffs from saved screenshot image files using image analysis libraries (no website browser bypass), honest metrics only comparable aligned regions. User explicitly requested compare screenshots. Save screenshots embed final proof.
 10 Verify actual backend upload API and public image fetch; unauth upload must401; validate forms no fake lead success. R2 originals uploaded via service/seed verified but API admin flow not yet end-to-end.
 11 No Git commits/deploy requested. Preserve all existing edits. No secret outputs. Report no100% until measured; generated photos are approximate and real DB counts differ from synthetic refs. Continue until all feasible work complete, not stop at source reports.
+
+
+## Local verification handoff — 2026-11-07
+
+User clarified the production website is future-only. Local backend/R2 upload and CMS publication were exercised. See `visual-qa/report.md` for exact evidence and limitations; do not claim 100% fidelity, completed browser admin sign-in, or production deployment. Local backend runs `bin/bmsolar-local-ready.exe`; frontend dev remains on 3000. Original Antigravity baseline is commit 6e3244f; this task did not commit or push.

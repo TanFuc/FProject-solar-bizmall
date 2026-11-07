@@ -4,65 +4,161 @@ import {
   ArticleItem,
   ProjectItem,
   BranchItem,
+  SiteShellData,
 } from '@/types/bmsolar-api';
 import { DetailedSolution } from '@/lib/api/mockData';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://bmsolar.vn';
+function getSiteUrl(): string {
+  if (process.env.NEXT_PUBLIC_SITE_URL) {
+    return process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, '');
+  }
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`.replace(/\/$/, '');
+  }
+  if (process.env.NODE_ENV === 'development') {
+    return 'http://localhost:3000';
+  }
+  return 'https://bmsolar.vn';
+}
+
+const SITE_URL = getSiteUrl();
 
 export interface BreadcrumbItem {
   name: string;
   url: string;
 }
 
+export interface PostalAddressSchema {
+  '@type': 'PostalAddress';
+  streetAddress: string;
+  addressLocality?: string;
+  addressRegion?: string;
+  postalCode?: string;
+  addressCountry: string;
+}
+
+export interface ContactPointSchema {
+  '@type': 'ContactPoint';
+  telephone: string;
+  contactType: string;
+  areaServed: string;
+  availableLanguage?: string[];
+}
+
+export interface OrganizationSchema {
+  '@context': 'https://schema.org';
+  '@type': 'Organization';
+  '@id': string;
+  name: string;
+  alternateName?: string;
+  url: string;
+  logo: string;
+  image: string;
+  description: string;
+  sameAs?: string[];
+  telephone?: string;
+  email?: string;
+  contactPoint?: ContactPointSchema[];
+  address?: PostalAddressSchema[];
+}
+
+export interface LocalBusinessSchema {
+  '@context': 'https://schema.org';
+  '@type': 'LocalBusiness';
+  '@id': string;
+  name: string;
+  url: string;
+  telephone?: string;
+  email?: string;
+  image: string;
+  priceRange: string;
+  address?: PostalAddressSchema;
+  parentOrganization?: {
+    '@id': string;
+  };
+}
+
 /**
- * Generates Schema.org Organization structured data.
+ * Generates Schema.org Organization structured data derived dynamically
+ * from live SiteShellData (brand, active branches, contact channels, social links).
+ * Does NOT emit factual branch schema or invented addresses when no live shell is provided.
  */
-export function getOrganizationSchema() {
-  return {
+export function getOrganizationSchema(shell?: Partial<SiteShellData> | null): OrganizationSchema {
+  const brandName = shell?.brand?.name || 'BM SOLAR';
+  const logoUrl = shell?.brand?.logo?.url
+    ? shell.brand.logo.url.startsWith('http')
+      ? shell.brand.logo.url
+      : `${SITE_URL}${shell.brand.logo.url.startsWith('/') ? '' : '/'}${shell.brand.logo.url}`
+    : `${SITE_URL}/images/logo.png`;
+
+  // Dynamically derive social links from footer
+  const sameAs: string[] = [];
+  if (Array.isArray(shell?.footer?.socialLinks)) {
+    for (const link of shell.footer.socialLinks) {
+      if (link.target && (link.target.startsWith('http://') || link.target.startsWith('https://'))) {
+        sameAs.push(link.target);
+      }
+    }
+  }
+
+  // Dynamically derive contact points and addresses from active branches in shell
+  const contactPoints: ContactPointSchema[] = [];
+  const activeBranches = Array.isArray(shell?.utilityBar?.branches)
+    ? shell.utilityBar.branches.filter((b) => b.isActive)
+    : [];
+
+  for (const branch of activeBranches) {
+    if (Array.isArray(branch.channels)) {
+      for (const ch of branch.channels) {
+        if (ch.type === 'phone' && ch.target) {
+          contactPoints.push({
+            '@type': 'ContactPoint',
+            telephone: ch.target,
+            contactType: branch.name || 'customer service',
+            areaServed: 'VN',
+          });
+        }
+      }
+    }
+  }
+
+  // Derive addresses strictly from supplied active branches - no invented postal codes/coordinates
+  const addresses: PostalAddressSchema[] = activeBranches
+    .filter((b) => Boolean(b.streetAddress))
+    .map((b) => ({
+      '@type': 'PostalAddress',
+      streetAddress: b.streetAddress,
+      addressCountry: 'VN',
+    }));
+
+  const schema: OrganizationSchema = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
     '@id': `${SITE_URL}/#organization`,
-    name: 'Công ty TNHH Năng Lượng BM SOLAR',
+    name: brandName,
     alternateName: 'BM SOLAR Việt Nam',
     url: SITE_URL,
-    logo: `${SITE_URL}/images/logo.png`,
-    image: `${SITE_URL}/images/logo.png`,
+    logo: logoUrl,
+    image: logoUrl,
     description:
-      'Tổng thầu EPC điện mặt trời, pin lưu trữ BESS và trạm sạc xe điện uy tín tại Quy Nhơn, TP.HCM và toàn quốc.',
-    telephone: '+84932456789',
-    email: 'kinhdoanh@bmsolar.vn',
-    sameAs: [
-      'https://www.facebook.com/bmsolar.vn',
-      'https://zalo.me/0932456789',
-    ],
-    contactPoint: [
-      {
-        '@type': 'ContactPoint',
-        telephone: '+84932456789',
-        contactType: 'customer service',
-        areaServed: 'VN',
-        availableLanguage: ['Vietnamese', 'English'],
-      },
-    ],
-    address: [
-      {
-        '@type': 'PostalAddress',
-        streetAddress: '01 Lê Duẩn, P. Lý Thường Kiệt',
-        addressLocality: 'TP. Quy Nhơn',
-        addressRegion: 'Bình Định',
-        postalCode: '590000',
-        addressCountry: 'VN',
-      },
-      {
-        '@type': 'PostalAddress',
-        streetAddress: '568 Quang Trung, Phường 11',
-        addressLocality: 'Quận Gò Vấp',
-        addressRegion: 'TP. Hồ Chí Minh',
-        postalCode: '700000',
-        addressCountry: 'VN',
-      },
-    ],
+      'Tổng thầu EPC điện mặt trời, pin lưu trữ BESS và trạm sạc xe điện uy tín tại Việt Nam.',
   };
+
+  if (sameAs.length > 0) {
+    schema.sameAs = sameAs;
+  }
+  if (contactPoints.length > 0) {
+    schema.contactPoint = contactPoints;
+    const firstPhone = contactPoints[0]?.telephone;
+    if (firstPhone) {
+      schema.telephone = firstPhone;
+    }
+  }
+  if (addresses.length > 0) {
+    schema.address = addresses;
+  }
+
+  return schema;
 }
 
 /**
@@ -91,95 +187,57 @@ export function getWebSiteSchema() {
 }
 
 /**
- * Generates Schema.org LocalBusiness structured data for specific branch or default HQ.
+ * Generates Schema.org LocalBusiness structured data.
+ * Derives details directly from BranchItem when supplied.
+ * Legacy string calls do NOT fabricate branch facts, coordinates or postal codes.
  */
-export function getLocalBusinessSchema(branch?: 'quynhon' | 'tphcm' | BranchItem) {
+export function getLocalBusinessSchema(
+  branch?: 'quynhon' | 'tphcm' | 'go-vap' | 'quy-nhon' | BranchItem | string | null
+): LocalBusinessSchema {
   if (branch && typeof branch === 'object') {
-    return {
+    const phoneChannel = branch.channels?.find((c) => c.type === 'phone');
+    const emailChannel = branch.channels?.find((c) => c.type === 'email');
+    const schema: LocalBusinessSchema = {
       '@context': 'https://schema.org',
       '@type': 'LocalBusiness',
       '@id': `${SITE_URL}/#branch-${branch.slug}`,
-      name: `BM SOLAR — ${branch.name}`,
+      name: branch.name,
       url: `${SITE_URL}/lien-he`,
-      telephone: branch.channels.find((c) => c.type === 'phone')?.target || '+84932456789',
       image: `${SITE_URL}/images/logo.png`,
       priceRange: '$$$',
-      address: {
+      parentOrganization: {
+        '@id': `${SITE_URL}/#organization`,
+      },
+    };
+
+    if (branch.streetAddress) {
+      schema.address = {
         '@type': 'PostalAddress',
         streetAddress: branch.streetAddress,
         addressCountry: 'VN',
-      },
-      openingHoursSpecification: {
-        '@type': 'OpeningHoursSpecification',
-        dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
-        opens: '07:30',
-        closes: '17:30',
-      },
-    };
+      };
+    }
+    if (phoneChannel?.target) {
+      schema.telephone = phoneChannel.target;
+    }
+    if (emailChannel?.target) {
+      schema.email = emailChannel.target;
+    }
+    return schema;
   }
 
-  if (branch === 'tphcm') {
-    return {
-      '@context': 'https://schema.org',
-      '@type': 'LocalBusiness',
-      '@id': `${SITE_URL}/#branch-tphcm`,
-      name: 'BM SOLAR — Văn Phòng Đại Diện TP. Hồ Chí Minh',
-      url: `${SITE_URL}/lien-he`,
-      telephone: '+84987654321',
-      email: 'hcm@bmsolar.vn',
-      image: `${SITE_URL}/images/logo.png`,
-      priceRange: '$$$',
-      address: {
-        '@type': 'PostalAddress',
-        streetAddress: '568 Quang Trung, Phường 11',
-        addressLocality: 'Quận Gò Vấp',
-        addressRegion: 'TP. Hồ Chí Minh',
-        postalCode: '700000',
-        addressCountry: 'VN',
-      },
-      geo: {
-        '@type': 'GeoCoordinates',
-        latitude: 10.8427,
-        longitude: 106.6578,
-      },
-      openingHoursSpecification: {
-        '@type': 'OpeningHoursSpecification',
-        dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
-        opens: '07:30',
-        closes: '17:30',
-      },
-    };
-  }
-
-  // Default Quy Nhơn HQ
+  // When only legacy string or no BranchItem is supplied, do NOT fabricate branch facts.
+  const branchSlug = typeof branch === 'string' ? branch : 'headquarters';
   return {
     '@context': 'https://schema.org',
     '@type': 'LocalBusiness',
-    '@id': `${SITE_URL}/#headquarters-quynhon`,
-    name: 'BM SOLAR — Trụ Sở Chính Quy Nhơn',
+    '@id': `${SITE_URL}/#branch-${branchSlug}`,
+    name: 'BM SOLAR',
     url: `${SITE_URL}/lien-he`,
-    telephone: '+84932456789',
-    email: 'kinhdoanh@bmsolar.vn',
     image: `${SITE_URL}/images/logo.png`,
     priceRange: '$$$',
-    address: {
-      '@type': 'PostalAddress',
-      streetAddress: '01 Lê Duẩn, P. Lý Thường Kiệt',
-      addressLocality: 'TP. Quy Nhơn',
-      addressRegion: 'Bình Định',
-      postalCode: '590000',
-      addressCountry: 'VN',
-    },
-    geo: {
-      '@type': 'GeoCoordinates',
-      latitude: 13.7745,
-      longitude: 109.2215,
-    },
-    openingHoursSpecification: {
-      '@type': 'OpeningHoursSpecification',
-      dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
-      opens: '07:30',
-      closes: '17:30',
+    parentOrganization: {
+      '@id': `${SITE_URL}/#organization`,
     },
   };
 }
@@ -209,7 +267,7 @@ export function getProductSchema(product: ProductDetail | ProductCard) {
     schema.category = product.category.name;
   }
 
-  // Grounded pricing: only emit Offer if real price is verified
+  // Grounded pricing: only emit Offer if real verified price is present
   if (product.priceEstimate && !product.priceEstimate.toLowerCase().includes('liên hệ')) {
     schema.offers = {
       '@type': 'Offer',
@@ -272,9 +330,7 @@ export function getSolutionSchema(solution: DetailedSolution) {
     serviceType: 'Tổng Thầu EPC Điện Mặt Trời & Lưu Trữ BESS',
     description: solution.subtitle || solution.overview,
     provider: {
-      '@type': 'Organization',
-      name: 'BM SOLAR Việt Nam',
-      url: SITE_URL,
+      '@id': `${SITE_URL}/#organization`,
     },
     areaServed: {
       '@type': 'Country',
@@ -293,8 +349,7 @@ export function getProjectSchema(project: ProjectItem) {
     name: project.title,
     description: project.summary,
     creator: {
-      '@type': 'Organization',
-      name: 'BM SOLAR Việt Nam',
+      '@id': `${SITE_URL}/#organization`,
     },
     locationCreated: {
       '@type': 'Place',

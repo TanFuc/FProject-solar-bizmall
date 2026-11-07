@@ -1,0 +1,771 @@
+[
+  {
+    "slug": "",
+    "name": "home",
+    "width": 1440,
+    "height": 900,
+    "shots": [
+      {
+        "doc": 2614,
+        "height": 900,
+        "overflow": 0,
+        "width": 1440,
+        "y": 0,
+        "file": "home-1440-0.jpg"
+      },
+      {
+        "doc": 2614,
+        "height": 900,
+        "overflow": 0,
+        "width": 1440,
+        "y": 787,
+        "file": "home-1440-1.jpg"
+      },
+      {
+        "doc": 2614,
+        "height": 900,
+        "overflow": 0,
+        "width": 1440,
+        "y": 1574,
+        "file": "home-1440-2.jpg"
+      },
+      {
+        "doc": 2614,
+        "height": 900,
+        "overflow": 0,
+        "width": 1440,
+        "y": 1714,
+        "file": "home-1440-3.jpg"
+      }
+    ],
+    "headings": [
+      "Giải pháp\nNăng lượng xanhtoàn diện",
+      "Tấm pin năng lượng mặt trời",
+      "Biến tần Inverter",
+      "Pin lưu trữ Lithium (ESS)",
+      "Trạm sạc xe điện",
+      "Phụ kiện & Khung giá đỡ",
+      "Chọn giải pháp phù hợp với bạn",
+      "Thiết bị chính hãng – Hiệu suất cao",
+      "Những công trình đã triển khai",
+      "Vì sao chọn BM SOLAR?",
+      "Cập nhật xu hướng năng lượng xanh",
+      "Thương hiệu thiết bị",
+      "Nhận tư vấn giải pháp"
+    ]
+  },
+  {
+    "slug": "gioi-thieu",
+    "name": "about",
+    "width": 1440,
+    "height": 900,
+    "shots": [
+      {
+        "doc": 3659,
+        "height": 900,
+        "overflow": 0,
+        "width": 1440,
+        "y": 0,
+        "file": "about-1440-0.jpg"
+      },
+      {
+        "doc": 3659,
+        "height": 900,
+        "overflow": 0,
+        "width": 1440,
+        "y": 787,
+        "file": "about-1440-1.jpg"
+      },
+      {
+        "doc": 3659,
+        "height": 900,
+        "overflow": 0,
+        "width": 1440,
+        "y": 1574,
+        "file": "about-1440-2.jpg"
+      },
+      {
+        "doc": 3659,
+        "height": 900,
+        "overflow": 0,
+        "width": 1440,
+        "y": 2361,
+        "file": "about-1440-3.jpg"
+      },
+      {
+        "doc": 3659,
+        "height": 900,
+        "overflow": 0,
+        "width": 1440,
+        "y": 2759,
+        "file": "about-1440-4.jpg"
+      }
+    ],
+    "headings": [
+      "Kiến tạo tương lainăng lượng xanh",
+      "BM SOLAR — Nơi công nghệ gặp nhu cầu thực tế",
+      "Tầm nhìn • Sứ mệnh • Giá trị cốt lõi",
+      "Một hệ thống — Nhiều giá trị",
+      "Trải nghiệm rõ ràng. Quy trình minh bạch.",
+      "Khám phá BM SOLAR qua hình ảnh",
+      "Bắt đầu hành trìnhnăng lượng xanh của bạn"
+    ]
+  },
+  {
+    "slug": "giai-phap",
+    "name": "solutions",
+    "width": 1440,
+    "height": 900,
+    "shots": [
+      {
+        "doc": 4016,
+        "height": 900,
+        "overflow": 0,
+        "width": 1440,
+        "y": 0,
+        "file": "solutions-1440-0.jpg"
+      },
+      {
+        "doc": 4016,
+        "height": 900,
+        "overflow": 0,
+        "width": 1440,
+        "y": 787,
+        "file": "solutions-1440-1.jpg"
+      },
+      {
+        "doc": 4016,
+        "height": 900,
+        "overflow": 0,
+        "width": 1440,
+        "y": 1574,
+        "file": "solutions-1440-2.jpg"
+      },
+      {
+        "doc": 4016,
+        "height": 900,
+        "overflow": 0,
+        "width": 1440,
+        "y": 2361,
+        "file": "solutions-1440-3.jpg"
+      },
+      {
+        "doc": 4016,
+        "height": 900,
+        "overflow": 0,
+        "width": 1440,
+        "y": 3116,
+        "file": "solutions-1440-4.jpg"
+      }
+    ],
+    "headings": [
+      "Giải pháp năng lượng xanhcho mọi nhu cầu",
+      "Giải pháp dành riêng cho bạn",
+      "Từ nhu cầu đến hệ thống phù hợp",
+      "Từ nguồn điện đến điểm sử dụng",
+      "Trải nghiệm rõ ràng. Quy trình minh bạch.",
+      "Bắt đầu hành trìnhnăng lượng xanh của bạn"
+    ]
+  },
+  {
+    "slug": "san-pham",
+    "name": "products",
+    "width": 1440,
+    "height": 900,
+    "shots": [
+      {
+        "doc": 2903,
+        "height": 900,
+        "overflow": 0,
+        "width": 1440,
+        "y": 0,
+        "file": "products-1440-0.jpg"
+      },
+      {
+        "doc": 2903,
+        "height": 900,
+        "overflow": 0,
+        "width": 1440,
+        "y": 787,
+        "file": "products-1440-1.jpg"
+      },
+      {
+        "doc": 2903,
+        "height": 900,
+        "overflow": 0,
+        "width": 1440,
+        "y": 1574,
+        "file": "products-1440-2.jpg"
+      },
+      {
+        "doc": 2903,
+        "height": 900,
+        "overflow": 0,
+        "width": 1440,
+        "y": 2003,
+        "file": "products-1440-3.jpg"
+      }
+    ],
+    "headings": [
+      "Thiết bị năng lượng xanhchính hãng · đồng bộ",
+      "Thiết bị chính hãng – Hiệu suất cao",
+      "Tấm pin năng lượng mặt trời",
+      "Biến tần Inverter",
+      "Pin lưu trữ Lithium (ESS)",
+      "Trạm sạc xe điện",
+      "Phụ kiện & Khung giá đỡ",
+      "Chọn giải pháp phù hợp với bạn",
+      "Giải Pháp Điện Mặt Trời Chuyên Sâu",
+      "Bắt đầu hành trìnhnăng lượng xanh của bạn"
+    ]
+  },
+  {
+    "slug": "du-an",
+    "name": "projects",
+    "width": 1440,
+    "height": 900,
+    "shots": [
+      {
+        "doc": 2323,
+        "height": 900,
+        "overflow": 0,
+        "width": 1440,
+        "y": 0,
+        "file": "projects-1440-0.jpg"
+      },
+      {
+        "doc": 2323,
+        "height": 900,
+        "overflow": 0,
+        "width": 1440,
+        "y": 787,
+        "file": "projects-1440-1.jpg"
+      },
+      {
+        "doc": 2323,
+        "height": 900,
+        "overflow": 0,
+        "width": 1440,
+        "y": 1423,
+        "file": "projects-1440-2.jpg"
+      }
+    ],
+    "headings": [
+      "Dự án tiêu biểuGiá trị xanh bền vững",
+      "Những công trình đã triển khai",
+      "Đồng hành từ ý tưởng đến vận hành",
+      "Bắt đầu hành trìnhnăng lượng xanh của bạn"
+    ]
+  },
+  {
+    "slug": "tin-tuc",
+    "name": "news",
+    "width": 1440,
+    "height": 900,
+    "shots": [
+      {
+        "doc": 2363,
+        "height": 900,
+        "overflow": 0,
+        "width": 1440,
+        "y": 0,
+        "file": "news-1440-0.jpg"
+      },
+      {
+        "doc": 2363,
+        "height": 900,
+        "overflow": 0,
+        "width": 1440,
+        "y": 787,
+        "file": "news-1440-1.jpg"
+      },
+      {
+        "doc": 2363,
+        "height": 900,
+        "overflow": 0,
+        "width": 1440,
+        "y": 1463,
+        "file": "news-1440-2.jpg"
+      }
+    ],
+    "headings": [
+      "Tin tức & Kiến thứcnăng lượng xanh",
+      "Góc nhìn & Kiến thức năng lượng",
+      "Cẩm Nang Chọn Biến Tần Inverter Hybrid Cho Gia Đình 2026",
+      "Kết nối cùng BM SOLAR",
+      "Bắt đầu hành trìnhnăng lượng xanh của bạn"
+    ]
+  },
+  {
+    "slug": "lien-he",
+    "name": "contact",
+    "width": 1440,
+    "height": 900,
+    "shots": [
+      {
+        "doc": 2823,
+        "height": 900,
+        "overflow": 0,
+        "width": 1440,
+        "y": 0,
+        "file": "contact-1440-0.jpg"
+      },
+      {
+        "doc": 2823,
+        "height": 900,
+        "overflow": 0,
+        "width": 1440,
+        "y": 787,
+        "file": "contact-1440-1.jpg"
+      },
+      {
+        "doc": 2823,
+        "height": 900,
+        "overflow": 0,
+        "width": 1440,
+        "y": 1574,
+        "file": "contact-1440-2.jpg"
+      },
+      {
+        "doc": 2823,
+        "height": 900,
+        "overflow": 0,
+        "width": 1440,
+        "y": 1923,
+        "file": "contact-1440-3.jpg"
+      }
+    ],
+    "headings": [
+      "Kết nối với BM SOLARChúng tôi luôn sẵn sàng",
+      "Chúng tôi sẵn sàng lắng nghe bạn",
+      "Nhận tư vấn giải pháp",
+      "Hệ thống chi nhánh",
+      "Câu hỏi thường gặp",
+      "Bắt đầu hành trìnhnăng lượng xanh của bạn"
+    ]
+  },
+  {
+    "slug": "",
+    "name": "home",
+    "width": 390,
+    "height": 844,
+    "shots": [
+      {
+        "doc": 3468,
+        "height": 844,
+        "overflow": 0,
+        "width": 390,
+        "y": 0,
+        "file": "home-390-0.jpg"
+      },
+      {
+        "doc": 3468,
+        "height": 844,
+        "overflow": 0,
+        "width": 390,
+        "y": 618,
+        "file": "home-390-1.jpg"
+      },
+      {
+        "doc": 3468,
+        "height": 844,
+        "overflow": 0,
+        "width": 390,
+        "y": 1236,
+        "file": "home-390-2.jpg"
+      },
+      {
+        "doc": 3468,
+        "height": 844,
+        "overflow": 0,
+        "width": 390,
+        "y": 1854,
+        "file": "home-390-3.jpg"
+      },
+      {
+        "doc": 3468,
+        "height": 844,
+        "overflow": 0,
+        "width": 390,
+        "y": 2472,
+        "file": "home-390-4.jpg"
+      },
+      {
+        "doc": 3468,
+        "height": 844,
+        "overflow": 0,
+        "width": 390,
+        "y": 2504,
+        "file": "home-390-5.jpg"
+      },
+      {
+        "doc": 3468,
+        "height": 844,
+        "overflow": 0,
+        "width": 390,
+        "y": 2504,
+        "file": "home-390-6.jpg"
+      },
+      {
+        "doc": 3468,
+        "height": 844,
+        "overflow": 0,
+        "width": 390,
+        "y": 2504,
+        "file": "home-390-7.jpg"
+      },
+      {
+        "doc": 3468,
+        "height": 844,
+        "overflow": 0,
+        "width": 390,
+        "y": 2504,
+        "file": "home-390-8.jpg"
+      },
+      {
+        "doc": 3468,
+        "height": 844,
+        "overflow": 0,
+        "width": 390,
+        "y": 2504,
+        "file": "home-390-9.jpg"
+      },
+      {
+        "doc": 3468,
+        "height": 844,
+        "overflow": 0,
+        "width": 390,
+        "y": 2504,
+        "file": "home-390-10.jpg"
+      },
+      {
+        "doc": 3468,
+        "height": 844,
+        "overflow": 0,
+        "width": 390,
+        "y": 2504,
+        "file": "home-390-11.jpg"
+      },
+      {
+        "doc": 3468,
+        "height": 844,
+        "overflow": 0,
+        "width": 390,
+        "y": 2504,
+        "file": "home-390-12.jpg"
+      },
+      {
+        "doc": 3468,
+        "height": 844,
+        "overflow": 0,
+        "width": 390,
+        "y": 2504,
+        "file": "home-390-13.jpg"
+      },
+      {
+        "doc": 3468,
+        "height": 844,
+        "overflow": 0,
+        "width": 390,
+        "y": 2504,
+        "file": "home-390-14.jpg"
+      },
+      {
+        "doc": 3468,
+        "height": 844,
+        "overflow": 0,
+        "width": 390,
+        "y": 2504,
+        "file": "home-390-15.jpg"
+      },
+      {
+        "doc": 3468,
+        "height": 844,
+        "overflow": 0,
+        "width": 390,
+        "y": 2504,
+        "file": "home-390-16.jpg"
+      },
+      {
+        "doc": 3468,
+        "height": 844,
+        "overflow": 0,
+        "width": 390,
+        "y": 2504,
+        "file": "home-390-17.jpg"
+      },
+      {
+        "doc": 3468,
+        "height": 844,
+        "overflow": 0,
+        "width": 390,
+        "y": 2504,
+        "file": "home-390-18.jpg"
+      },
+      {
+        "doc": 3468,
+        "height": 844,
+        "overflow": 0,
+        "width": 390,
+        "y": 2504,
+        "file": "home-390-19.jpg"
+      },
+      {
+        "doc": 3468,
+        "height": 844,
+        "overflow": 0,
+        "width": 390,
+        "y": 2504,
+        "file": "home-390-20.jpg"
+      },
+      {
+        "doc": 3468,
+        "height": 844,
+        "overflow": 0,
+        "width": 390,
+        "y": 2504,
+        "file": "home-390-21.jpg"
+      },
+      {
+        "doc": 3468,
+        "height": 844,
+        "overflow": 0,
+        "width": 390,
+        "y": 2504,
+        "file": "home-390-22.jpg"
+      },
+      {
+        "doc": 3468,
+        "height": 844,
+        "overflow": 0,
+        "width": 390,
+        "y": 2504,
+        "file": "home-390-23.jpg"
+      }
+    ],
+    "headings": [
+      "Giải pháp\nNăng lượng xanhtoàn diện",
+      "Tấm pin năng lượng mặt trời",
+      "Biến tần Inverter",
+      "Pin lưu trữ Lithium (ESS)",
+      "Trạm sạc xe điện",
+      "Phụ kiện & Khung giá đỡ",
+      "Chọn giải pháp phù hợp với bạn",
+      "Thiết bị chính hãng – Hiệu suất cao",
+      "Những công trình đã triển khai",
+      "Vì sao chọn BM SOLAR?",
+      "Cập nhật xu hướng năng lượng xanh",
+      "Thương hiệu thiết bị",
+      "Nhận tư vấn giải pháp"
+    ]
+  },
+  {
+    "slug": "gioi-thieu",
+    "name": "about",
+    "width": 390,
+    "height": 844,
+    "shots": [
+      {
+        "doc": 5305,
+        "height": 844,
+        "overflow": 0,
+        "width": 390,
+        "y": 0,
+        "file": "about-390-0.jpg"
+      },
+      {
+        "doc": 5305,
+        "height": 844,
+        "overflow": 0,
+        "width": 390,
+        "y": 618,
+        "file": "about-390-1.jpg"
+      },
+      {
+        "doc": 5305,
+        "height": 844,
+        "overflow": 0,
+        "width": 390,
+        "y": 1236,
+        "file": "about-390-2.jpg"
+      },
+      {
+        "doc": 5305,
+        "height": 844,
+        "overflow": 0,
+        "width": 390,
+        "y": 1854,
+        "file": "about-390-3.jpg"
+      },
+      {
+        "doc": 5305,
+        "height": 844,
+        "overflow": 0,
+        "width": 390,
+        "y": 2472,
+        "file": "about-390-4.jpg"
+      },
+      {
+        "doc": 5305,
+        "height": 844,
+        "overflow": 0,
+        "width": 390,
+        "y": 3090,
+        "file": "about-390-5.jpg"
+      },
+      {
+        "doc": 5305,
+        "height": 844,
+        "overflow": 0,
+        "width": 390,
+        "y": 3708,
+        "file": "about-390-6.jpg"
+      },
+      {
+        "doc": 5305,
+        "height": 844,
+        "overflow": 0,
+        "width": 390,
+        "y": 4326,
+        "file": "about-390-7.jpg"
+      },
+      {
+        "doc": 5305,
+        "height": 844,
+        "overflow": 0,
+        "width": 390,
+        "y": 4341,
+        "file": "about-390-8.jpg"
+      },
+      {
+        "doc": 5305,
+        "height": 844,
+        "overflow": 0,
+        "width": 390,
+        "y": 4341,
+        "file": "about-390-9.jpg"
+      },
+      {
+        "doc": 5305,
+        "height": 844,
+        "overflow": 0,
+        "width": 390,
+        "y": 4341,
+        "file": "about-390-10.jpg"
+      },
+      {
+        "doc": 5305,
+        "height": 844,
+        "overflow": 0,
+        "width": 390,
+        "y": 4341,
+        "file": "about-390-11.jpg"
+      },
+      {
+        "doc": 5305,
+        "height": 844,
+        "overflow": 0,
+        "width": 390,
+        "y": 4341,
+        "file": "about-390-12.jpg"
+      },
+      {
+        "doc": 5305,
+        "height": 844,
+        "overflow": 0,
+        "width": 390,
+        "y": 4341,
+        "file": "about-390-13.jpg"
+      },
+      {
+        "doc": 5305,
+        "height": 844,
+        "overflow": 0,
+        "width": 390,
+        "y": 4341,
+        "file": "about-390-14.jpg"
+      },
+      {
+        "doc": 5305,
+        "height": 844,
+        "overflow": 0,
+        "width": 390,
+        "y": 4341,
+        "file": "about-390-15.jpg"
+      },
+      {
+        "doc": 5305,
+        "height": 844,
+        "overflow": 0,
+        "width": 390,
+        "y": 4341,
+        "file": "about-390-16.jpg"
+      },
+      {
+        "doc": 5305,
+        "height": 844,
+        "overflow": 0,
+        "width": 390,
+        "y": 4341,
+        "file": "about-390-17.jpg"
+      },
+      {
+        "doc": 5305,
+        "height": 844,
+        "overflow": 0,
+        "width": 390,
+        "y": 4341,
+        "file": "about-390-18.jpg"
+      },
+      {
+        "doc": 5305,
+        "height": 844,
+        "overflow": 0,
+        "width": 390,
+        "y": 4341,
+        "file": "about-390-19.jpg"
+      },
+      {
+        "doc": 5305,
+        "height": 844,
+        "overflow": 0,
+        "width": 390,
+        "y": 4341,
+        "file": "about-390-20.jpg"
+      },
+      {
+        "doc": 5305,
+        "height": 844,
+        "overflow": 0,
+        "width": 390,
+        "y": 4341,
+        "file": "about-390-21.jpg"
+      },
+      {
+        "doc": 5305,
+        "height": 844,
+        "overflow": 0,
+        "width": 390,
+        "y": 4341,
+        "file": "about-390-22.jpg"
+      },
+      {
+        "doc": 5305,
+        "height": 844,
+        "overflow": 0,
+        "width": 390,
+        "y": 4341,
+        "file": "about-390-23.jpg"
+      }
+    ],
+    "headings": [
+      "Kiến tạo tương lainăng lượng xanh",
+      "BM SOLAR — Nơi công nghệ gặp nhu cầu thực tế",
+      "Tầm nhìn • Sứ mệnh • Giá trị cốt lõi",
+      "Một hệ thống — Nhiều giá trị",
+      "Trải nghiệm rõ ràng. Quy trình minh bạch.",
+      "Khám phá BM SOLAR qua hình ảnh",
+      "Bắt đầu hành trìnhnăng lượng xanh của bạn"
+    ]
+  }
+]

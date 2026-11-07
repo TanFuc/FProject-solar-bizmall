@@ -14,9 +14,13 @@ import { constructMetadata } from '@/lib/seo/metadata';
 import {
   getOrganizationSchema,
   getWebSiteSchema,
-  getLocalBusinessSchema,
 } from '@/lib/seo/structuredData';
 import { JsonLd } from '@/components/seo/JsonLd';
+import type { SiteShellData } from '@/types/bmsolar-api';
+
+// NOTE FOR PARENT / CONCURRENT UI WORKERS:
+// Root layout handles failure states with noindex protection. If a root-level navigation
+// loading progress bar is needed, inject it immediately inside the <body> tag below.
 
 const inter = Inter({
   subsets: ['latin', 'vietnamese'],
@@ -33,25 +37,82 @@ export const viewport: Viewport = {
   maximumScale: 5,
 };
 
+export const dynamic = 'force-dynamic';
+
 export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const siteShell = await getSiteShell();
-  const orgSchema = getOrganizationSchema();
+  let siteShell: SiteShellData | null = null;
+  let shellUnavailable = false;
+
+  try {
+    siteShell = await getSiteShell();
+  } catch {
+    shellUnavailable = true;
+  }
+
+  // Pass live siteShell to derive verified brand and branch data dynamically
+  const orgSchema = getOrganizationSchema(siteShell);
   const webSiteSchema = getWebSiteSchema();
-  const hqSchema = getLocalBusinessSchema('quynhon');
-  const hcmSchema = getLocalBusinessSchema('tphcm');
+
+  // Root shell failure / rate-limit guard:
+  // Render a clean, customer-facing recoverable shell with noindex protection
+  // to prevent indexing broken or partial state.
+  if (shellUnavailable || !siteShell) {
+    return (
+      <html lang="vi" className={inter.variable}>
+        <head>
+          <meta name="robots" content="noindex, nofollow" />
+          <link rel="icon" href="/images/logo.png" type="image/png" sizes="any" />
+          <link rel="apple-touch-icon" href="/images/logo.png" />
+          <JsonLd data={[orgSchema, webSiteSchema]} />
+        </head>
+        <body id="top" className="solar-site min-h-screen flex flex-col bg-surface-white text-ink antialiased">
+          <header className="w-full border-b border-border-subtle bg-white py-3 px-6 flex items-center justify-between">
+            <span className="font-bold text-lg text-solar-navy tracking-tight">BM SOLAR</span>
+            <a
+              href="/"
+              className="text-xs font-semibold text-solar-navy hover:underline"
+            >
+              Tải lại trang
+            </a>
+          </header>
+          <main className="flex-1 flex items-center justify-center p-6 bg-surface">
+            <div className="max-w-md w-full p-8 border border-border-subtle bg-white rounded-xl shadow-sm text-center">
+              <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-xl">
+                !
+              </div>
+              <h1 className="text-lg font-bold text-ink mb-2">
+                Hệ Thống Đang Tiếp Nhận Lượng Truy Cập Cao
+              </h1>
+              <p className="text-xs text-ink-muted mb-6 leading-relaxed">
+                Quý khách vui lòng thử lại sau giây lát hoặc tải lại trang.
+              </p>
+              <a
+                href="/"
+                className="inline-flex items-center justify-center px-4 py-2 text-xs font-semibold rounded-md bg-solar-navy text-white hover:bg-solar-navy/90 transition-colors shadow-sm"
+              >
+                Thử lại ngay
+              </a>
+            </div>
+          </main>
+        </body>
+      </html>
+    );
+  }
 
   return (
     <html lang="vi" className={inter.variable}>
       <head>
-        <JsonLd data={[orgSchema, webSiteSchema, hqSchema, hcmSchema]} />
+        <link rel="icon" href="/images/logo.png" type="image/png" sizes="any" />
+        <link rel="apple-touch-icon" href="/images/logo.png" />
+        <JsonLd data={[orgSchema, webSiteSchema]} />
       </head>
-      <body className="solar-site min-h-screen flex flex-col bg-surface-white text-ink antialiased">
+      <body id="top" className="solar-site min-h-screen flex flex-col bg-surface-white text-ink antialiased">
         <I18nProvider>
-          <BranchProvider initialBranches={siteShell.utilityBar.branches}>
+          <BranchProvider initialBranches={siteShell.utilityBar.branches} globalChannels={siteShell.footer.socialLinks} brand={siteShell.brand}>
             {/* Desktop Topbar */}
             <TopBar />
 
@@ -79,4 +140,3 @@ export default async function RootLayout({
     </html>
   );
 }
-

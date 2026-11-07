@@ -71,3 +71,27 @@ func TestRejectOversizedUpload(t *testing.T) {
 		t.Fatal("oversized upload accepted")
 	}
 }
+func TestTransparentPNGRetainsOriginalAlpha(t *testing.T) {
+	cfg := &config.Config{LocalStoragePath: t.TempDir(), StorageProvider: "local", ImageQuality: 95}
+	var encoded bytes.Buffer
+	if err := png.Encode(&encoded, image.NewRGBA(image.Rect(0, 0, 12, 12))); err != nil {
+		t.Fatal(err)
+	}
+	result, err := NewService(cfg).SaveUploadedFile(testFile{bytes.NewReader(encoded.Bytes())}, &multipart.FileHeader{Filename: "transparent.png", Size: int64(encoded.Len())}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	file, err := os.Open(filepath.Join(cfg.LocalStoragePath, result.Asset.StorageKey))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer file.Close()
+	actual, _, err := image.Decode(file)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, _, _, alpha := actual.At(6, 6).RGBA()
+	if alpha != 0 || result.Asset.MimeType != "image/png" {
+		t.Fatal("transparent input lost its original alpha channel")
+	}
+}

@@ -1,0 +1,7 @@
+{
+  "provider": "Gemini CLI",
+  "role": "ui",
+  "exitCode": 1,
+  "durationSeconds": 4.9962981,
+  "oauthFallback": false
+}

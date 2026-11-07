@@ -7,10 +7,13 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	_ "golang.org/x/image/webp"
 	"image"
+	"image/color"
+	"image/draw"
 	_ "image/gif"
 	"image/jpeg"
-	_ "image/png"
+	"image/png"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -96,17 +99,32 @@ func (s *Service) SaveUploadedFile(file multipart.File, header *multipart.FileHe
 			maxH = 2400
 		}
 		source = fitImage(source, maxW, maxH)
-		quality := s.cfg.ImageQuality
-		if quality < 1 || quality > 100 {
-			quality = 82
-		}
+		hasAlpha := imageHasAlpha(source)
+
 		var encoded bytes.Buffer
-		if err = jpeg.Encode(&encoded, source, &jpeg.Options{Quality: quality}); err != nil {
-			return nil, fmt.Errorf("encode image: %w", err)
+		if hasAlpha {
+			if err = png.Encode(&encoded, source); err != nil {
+				return nil, fmt.Errorf("encode png image: %w", err)
+			}
+			data = encoded.Bytes()
+			ext = ".png"
+			mimeType = "image/png"
+		} else {
+			opaque := image.NewRGBA(source.Bounds())
+			draw.Draw(opaque, opaque.Bounds(), image.NewUniform(color.White), image.Point{}, draw.Src)
+			draw.Draw(opaque, opaque.Bounds(), source, source.Bounds().Min, draw.Over)
+			source = opaque
+			quality := s.cfg.ImageQuality
+			if quality < 1 || quality > 100 {
+				quality = 82
+			}
+			if err = jpeg.Encode(&encoded, source, &jpeg.Options{Quality: quality}); err != nil {
+				return nil, fmt.Errorf("encode image: %w", err)
+			}
+			data = encoded.Bytes()
+			ext = ".jpg"
+			mimeType = "image/jpeg"
 		}
-		data = encoded.Bytes()
-		ext = ".jpg"
-		mimeType = "image/jpeg"
 		w, h := source.Bounds().Dx(), source.Bounds().Dy()
 		width, height = &w, &h
 	} else if ext == ".svg" {
@@ -142,12 +160,18 @@ func (s *Service) SaveUploadedFile(file multipart.File, header *multipart.FileHe
 			}
 			img := fitImage(source, definition.width, source.Bounds().Dy())
 			var encoded bytes.Buffer
-			quality := s.cfg.ImageQuality
-			if quality < 1 || quality > 100 {
-				quality = 82
-			}
-			if err = jpeg.Encode(&encoded, img, &jpeg.Options{Quality: quality}); err != nil {
-				return nil, fmt.Errorf("encode variant: %w", err)
+			if ext == ".png" {
+				if err = png.Encode(&encoded, img); err != nil {
+					return nil, fmt.Errorf("encode variant: %w", err)
+				}
+			} else {
+				quality := s.cfg.ImageQuality
+				if quality < 1 || quality > 100 {
+					quality = 82
+				}
+				if err = jpeg.Encode(&encoded, img, &jpeg.Options{Quality: quality}); err != nil {
+					return nil, fmt.Errorf("encode variant: %w", err)
+				}
 			}
 			variantKey := assetID + "_" + definition.key + ext
 			if err = write(variantKey, encoded.Bytes()); err != nil {
@@ -245,4 +269,51 @@ func hmacSHA256(key, data []byte) []byte {
 	h := hmac.New(sha256.New, key)
 	h.Write(data)
 	return h.Sum(nil)
+}
+
+// imageHasAlpha determines if an image contains transparent or semi-transparent pixels
+func imageHasAlpha(img image.Image) bool {
+	switch m := img.(type) {
+	case *image.NRGBA:
+		for i := 3; i < len(m.Pix); i += 4 {
+			if m.Pix[i] < 255 {
+				return true
+			}
+		}
+	case *image.RGBA:
+		for i := 3; i < len(m.Pix); i += 4 {
+			if m.Pix[i] < 255 {
+				return true
+			}
+		}
+	case *image.NRGBA64:
+		for i := 7; i < len(m.Pix); i += 8 {
+			if m.Pix[i] < 255 || m.Pix[i-1] < 255 {
+				return true
+			}
+		}
+	case *image.RGBA64:
+		for i := 7; i < len(m.Pix); i += 8 {
+			if m.Pix[i] < 255 || m.Pix[i-1] < 255 {
+				return true
+			}
+		}
+	case *image.Paletted:
+		for _, c := range m.Palette {
+			if _, _, _, a := c.RGBA(); a < 0xffff {
+				return true
+			}
+		}
+	default:
+		bounds := img.Bounds()
+		for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
+			for x := bounds.Min.X; x < bounds.Max.X; x++ {
+				_, _, _, a := img.At(x, y).RGBA()
+				if a < 0xffff {
+					return true
+				}
+			}
+		}
+	}
+	return false
 }

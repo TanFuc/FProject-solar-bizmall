@@ -25,7 +25,6 @@ import (
 	"bmsolar-backend/internal/modules/seo"
 
 	"github.com/go-chi/chi/v5"
-	chimw "github.com/go-chi/chi/v5/middleware"
 	"go.uber.org/automaxprocs/maxprocs"
 )
 
@@ -105,7 +104,6 @@ func main() {
 	r.Use(middleware.Logger(logger))
 	r.Use(middleware.Recoverer(logger))
 	r.Use(middleware.CORS(cfg.CorsAllowedOrigins))
-	r.Use(chimw.RealIP)
 
 	// Concurrency limiting (if configured > 0)
 	if cfg.MaxConcurrentRequests > 0 {

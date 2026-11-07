@@ -325,20 +325,21 @@ func (ContentTag) TableName() string { return "content_tags" }
 
 // MediaAsset stored media files
 type MediaAsset struct {
-	ID           string         `gorm:"primaryKey;size:26" json:"id"`
-	StorageKey   string         `gorm:"size:255;not null;uniqueIndex" json:"storageKey"`
-	OriginalName string         `gorm:"size:255;not null" json:"originalName"`
-	MimeType     string         `gorm:"size:100;not null" json:"mimeType"`
-	Bytes        int            `gorm:"not null" json:"bytes"`
-	Width        *int           `json:"width"`
-	Height       *int           `json:"height"`
-	Duration     *float64       `json:"duration"`
-	AltText      *string        `gorm:"size:255" json:"altText"`
-	Status       string         `gorm:"size:20;not null;default:'ready'" json:"status"`
-	UploaderID   *string        `gorm:"size:26" json:"uploaderId"`
-	CreatedAt    time.Time      `json:"createdAt"`
-	UpdatedAt    time.Time      `json:"updatedAt"`
-	Variants     []MediaVariant `gorm:"foreignKey:AssetID" json:"variants,omitempty"`
+	ReplacementID *string        `gorm:"size:26;index" json:"replacementId,omitempty"`
+	ID            string         `gorm:"primaryKey;size:26" json:"id"`
+	StorageKey    string         `gorm:"size:255;not null;uniqueIndex" json:"storageKey"`
+	OriginalName  string         `gorm:"size:255;not null" json:"originalName"`
+	MimeType      string         `gorm:"size:100;not null" json:"mimeType"`
+	Bytes         int            `gorm:"not null" json:"bytes"`
+	Width         *int           `json:"width"`
+	Height        *int           `json:"height"`
+	Duration      *float64       `json:"duration"`
+	AltText       *string        `gorm:"size:255" json:"altText"`
+	Status        string         `gorm:"size:20;not null;default:'ready'" json:"status"`
+	UploaderID    *string        `gorm:"size:26" json:"uploaderId"`
+	CreatedAt     time.Time      `json:"createdAt"`
+	UpdatedAt     time.Time      `json:"updatedAt"`
+	Variants      []MediaVariant `gorm:"foreignKey:AssetID" json:"variants,omitempty"`
 }
 
 func (MediaAsset) TableName() string { return "media_assets" }
