@@ -10,6 +10,8 @@ import { FeaturedProducts } from '@/components/blocks/FeaturedProducts';
 import { ProjectShowcase } from '@/components/blocks/ProjectShowcase';
 import { NewsSection } from '@/components/blocks/NewsSection';
 import { ConsultationFormBlock } from '@/components/blocks/ConsultationFormBlock';
+import { ProcessFiveSteps } from '@/components/blocks/ProcessFiveSteps';
+import { JourneyCtaBanner } from '@/components/blocks/JourneyCtaBanner';
 import {
   fallbackCategories,
   fallbackAudiences,
@@ -66,7 +68,7 @@ export default async function HomePage() {
         }
       />
 
-      {/* 2. Curved Equipment Category Strip */}
+      {/* 2. Curved Equipment Category Strip (5 categories) */}
       <CategoryStrip
         categories={
           (catBlock?.data as { categories?: any[] })?.categories || fallbackCategories
@@ -99,14 +101,29 @@ export default async function HomePage() {
         }
       />
 
-      {/* 7. Energy News & Market Guide */}
+      {/* 7. Process 5 Steps on Royal Blue Background */}
+      <ProcessFiveSteps
+        tag="02 / NĂNG LỰC TRIỂN KHAI"
+        title="Mỗi dự án — Một giải pháp phù hợp"
+        rightLinkText="Xem quy trình chi tiết →"
+        rightLinkHref="/giai-phap"
+      />
+
+      {/* 8. Energy News & Market Guide */}
       <NewsSection
         articles={
           (newsBlock?.data as { articles?: any[] })?.articles || fallbackArticles
         }
       />
 
-      {/* 8. High-conversion Consultation Form Block */}
+      {/* 9. Bottom Journey CTA Banner */}
+      <JourneyCtaBanner
+        primaryCtaText="Nhận tư vấn giải pháp →"
+        secondaryCtaText="Xem các dự án"
+        secondaryCtaHref="/du-an"
+      />
+
+      {/* 10. High-conversion Consultation Form Block */}
       <ConsultationFormBlock
         headline={(leadBlock?.data as { headline?: string })?.headline}
         subheading={(leadBlock?.data as { subheading?: string })?.subheading}
@@ -114,4 +131,3 @@ export default async function HomePage() {
     </div>
   );
 }
-
