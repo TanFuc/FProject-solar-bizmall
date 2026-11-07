@@ -1,0 +1,510 @@
+openapi: 3.1.0
+info:
+  title: BM SOLAR Public and Admin API
+  version: 1.0.0
+  description: >-
+    Golang-based API-first CMS & CRM backend for BM SOLAR.
+    Zero mocks/stubs, strict types, ULID identifiers, discriminated content block registry.
+servers:
+  - url: http://localhost:3001/api/v1
+    description: Local development server
+paths:
+  /public/site-shell:
+    get:
+      operationId: getPublicSiteShell
+      tags: [Public]
+      summary: Published shared website shell
+      responses:
+        '200':
+          description: Site shell data including theme, brand, navigation, footer, mobile actions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiteShellResponse'
+  /public/branches:
+    get:
+      operationId: getPublicBranches
+      tags: [Public]
+      summary: List active branches
+      parameters:
+        - name: active
+          in: query
+          schema: { type: boolean, default: true }
+      responses:
+        '200':
+          description: List of branches
+  /public/branches/{id}/channels:
+    get:
+      operationId: getBranchChannels
+      tags: [Public]
+      summary: Resolve effective contact channels for branch
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Resolved channels with formatted tel: and Zalo destinations
+  /public/pages/{pageKey}:
+    get:
+      operationId: getPublishedPage
+      tags: [Public]
+      summary: Get published CMS page with content blocks
+      parameters:
+        - name: pageKey
+          in: path
+          required: true
+          schema: { type: string }
+        - name: previewToken
+          in: query
+          schema: { type: string }
+      responses:
+        '200':
+          description: Published page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublishedPageResponse'
+        '404':
+          description: Missing or unpublished
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+  /public/product-categories:
+    get:
+      operationId: listProductCategories
+      tags: [Public]
+      summary: List product categories
+      responses:
+        '200':
+          description: Categories tree
+  /public/audiences:
+    get:
+      operationId: listAudiences
+      tags: [Public]
+      summary: List customer audience segments
+      responses:
+        '200':
+          description: Audiences
+  /public/products:
+    get:
+      operationId: listProducts
+      tags: [Public]
+      summary: Filtered and paginated product list
+      parameters:
+        - name: category
+          in: query
+          schema: { type: string }
+        - name: audience
+          in: query
+          schema: { type: string }
+        - name: brand
+          in: query
+          schema: { type: string }
+        - name: search
+          in: query
+          schema: { type: string }
+        - name: sort
+          in: query
+          schema: { type: string, enum: [recent, name_asc, name_desc] }
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: pageSize
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 50, default: 12 }
+      responses:
+        '200':
+          description: Product list
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProductListResponse' }
+  /public/products/{slug}:
+    get:
+      operationId: getProductDetail
+      tags: [Public]
+      summary: Get product detail by slug
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Product details with specifications
+        '404':
+          description: Unpublished or not found
+  /public/project-types:
+    get:
+      operationId: listProjectTypes
+      tags: [Public]
+      summary: List project installation types
+      responses:
+        '200':
+          description: Project types
+  /public/provinces:
+    get:
+      operationId: listProvinces
+      tags: [Public]
+      summary: List provinces and cities
+      responses:
+        '200':
+          description: Provinces
+  /public/projects:
+    get:
+      operationId: listProjects
+      tags: [Public]
+      summary: Filtered project showcase list
+      parameters:
+        - name: projectType
+          in: query
+          schema: { type: string }
+        - name: province
+          in: query
+          schema: { type: string }
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: pageSize
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 50, default: 12 }
+      responses:
+        '200':
+          description: Project list
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProjectListResponse' }
+  /public/projects/{slug}:
+    get:
+      operationId: getProjectDetail
+      tags: [Public]
+      summary: Project detail by slug
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Project detail
+        '404':
+          description: Not found or unpublished
+  /public/articles:
+    get:
+      operationId: listArticles
+      tags: [Public]
+      summary: Published news and educational articles
+      parameters:
+        - name: tag
+          in: query
+          schema: { type: string }
+        - name: page
+          in: query
+          schema: { type: integer, default: 1 }
+        - name: pageSize
+          in: query
+          schema: { type: integer, default: 12 }
+      responses:
+        '200':
+          description: Articles list
+  /public/articles/{slug}:
+    get:
+      operationId: getArticleDetail
+      tags: [Public]
+      summary: Article detail by slug
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Article detail
+  /public/leads:
+    post:
+      operationId: createLead
+      tags: [Public]
+      summary: Submit consultation inquiry
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          required: false
+          schema: { type: string, minLength: 8, maxLength: 128 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateLeadRequest' }
+      responses:
+        '201':
+          description: Lead accepted
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CreateLeadResponse' }
+        '400':
+          description: Validation error or missing consent
+  /public/sitemap.xml:
+    get:
+      operationId: getSitemapXML
+      tags: [Public]
+      summary: Dynamic XML Sitemap for SEO crawlers
+      responses:
+        '200':
+          description: XML sitemap
+          content:
+            application/xml:
+              schema: { type: string }
+  /public/redirects/resolve:
+    get:
+      operationId: resolveRedirect
+      tags: [Public]
+      summary: Resolve HTTP 301/308 redirects for migrated URLs
+      parameters:
+        - name: path
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Redirect target
+        '404':
+          description: No redirect registered
+
+  # Admin Endpoints
+  /admin/auth/login:
+    post:
+      operationId: adminLogin
+      tags: [Admin Auth]
+      summary: Admin user login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string }
+      responses:
+        '200':
+          description: Login successful with JWT tokens
+  /admin/auth/me:
+    get:
+      operationId: adminMe
+      tags: [Admin Auth]
+      security:
+        - BearerAuth: []
+      summary: Current user profile and permissions
+      responses:
+        '200':
+          description: Current user info
+  /admin/pages:
+    get:
+      operationId: adminListPages
+      tags: [Admin CMS]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List pages
+    post:
+      operationId: adminCreatePage
+      tags: [Admin CMS]
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Page created in draft
+  /admin/pages/{id}/publish:
+    post:
+      operationId: adminPublishPage
+      tags: [Admin CMS]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Page published atomically
+  /admin/leads:
+    get:
+      operationId: adminListLeads
+      tags: [Admin Leads]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string }
+        - name: branchId
+          in: query
+          schema: { type: string }
+      responses:
+        '200':
+          description: Scoped list of leads
+  /admin/leads/{id}/transition:
+    post:
+      operationId: adminTransitionLead
+      tags: [Admin Leads]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [toStatus]
+              properties:
+                toStatus: { type: string }
+                reason: { type: string }
+                note: { type: string }
+      responses:
+        '200':
+          description: Status transition executed and logged
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    SiteShellResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [brand, theme, navigation, utilityBar, mobileActions]
+          properties:
+            brand:
+              type: object
+              required: [name, logo]
+              properties:
+                name: { type: string }
+                logo:
+                  type: object
+                  required: [url, alt]
+                  properties:
+                    url: { type: string }
+                    alt: { type: string }
+            theme:
+              type: object
+              required: [primary, navy, accent]
+              properties:
+                primary: { type: string }
+                navy: { type: string }
+                accent: { type: string }
+                fonts: { type: string }
+                radius: { type: string }
+            utilityBar:
+              type: object
+              required: [visible, branches]
+              properties:
+                visible: { type: boolean }
+                branches: { type: array, items: { type: object } }
+                showHotline: { type: boolean }
+                showEmail: { type: boolean }
+            mobileActions:
+              type: array
+              items: { type: object }
+            navigation:
+              type: array
+              items: { type: object }
+
+    PublishedPageResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [pageKey, slug, title, blocks]
+          properties:
+            pageKey: { type: string }
+            slug: { type: string }
+            title: { type: string }
+            blocks: { type: array, items: { type: object } }
+            seo: { type: object }
+
+    ProductListResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            required: [id, sku, slug, name]
+            properties:
+              id: { type: string }
+              sku: { type: string }
+              slug: { type: string }
+              name: { type: string }
+              summary: { type: string }
+              categorySlug: { type: string }
+              coverUrl: { type: string }
+        meta:
+          type: object
+          required: [page, pageSize, total, totalPages]
+          properties:
+            page: { type: integer }
+            pageSize: { type: integer }
+            total: { type: integer }
+            totalPages: { type: integer }
+
+    ProjectListResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data: { type: array, items: { type: object } }
+        meta: { type: object }
+
+    CreateLeadRequest:
+      type: object
+      required: [name, message, privacyConsent, privacyPolicyVersion, sourcePage]
+      properties:
+        name: { type: string, minLength: 2, maxLength: 120 }
+        phone: { type: string }
+        email: { type: string, format: email }
+        message: { type: string, minLength: 3, maxLength: 4000 }
+        branchId: { type: string }
+        audience: { type: string }
+        productId: { type: string }
+        privacyConsent: { type: boolean, const: true }
+        privacyPolicyVersion: { type: string }
+        sourcePage: { type: string }
+
+    CreateLeadResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [referenceCode, receivedAt]
+          properties:
+            referenceCode: { type: string }
+            receivedAt: { type: string, format: date-time }
+
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message, requestId]
+          properties:
+            code: { type: string }
+            message: { type: string }
+            requestId: { type: string }

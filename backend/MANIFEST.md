@@ -1,0 +1,28 @@
+# Package manifest (Golang Edition)
+
+- `.env.example`
+- `AGENTS.md`
+- `README.md`
+- `agent/IMPLEMENTATION_PROMPT.md`
+- `contracts/openapi.yaml`
+- `docs/01-product-requirements.md`
+- `docs/02-ui-to-cms-mapping.md`
+- `docs/03-architecture.md`
+- `docs/04-data-model.md`
+- `docs/05-api-contract.md`
+- `docs/06-cms-publishing.md`
+- `docs/07-seo-automation.md`
+- `docs/08-leads-security.md`
+- `docs/09-operations.md`
+- `docs/10-test-acceptance.md`
+- `docs/11-fe-integration.md`
+- `docs/12-implementation-plan.md`
+- `docs/API_DOCUMENTATION.md`
+- `questions.md`
+- `reference/ui-reference.png`
+- `go.mod`
+- `go.sum`
+- `cmd/server/main.go`
+- `cmd/seed/main.go`
+- `internal/`
+- `test/`
