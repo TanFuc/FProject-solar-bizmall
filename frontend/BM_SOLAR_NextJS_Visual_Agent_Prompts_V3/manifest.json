@@ -1,0 +1,266 @@
+{
+  "pack": "BM SOLAR NextJS Visual Agent Prompts V3",
+  "fileCount": 52,
+  "files": [
+    {
+      "path": "00_README.md",
+      "size": 3723,
+      "sha256": "6232367b4e17f772235d4f07719e7b863618c9385260ca774397f62e509fbd62"
+    },
+    {
+      "path": "01_MASTER_AGENT_PROMPT.md",
+      "size": 6705,
+      "sha256": "8d318430d31533edaac6d03356e8bc3c2151dd94fa200ca9f93cf125548ea255"
+    },
+    {
+      "path": "02_DESIGN_SYSTEM.md",
+      "size": 3310,
+      "sha256": "2dd6178993884279aff5dda046f21ba6bf83a51cb20150937903fecec60bfd97"
+    },
+    {
+      "path": "03_PAGE_BLUEPRINTS.md",
+      "size": 4667,
+      "sha256": "b995d9db4f67926ac76341b3f91ecc08a79d0f4545e23f975ed6a89deb6b7014"
+    },
+    {
+      "path": "04_RESPONSIVE_AND_INTERACTIONS.md",
+      "size": 2692,
+      "sha256": "83369e6867139e99ee809a4beb8718d04ec9c6aea17b3e5f5827d21775375c2e"
+    },
+    {
+      "path": "05_CMS_API_CONTRACT.md",
+      "size": 4440,
+      "sha256": "a516a980afa22f3d264583ccdb01d044cb9938a18330ec9d261f171e0d445779"
+    },
+    {
+      "path": "06_VISUAL_QA.md",
+      "size": 2868,
+      "sha256": "86f64adc83236bedf48b28a46d066f385321f15384a90ee1d6b937f107abbdc4"
+    },
+    {
+      "path": "07_ACCEPTANCE_TESTS.md",
+      "size": 2731,
+      "sha256": "05d67b76c7a25433ea274ef66f9a801c00f76f78ed3c4c7aa684c33c701b935b"
+    },
+    {
+      "path": "08_AGENT_TASK_PROMPTS.md",
+      "size": 3007,
+      "sha256": "cd37d67683db456714eb30f8ac7a9944d59b3491e4f6f91e3b0f6f181e2ba5f0"
+    },
+    {
+      "path": "09_ASSET_AND_CONTENT_CHECKLIST.md",
+      "size": 1453,
+      "sha256": "60c60c60a7510c3b0cf3ab774669d7445b3ff36f1a91082222ecd9715807a68c"
+    },
+    {
+      "path": "10_NEXTJS_ARCHITECTURE.md",
+      "size": 4617,
+      "sha256": "61fce3347a2434a127972313e4396666bae1e6df8f3e18760fac5fc0312e5a56"
+    },
+    {
+      "path": "11_TECHNICAL_SEO.md",
+      "size": 4776,
+      "sha256": "1503ddee678b809ce3e245663f6d07da4470ab69ff4c57b1f557213557cbded1"
+    },
+    {
+      "path": "12_HASHTAG_PIPELINE.md",
+      "size": 4393,
+      "sha256": "9b8f3e176ee640e91d46a21be691dafcb27ef50a2a7c65cc2a5a04dd9cfc0b8e"
+    },
+    {
+      "path": "13_INDEXING_AUTOMATION.md",
+      "size": 4867,
+      "sha256": "5da777037eca53ec88d8d79299abd2e946b9edabadf607904440c2ef0cb3d977"
+    },
+    {
+      "path": "14_GLOBAL_LOADING_PERFORMANCE.md",
+      "size": 4189,
+      "sha256": "38a496337a7b980cecdf43cca2c911a37534923ea58c3ed96b9fe371407442c5"
+    },
+    {
+      "path": "15_REFERENCE_MAP_AND_VISUAL_PRECEDENCE.md",
+      "size": 3392,
+      "sha256": "2fb52f053cda9feb4bb3b219255391c5727b6e876bce667d44162427b392c1ee"
+    },
+    {
+      "path": "16_BACKEND_INTEGRATION_GAPS.md",
+      "size": 3224,
+      "sha256": "9ff23f66d81e05b6abc2570f524686df58d5e4864b0bb2426b065e32b0f1f31b"
+    },
+    {
+      "path": "17_IMPLEMENTATION_PLAN.md",
+      "size": 2565,
+      "sha256": "8272cccdefb437570bcbf82a2a1032e2812c8824babc4a0414b30d0926eda509"
+    },
+    {
+      "path": "18_TEST_MATRIX.md",
+      "size": 2480,
+      "sha256": "baca0562e7623f1c3bd7aa9cc30f0be1849e5cfdd2e5f946556284b89d57002f"
+    },
+    {
+      "path": "19_HANDOFF_PROMPT.md",
+      "size": 1228,
+      "sha256": "3f7c64c22a328e36bcf2ebe7191aa293741025fe412c5321825de713769999f9"
+    },
+    {
+      "path": "AGENTS.md",
+      "size": 2273,
+      "sha256": "c44d4069a7bb17a631018121b661d265ecd7bc9b3279a162cfcaa792593c49fe"
+    },
+    {
+      "path": "AI_INIT_PROMPT.md",
+      "size": 2257,
+      "sha256": "d086c560a67771c62287a6ba74fb50781a70eeb25705770b428ba0589d0c65cb"
+    },
+    {
+      "path": "BM_SOLAR_Full_Page_Designs/BM_SOLAR_du-an_desktop.png",
+      "size": 2439885,
+      "sha256": "047a2f84d03512a55f8f8c38604effce332374868a2309514d12ce6d76a12303"
+    },
+    {
+      "path": "BM_SOLAR_Full_Page_Designs/BM_SOLAR_du-an_mobile.png",
+      "size": 1041579,
+      "sha256": "c24d79f6791a257dbdf2a3938c7e17a5020e5bc05efa5dfff638c301f9d4b270"
+    },
+    {
+      "path": "BM_SOLAR_Full_Page_Designs/BM_SOLAR_giai-phap_desktop.png",
+      "size": 2628625,
+      "sha256": "736779e63f93419e5c771f75acf08271af828117cb850b7993b421a2e7645a6d"
+    },
+    {
+      "path": "BM_SOLAR_Full_Page_Designs/BM_SOLAR_giai-phap_mobile.png",
+      "size": 1299961,
+      "sha256": "31afe477ccc3613134434616067e419154722567665478928b43f1309886cc4c"
+    },
+    {
+      "path": "BM_SOLAR_Full_Page_Designs/BM_SOLAR_gioi-thieu_desktop.png",
+      "size": 2531178,
+      "sha256": "12e3c9e75a67a64e0ee858655c54b95d7865712aa93a81b6448e360a60cc0362"
+    },
+    {
+      "path": "BM_SOLAR_Full_Page_Designs/BM_SOLAR_gioi-thieu_mobile.png",
+      "size": 1315082,
+      "sha256": "ca9c0e469a25b0af703952c2626dfece0cedd5d0445ff258e9acde9965f54731"
+    },
+    {
+      "path": "BM_SOLAR_Full_Page_Designs/BM_SOLAR_lien-he_desktop.png",
+      "size": 1026156,
+      "sha256": "02d5d37abd83bc5213b8b7ffce3dad35d827108510bbd626987d72dff49c92b5"
+    },
+    {
+      "path": "BM_SOLAR_Full_Page_Designs/BM_SOLAR_lien-he_mobile.png",
+      "size": 491078,
+      "sha256": "d1f9724082dec93c09c682e872f12dc843d95173a917f0c1fa909636e68ad6c6"
+    },
+    {
+      "path": "BM_SOLAR_Full_Page_Designs/BM_SOLAR_loading_icon.gif",
+      "size": 93825,
+      "sha256": "fb3e77bd9c2c28a1f68585843db2b5cd13c01952922bd6053c32e880376ea4a0"
+    },
+    {
+      "path": "BM_SOLAR_Full_Page_Designs/BM_SOLAR_loading_icon.png",
+      "size": 51526,
+      "sha256": "c09be44aaa4fb207f8d50a334948a9ca5b0a5ee2869e9942fdfc60c31a6bf216"
+    },
+    {
+      "path": "BM_SOLAR_Full_Page_Designs/BM_SOLAR_loading_icon.svg",
+      "size": 646,
+      "sha256": "647c6b519ed3e6eab18d03278f7d05d2d5c0e3484a9aba3ac4706bfc9ba4bb4f"
+    },
+    {
+      "path": "BM_SOLAR_Full_Page_Designs/BM_SOLAR_loading_screen_desktop.png",
+      "size": 30092,
+      "sha256": "3496569340c48760750b55621e0d25e1304157009b1a7cff13a5284efbc28271"
+    },
+    {
+      "path": "BM_SOLAR_Full_Page_Designs/BM_SOLAR_loading_screen_mobile.png",
+      "size": 18539,
+      "sha256": "92f476e25f76190b66a52fed5df7616e2aa106a5790ea672fc7faa00d6284872"
+    },
+    {
+      "path": "BM_SOLAR_Full_Page_Designs/BM_SOLAR_san-pham_desktop.png",
+      "size": 1502005,
+      "sha256": "d0c1dcc22e8a6f170debef2255aa5724cf921616dc97703826ee67ec2d81c3d4"
+    },
+    {
+      "path": "BM_SOLAR_Full_Page_Designs/BM_SOLAR_san-pham_mobile.png",
+      "size": 915545,
+      "sha256": "cd71ae93dceebc2b85ade03551be9150452c500e4cc3951d83ca3931aab6d319"
+    },
+    {
+      "path": "BM_SOLAR_Full_Page_Designs/BM_SOLAR_tin-tuc_desktop.png",
+      "size": 2648918,
+      "sha256": "74b38f084e6b176f8637fb6a6e931a12e3402b91957e35989def6fe9b9fa201c"
+    },
+    {
+      "path": "BM_SOLAR_Full_Page_Designs/BM_SOLAR_tin-tuc_mobile.png",
+      "size": 1109062,
+      "sha256": "1c6dab01a216c5060025d2f86a1f060efc8e797f4d350355dedb0e5b435516b3"
+    },
+    {
+      "path": "BM_SOLAR_Full_Page_Designs/README.txt",
+      "size": 936,
+      "sha256": "c53a5b943962192a2a64d0e74305ec59e60dd0d1ef33d9334c72850be1989329"
+    },
+    {
+      "path": "contracts/README.md",
+      "size": 674,
+      "sha256": "1e894f1d8e30badf81eababe52c1171e3c919477642e5fc8209896e4a2b3b557"
+    },
+    {
+      "path": "contracts/backend-openapi-reference.yaml",
+      "size": 253252,
+      "sha256": "b07f8aa8b7f5cf7c5a5e235ce83a558a1437a44ca774f5d24e27f803bac6817a"
+    },
+    {
+      "path": "contracts/page-blocks.schema.json",
+      "size": 19011,
+      "sha256": "298aad596e1ab47ebcb8a5006578483f669ecdff3acb7a2418b9470eeb5a206a"
+    },
+    {
+      "path": "examples/.env.example",
+      "size": 545,
+      "sha256": "abbb7a3fdcec3c077c6c8e4b58e2905f9897b163833ad6905195303be553c452"
+    },
+    {
+      "path": "examples/route-map.json",
+      "size": 1580,
+      "sha256": "703fefc5d1f9c22500a8ed92a00d57b0f6b4c7b0d97696e01f20da4488015ab9"
+    },
+    {
+      "path": "examples/seo-hashtag-types.ts",
+      "size": 1537,
+      "sha256": "825b0abaabf0360b2fc61785a5e128ec8e7fc246f667ef1ad04913b8ea30d5a5"
+    },
+    {
+      "path": "references/all-pages-storyboard.png",
+      "size": 2544484,
+      "sha256": "d225249368b74f613380c47f8bd756e6ba0872e645c24566c8d67b82e6a3dea8"
+    },
+    {
+      "path": "references/contact-desktop-supplement.jpg",
+      "size": 528209,
+      "sha256": "edfc87fdc1443e8b7255edfe643497ad74d73ff641e9e777c13002f4e1c729cd"
+    },
+    {
+      "path": "references/contact-mobile-supplement.jpg",
+      "size": 744445,
+      "sha256": "b9f0d56e7592250b95ff94770023e01c5ebfdaed311ecc70f13ceadc6ce34b91"
+    },
+    {
+      "path": "references/hero-desktop-mobile.png",
+      "size": 3285208,
+      "sha256": "3ffe473382f6e21eb7dcd9f3c1eb0b544f0c7f0b0ea13b0481e52bd908dbe1e6"
+    },
+    {
+      "path": "references/home-desktop-full.png",
+      "size": 3205040,
+      "sha256": "f49755cbedad0dace5e6580337cf5e9ee4d2ae517f22f5d30c4f4ed8a0a10c9e"
+    },
+    {
+      "path": "references/home-mobile-full.png",
+      "size": 2104956,
+      "sha256": "b4b16071da1d87d31538fab21dc0332232d41e1d1f4f9513082f366e7e0c8c39"
+    }
+  ]
+}

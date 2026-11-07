@@ -1,0 +1,53 @@
+{
+  "routes": [
+    {
+      "path": "/",
+      "refDesktop": "references/home-desktop-full.png",
+      "refMobile": "references/home-mobile-full.png"
+    },
+    {
+      "path": "/gioi-thieu",
+      "refDesktop": "BM_SOLAR_Full_Page_Designs/BM_SOLAR_gioi-thieu_desktop.png",
+      "refMobile": "BM_SOLAR_Full_Page_Designs/BM_SOLAR_gioi-thieu_mobile.png"
+    },
+    {
+      "path": "/giai-phap",
+      "refDesktop": "BM_SOLAR_Full_Page_Designs/BM_SOLAR_giai-phap_desktop.png",
+      "refMobile": "BM_SOLAR_Full_Page_Designs/BM_SOLAR_giai-phap_mobile.png"
+    },
+    {
+      "path": "/san-pham",
+      "refDesktop": "BM_SOLAR_Full_Page_Designs/BM_SOLAR_san-pham_desktop.png",
+      "refMobile": "BM_SOLAR_Full_Page_Designs/BM_SOLAR_san-pham_mobile.png"
+    },
+    {
+      "path": "/du-an",
+      "refDesktop": "BM_SOLAR_Full_Page_Designs/BM_SOLAR_du-an_desktop.png",
+      "refMobile": "BM_SOLAR_Full_Page_Designs/BM_SOLAR_du-an_mobile.png"
+    },
+    {
+      "path": "/tin-tuc",
+      "refDesktop": "BM_SOLAR_Full_Page_Designs/BM_SOLAR_tin-tuc_desktop.png",
+      "refMobile": "BM_SOLAR_Full_Page_Designs/BM_SOLAR_tin-tuc_mobile.png"
+    },
+    {
+      "path": "/lien-he",
+      "refDesktop": "BM_SOLAR_Full_Page_Designs/BM_SOLAR_lien-he_desktop.png",
+      "refMobile": "BM_SOLAR_Full_Page_Designs/BM_SOLAR_lien-he_mobile.png"
+    }
+  ],
+  "dynamicRoutes": [
+    "/giai-phap/[slug]",
+    "/san-pham/[slug]",
+    "/du-an/[slug]",
+    "/tin-tuc/[slug]",
+    "/chi-nhanh/[slug]"
+  ],
+  "mobileNav": [
+    "Trang chủ",
+    "Gọi ngay",
+    "Zalo",
+    "Tư vấn",
+    "Menu"
+  ]
+}

@@ -1,0 +1,11 @@
+# BM SOLAR V3 — Copy/paste this prompt into your coding agent
+
+Read **ALL** files in `BM_SOLAR_NextJS_Visual_Agent_Prompts_V3/` starting with `AGENTS.md`, `01_MASTER_AGENT_PROMPT.md`, `15_REFERENCE_MAP_AND_VISUAL_PRECEDENCE.md`, `10_NEXTJS_ARCHITECTURE.md`, `11_TECHNICAL_SEO.md`, `12_HASHTAG_PIPELINE.md`, `13_INDEXING_AUTOMATION.md`, `14_GLOBAL_LOADING_PERFORMANCE.md` and `17_IMPLEMENTATION_PLAN.md`. Read all images in `BM_SOLAR_Full_Page_Designs/` and `references/`. Compare `contracts/backend-openapi-reference.yaml` with the latest actual backend API before generating types.
+
+Implement the BM SOLAR frontend using **Next.js App Router + React + TypeScript Strict**, with the existing NestJS CMS/Public API/Lead Management as the backend. **Do not use Vite. Do not hardcode business content. Do not redesign the reference.**
+
+Homepage references: `references/home-desktop-full.png`, `references/home-mobile-full.png`. Six other page pairs: `BM_SOLAR_Full_Page_Designs/BM_SOLAR_<slug>_{desktop,mobile}.png`. Loading assets: `BM_SOLAR_Full_Page_Designs/BM_SOLAR_loading_*`. Build complete sections from top to footer, including mobile fixed Home/Call/Zalo/Consultation/Menu and desktop branch-specific Call/Zalo.
+
+Technical SEO: server-rendered crawlable HTML, `generateMetadata`, canonical, robots, sitemap, verified JSON-LD, internal links, redirects, image SEO, Core Web Vitals. Hashtags: auto-suggest from approved Vietnamese content via existing backend `POST /admin/seo/suggest`, review and PATCH `/admin/seo-metadata/{resourceType}/{resourceId}`; no keyword stuffing. Indexing: on-publish sitemap/revalidation, Search Console monitoring and optional IndexNow for supporting engines; **do not misuse Google Indexing API or promise rankings/indexing**. Loading: lightweight branded SVG/CSS, route skeletons/Suspense, no blocking splash.
+
+Follow phases P0–P7 in `17_IMPLEMENTATION_PLAN.md`. **Start with audit and homepage only.** After home, take real full-page desktop/mobile screenshots, compare against references and fix deviations before proceeding. Run strict typecheck, lint, tests, visual regression, accessibility, SEO and performance audits. Report actual evidence and backend contract gaps. Do not assert success without execution.
