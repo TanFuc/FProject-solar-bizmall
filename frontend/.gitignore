@@ -1,0 +1,39 @@
+# ==============================================================================
+# Next.js Frontend — Git Ignore
+# ==============================================================================
+
+# Dependencies
+/node_modules
+/.pnpm-store
+
+# Next.js Build & Cache
+/.next/
+/out/
+/build
+/dist
+.swc/
+
+# Environment Variables
+.env
+.env*.local
+
+# Logs & Debugging
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Testing & Coverage
+coverage/
+playwright-report/
+blob-report/
+test-results/
+
+# System / OS
+.DS_Store
+Thumbs.db
+
+# TypeScript declaration backup
+next-env.d.ts.bak
+*.tsbuildinfo
+
