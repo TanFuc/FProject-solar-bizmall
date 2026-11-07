@@ -13,6 +13,7 @@ import (
 	"bmsolar-backend/internal/config"
 	"bmsolar-backend/internal/database/models"
 	"bmsolar-backend/internal/modules/identity"
+	"bmsolar-backend/internal/modules/media"
 
 	"github.com/go-chi/chi/v5"
 	"gorm.io/gorm"
@@ -29,6 +30,7 @@ func NewHandler(db *gorm.DB, cfg *config.Config) *Handler {
 
 func (h *Handler) RegisterRoutes(r chi.Router) {
 	// Public catalog routes
+	r.Get("/public/brands", h.GetPublicBrands)
 	r.Get("/public/product-categories", h.GetPublicCategories)
 	r.Get("/public/audiences", h.GetPublicAudiences)
 	r.Get("/public/products", h.ListPublicProducts)
@@ -63,30 +65,66 @@ func (h *Handler) RegisterRoutes(r chi.Router) {
 
 // ---------------- Public Endpoints ----------------
 
+type CategoryPublicDTO struct {
+	models.ProductCategory
+	ImageURL string `json:"imageUrl,omitempty"`
+}
+type AudiencePublicDTO struct {
+	models.Audience
+	ImageURL string `json:"imageUrl,omitempty"`
+}
+
 func (h *Handler) GetPublicCategories(w http.ResponseWriter, r *http.Request) {
-	var categories []models.ProductCategory
-	if err := h.db.Where("status = 'published'").Order("sort_order asc").Find(&categories).Error; err != nil {
+	var rows []models.ProductCategory
+	if err := h.db.Where("status = 'published'").Order("sort_order asc").Find(&rows).Error; err != nil {
 		errors.WriteJSON(w, r, errors.Internal("Failed to list categories"))
 		return
 	}
-
+	out := make([]CategoryPublicDTO, 0, len(rows))
+	for _, row := range rows {
+		url := ""
+		if row.MediaID != nil {
+			resolved, err := media.ResolvePublicURL(h.db, h.cfg, *row.MediaID)
+			if err != nil {
+				errors.WriteJSON(w, r, errors.Internal("Failed to resolve category media"))
+				return
+			}
+			url = resolved
+		}
+		out = append(out, CategoryPublicDTO{ProductCategory: row, ImageURL: url})
+	}
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(map[string]any{
-		"data": categories,
-	})
+	if err := json.NewEncoder(w).Encode(struct {
+		Data []CategoryPublicDTO `json:"data"`
+	}{out}); err != nil {
+		return
+	}
 }
-
 func (h *Handler) GetPublicAudiences(w http.ResponseWriter, r *http.Request) {
-	var audiences []models.Audience
-	if err := h.db.Where("enabled = true").Order("sort_order asc").Find(&audiences).Error; err != nil {
+	var rows []models.Audience
+	if err := h.db.Where("enabled = true").Order("sort_order asc").Find(&rows).Error; err != nil {
 		errors.WriteJSON(w, r, errors.Internal("Failed to list audiences"))
 		return
 	}
-
+	out := make([]AudiencePublicDTO, 0, len(rows))
+	for _, row := range rows {
+		url := ""
+		if row.HeroMediaID != nil {
+			resolved, err := media.ResolvePublicURL(h.db, h.cfg, *row.HeroMediaID)
+			if err != nil {
+				errors.WriteJSON(w, r, errors.Internal("Failed to resolve audience media"))
+				return
+			}
+			url = resolved
+		}
+		out = append(out, AudiencePublicDTO{Audience: row, ImageURL: url})
+	}
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(map[string]any{
-		"data": audiences,
-	})
+	if err := json.NewEncoder(w).Encode(struct {
+		Data []AudiencePublicDTO `json:"data"`
+	}{out}); err != nil {
+		return
+	}
 }
 
 type ProductCardDTO struct {
@@ -166,7 +204,11 @@ func (h *Handler) ListPublicProducts(w http.ResponseWriter, r *http.Request) {
 		}
 		var coverURL *string
 		if prod.CoverMediaID != nil {
-			url := h.cfg.AppBaseURL + "/media/" + *prod.CoverMediaID
+			url, mediaErr := media.ResolvePublicURL(h.db, h.cfg, *prod.CoverMediaID)
+			if mediaErr != nil {
+				errors.WriteJSON(w, r, errors.Internal("Failed to resolve media"))
+				return
+			}
 			coverURL = &url
 		}
 		audCodes := make([]string, 0, len(prod.Audiences))
@@ -234,24 +276,28 @@ func (h *Handler) GetPublicProductDetail(w http.ResponseWriter, r *http.Request)
 
 	var coverURL *string
 	if prod.CoverMediaID != nil {
-		url := h.cfg.AppBaseURL + "/media/" + *prod.CoverMediaID
+		url, mediaErr := media.ResolvePublicURL(h.db, h.cfg, *prod.CoverMediaID)
+		if mediaErr != nil {
+			errors.WriteJSON(w, r, errors.Internal("Failed to resolve media"))
+			return
+		}
 		coverURL = &url
 	}
 
 	type ProductDetailResponse struct {
-		ID            string   `json:"id"`
-		SKU           string   `json:"sku"`
-		Slug          string   `json:"slug"`
-		Name          string   `json:"name"`
-		Summary       string   `json:"summary"`
-		Description   string   `json:"description"`
-		CoverURL      *string  `json:"coverUrl,omitempty"`
-		Category      any      `json:"category,omitempty"`
-		Brand         any      `json:"brand,omitempty"`
-		Specifications any     `json:"specifications,omitempty"`
-		Audiences     []string `json:"audiences"`
-		Gallery       []string `json:"gallery"`
-		PublishedAt   *time.Time `json:"publishedAt,omitempty"`
+		ID             string     `json:"id"`
+		SKU            string     `json:"sku"`
+		Slug           string     `json:"slug"`
+		Name           string     `json:"name"`
+		Summary        string     `json:"summary"`
+		Description    string     `json:"description"`
+		CoverURL       *string    `json:"coverUrl,omitempty"`
+		Category       any        `json:"category,omitempty"`
+		Brand          any        `json:"brand,omitempty"`
+		Specifications any        `json:"specifications,omitempty"`
+		Audiences      []string   `json:"audiences"`
+		Gallery        []string   `json:"gallery"`
+		PublishedAt    *time.Time `json:"publishedAt,omitempty"`
 	}
 
 	audCodes := make([]string, 0, len(prod.Audiences))
@@ -586,4 +632,38 @@ func (h *Handler) AdminUnpublishProduct(w http.ResponseWriter, r *http.Request) 
 			"status": "draft",
 		},
 	})
+}
+
+type BrandPublicDTO struct {
+	ID      string `json:"id"`
+	Slug    string `json:"slug"`
+	Name    string `json:"name"`
+	LogoURL string `json:"logoUrl,omitempty"`
+}
+
+func (h *Handler) GetPublicBrands(w http.ResponseWriter, r *http.Request) {
+	var rows []models.Brand
+	if err := h.db.Order("name asc").Find(&rows).Error; err != nil {
+		errors.WriteJSON(w, r, errors.Internal("Failed to list brands"))
+		return
+	}
+	result := make([]BrandPublicDTO, 0, len(rows))
+	for _, row := range rows {
+		url := ""
+		if row.LogoMediaID != nil {
+			resolved, err := media.ResolvePublicURL(h.db, h.cfg, *row.LogoMediaID)
+			if err != nil {
+				errors.WriteJSON(w, r, errors.Internal("Failed to resolve brand logo"))
+				return
+			}
+			url = resolved
+		}
+		result = append(result, BrandPublicDTO{ID: row.ID, Slug: row.Slug, Name: row.Name, LogoURL: url})
+	}
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(struct {
+		Data []BrandPublicDTO `json:"data"`
+	}{result}); err != nil {
+		return
+	}
 }

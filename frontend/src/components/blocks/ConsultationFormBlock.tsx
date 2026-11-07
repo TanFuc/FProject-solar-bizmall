@@ -8,6 +8,7 @@ import { Sparkles, Phone, User, MapPin, CheckCircle, AlertCircle, ShieldCheck } 
 import { Button } from '@/components/ui/Button';
 
 interface ConsultationFormBlockProps {
+  source?:string;
   headline?: string;
   subheading?: string;
 }
@@ -15,6 +16,7 @@ interface ConsultationFormBlockProps {
 export function ConsultationFormBlock({
   headline,
   subheading,
+  source,
 }: ConsultationFormBlockProps) {
   const { branches, activeBranch } = useBranch();
   const { t, isEnglish } = useTranslation();
@@ -41,7 +43,7 @@ export function ConsultationFormBlock({
       name: name.trim(),
       phone: phone.trim(),
       branchId: branchId || activeBranch?.id,
-      message: message.trim() || 'Yêu cầu khảo sát từ form chân trang',
+      message: message.trim() || source || 'Yêu cầu khảo sát từ form chân trang',
       sourcePage: typeof window !== 'undefined' ? window.location.pathname : '/',
       privacyConsent: true,
       privacyPolicyVersion: 'v1.0.0',
@@ -59,7 +61,7 @@ export function ConsultationFormBlock({
   };
 
   return (
-    <section className="py-16 lg:py-20 bg-gradient-to-br from-brand-dark via-brand-primary to-brand-darker text-white relative overflow-hidden" id="tu-van">
+    <section className="solar-consultation py-16 lg:py-20 bg-gradient-to-br from-brand-dark via-brand-primary to-brand-darker text-white relative overflow-hidden" id="tu-van">
       {/* Decorative solar glow */}
       <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 rounded-full bg-accent-orange/15 blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 rounded-full bg-blue-500/10 blur-3xl pointer-events-none" />

@@ -1,3 +1,5 @@
+import { articleFromApi, listFromApi, productFromApi, projectFromApi } from './public-adapters';
+import { items, category, audience, object } from './blocks';
 import {
   ApiResponse,
   PaginatedResponse,
@@ -17,7 +19,8 @@ import {
   fallbackArticles,
 } from './mockData';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001/api/v1';
+const apiOrigin = (process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001').replace(/\/$/, '');
+const API_BASE_URL = apiOrigin.endsWith('/api/v1') ? apiOrigin : `${apiOrigin}/api/v1`;
 
 async function safeFetch<T>(endpoint: string, options?: RequestInit, fallback?: T): Promise<T> {
   try {
@@ -28,7 +31,7 @@ async function safeFetch<T>(endpoint: string, options?: RequestInit, fallback?: 
         'Content-Type': 'application/json',
         ...(options?.headers || {}),
       },
-      next: { revalidate: 60 },
+      next: { revalidate: process.env.NODE_ENV === 'development' ? 0 : 60 },
     });
 
     if (!res.ok) {
@@ -82,10 +85,10 @@ export async function getProducts(params?: {
 
   try {
     const res = await fetch(`${API_BASE_URL}/public/products?${query.toString()}`, {
-      next: { revalidate: 60 },
+      next: { revalidate: process.env.NODE_ENV === 'development' ? 0 : 60 },
     });
     if (!res.ok) return fallback;
-    return (await res.json()) as PaginatedResponse<ProductCard>;
+    return listFromApi(await res.json(), productFromApi);
   } catch {
     return fallback;
   }
@@ -104,7 +107,7 @@ export async function getProductBySlug(slug: string): Promise<ProductDetail | nu
 
   try {
     const res = await fetch(`${API_BASE_URL}/public/products/${slug}`, {
-      next: { revalidate: 60 },
+      next: { revalidate: process.env.NODE_ENV === 'development' ? 0 : 60 },
     });
     if (!res.ok) return fallback;
     const json = (await res.json()) as ApiResponse<ProductDetail>;
@@ -138,10 +141,10 @@ export async function getProjects(params?: {
 
   try {
     const res = await fetch(`${API_BASE_URL}/public/projects?${query.toString()}`, {
-      next: { revalidate: 60 },
+      next: { revalidate: process.env.NODE_ENV === 'development' ? 0 : 60 },
     });
     if (!res.ok) return fallback;
-    return (await res.json()) as PaginatedResponse<ProjectItem>;
+    return listFromApi(await res.json(), projectFromApi);
   } catch {
     return fallback;
   }
@@ -151,7 +154,7 @@ export async function getProjectBySlug(slug: string): Promise<ProjectItem | null
   const found = fallbackProjects.find((p) => p.slug === slug) || null;
   try {
     const res = await fetch(`${API_BASE_URL}/public/projects/${slug}`, {
-      next: { revalidate: 60 },
+      next: { revalidate: process.env.NODE_ENV === 'development' ? 0 : 60 },
     });
     if (!res.ok) return found;
     const json = (await res.json()) as ApiResponse<ProjectItem>;
@@ -183,10 +186,10 @@ export async function getArticles(params?: {
 
   try {
     const res = await fetch(`${API_BASE_URL}/public/articles?${query.toString()}`, {
-      next: { revalidate: 60 },
+      next: { revalidate: process.env.NODE_ENV === 'development' ? 0 : 60 },
     });
     if (!res.ok) return fallback;
-    return (await res.json()) as PaginatedResponse<ArticleItem>;
+    return listFromApi(await res.json(), articleFromApi);
   } catch {
     return fallback;
   }
@@ -196,7 +199,7 @@ export async function getArticleBySlug(slug: string): Promise<ArticleItem | null
   const found = fallbackArticles.find((a) => a.slug === slug) || null;
   try {
     const res = await fetch(`${API_BASE_URL}/public/articles/${slug}`, {
-      next: { revalidate: 60 },
+      next: { revalidate: process.env.NODE_ENV === 'development' ? 0 : 60 },
     });
     if (!res.ok) return found;
     const json = (await res.json()) as ApiResponse<ArticleItem>;
@@ -232,10 +235,10 @@ export async function submitLeadRequest(payload: CreateLeadPayload): Promise<{ s
       message: 'Cảm ơn quý khách! Kỹ sư BM SOLAR sẽ liên hệ tư vấn khảo sát trong vòng 15 phút.',
     };
   } catch {
-    // If backend offline, simulate smooth successful demo response
+    // A network failure must never be presented as a saved lead.
     return {
-      success: true,
-      message: 'Yêu cầu tư vấn của quý khách đã được tiếp nhận thành công!',
+      success: false,
+      message: 'Chưa gửi được yêu cầu. Vui lòng thử lại hoặc liên hệ trực tiếp.',
     };
   }
 }
@@ -255,3 +258,24 @@ export async function getFaqs() {
   return fallbackFaqs;
 }
 
+
+export async function getProductCategories() {
+ const res=await fetch(`${API_BASE_URL}/public/product-categories`,{next:{revalidate:process.env.NODE_ENV==='development'?0:60}});
+ if(!res.ok) throw new Error('Product categories unavailable');
+ const json:unknown=await res.json();
+ return object(json)?items(json.data,category)||[]:[];
+}
+export async function getAudiences() {
+ const res=await fetch(`${API_BASE_URL}/public/audiences`,{next:{revalidate:process.env.NODE_ENV==='development'?0:60}});
+ if(!res.ok) throw new Error('Audiences unavailable');
+ const json:unknown=await res.json();
+ return object(json)?items(json.data,audience)||[]:[];
+}
+
+export async function getBrands() {
+ const res=await fetch(`${API_BASE_URL}/public/brands`,{next:{revalidate:process.env.NODE_ENV==='development'?0:60}});
+ if(!res.ok)return [];
+ const json:unknown=await res.json();if(!object(json)||!Array.isArray(json.data))return [];
+ const brands=json.data.flatMap(row=>object(row)&&typeof row.id==='string'&&typeof row.slug==='string'&&typeof row.name==='string'?[{id:row.id,slug:row.slug,name:row.name,logoUrl:typeof row.logoUrl==='string'?row.logoUrl:undefined}]:[]);
+ return Array.from(new Map(brands.map(brand=>[brand.name.toLowerCase(),brand])).values());
+}

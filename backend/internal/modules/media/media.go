@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"image"
 	_ "image/gif"
-	_ "image/jpeg"
+	"image/jpeg"
 	_ "image/png"
 	"io"
 	"mime/multipart"
@@ -68,132 +68,99 @@ func (s *Service) SaveUploadedFile(file multipart.File, header *multipart.FileHe
 		maxMB = 25
 	}
 	maxBytes := int64(maxMB) << 20
-
 	if header.Size > maxBytes {
-		return nil, fmt.Errorf("file size %d bytes exceeds maximum allowed %dMB", header.Size, maxMB)
+		return nil, fmt.Errorf("file exceeds %dMB upload limit", maxMB)
 	}
-
+	data, err := io.ReadAll(io.LimitReader(file, maxBytes+1))
+	if err != nil {
+		return nil, fmt.Errorf("read upload: %w", err)
+	}
+	if int64(len(data)) > maxBytes {
+		return nil, fmt.Errorf("file exceeds %dMB upload limit", maxMB)
+	}
 	assetID := id.New()
 	ext := strings.ToLower(filepath.Ext(header.Filename))
-	if ext == "" {
+	mimeType := http.DetectContentType(data)
+	var source image.Image
+	var width, height *int
+	if strings.HasPrefix(mimeType, "image/") {
+		source, _, err = image.Decode(bytes.NewReader(data))
+		if err != nil {
+			return nil, fmt.Errorf("decode uploaded image: %w", err)
+		}
+		maxW, maxH := s.cfg.ImageMaxWidth, s.cfg.ImageMaxHeight
+		if maxW <= 0 {
+			maxW = 2400
+		}
+		if maxH <= 0 {
+			maxH = 2400
+		}
+		source = fitImage(source, maxW, maxH)
+		quality := s.cfg.ImageQuality
+		if quality < 1 || quality > 100 {
+			quality = 82
+		}
+		var encoded bytes.Buffer
+		if err = jpeg.Encode(&encoded, source, &jpeg.Options{Quality: quality}); err != nil {
+			return nil, fmt.Errorf("encode image: %w", err)
+		}
+		data = encoded.Bytes()
+		ext = ".jpg"
+		mimeType = "image/jpeg"
+		w, h := source.Bounds().Dx(), source.Bounds().Dy()
+		width, height = &w, &h
+	} else if ext == ".svg" {
+		mimeType = "image/svg+xml"
+	} else if ext == "" {
 		ext = ".bin"
 	}
-
-	storageKey := fmt.Sprintf("%s%s", assetID, ext)
-	targetPath := filepath.Join(s.storagePath, storageKey)
-
-	// Read file content
-	fileBytes, err := io.ReadAll(file)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read upload file: %w", err)
-	}
-
-	// Always save locally for serving / fallback
-	if err := os.WriteFile(targetPath, fileBytes, 0644); err != nil {
-		return nil, fmt.Errorf("failed to save file locally: %w", err)
-	}
-
-	// If R2 is enabled, upload to Cloudflare R2
-	if (s.cfg.R2Enabled || s.cfg.StorageProvider == "r2") && s.cfg.R2AccountID != "" && s.cfg.R2Bucket != "" {
-		_ = s.uploadToR2(storageKey, fileBytes, header.Header.Get("Content-Type"))
-	}
-
-	mimeType := header.Header.Get("Content-Type")
-	if mimeType == "" {
-		mimeType = "application/octet-stream"
-	}
-
-	var width, height *int
-	variants := make([]models.MediaVariant, 0)
-	variantItems := make([]VariantItem, 0)
-
-	// Inspect dimensions if image
-	if strings.HasPrefix(mimeType, "image/") && ext != ".svg" {
-		cfg, _, imgErr := image.DecodeConfig(bytes.NewReader(fileBytes))
-		if imgErr == nil {
-			w := cfg.Width
-			h := cfg.Height
-			width = &w
-			height = &h
-
-			thumbW := s.cfg.ImageThumbWidth
-			if thumbW <= 0 {
-				thumbW = 480
-			}
-			mediumW := s.cfg.ImageMediumWidth
-			if mediumW <= 0 {
-				mediumW = 1200
-			}
-			largeW := s.cfg.ImageLargeWidth
-			if largeW <= 0 {
-				largeW = 1800
-			}
-
-			variantDefs := []struct {
-				Key    string
-				Width  int
-				Height int
-			}{
-				{Key: "thumb", Width: thumbW, Height: int(float64(thumbW) * float64(h) / float64(w))},
-				{Key: "medium", Width: mediumW, Height: int(float64(mediumW) * float64(h) / float64(w))},
-				{Key: "large", Width: largeW, Height: int(float64(largeW) * float64(h) / float64(w))},
-				{Key: "desktop_16_9", Width: 1920, Height: 1080},
-				{Key: "mobile_4_5", Width: 800, Height: 1000},
-			}
-
-			for _, vd := range variantDefs {
-				vKey := fmt.Sprintf("%s_%s%s", assetID, vd.Key, ext)
-				vURL := s.cfg.ResolveMediaURL(vKey)
-
-				mv := models.MediaVariant{
-					ID:         id.New(),
-					AssetID:    assetID,
-					VariantKey: vd.Key,
-					StorageKey: vKey,
-					Width:      vd.Width,
-					Height:     vd.Height,
-					SizeBytes:  len(fileBytes),
-				}
-				variants = append(variants, mv)
-				variantItems = append(variantItems, VariantItem{
-					VariantKey: vd.Key,
-					StorageKey: vKey,
-					URL:        vURL,
-					Width:      vd.Width,
-					Height:     vd.Height,
-					SizeBytes:  len(fileBytes),
-				})
-
-				// If R2 enabled, push variant reference or sync
-				if (s.cfg.R2Enabled || s.cfg.StorageProvider == "r2") && s.cfg.R2AccountID != "" {
-					_ = s.uploadToR2(vKey, fileBytes, mimeType)
-				}
+	write := func(key string, body []byte) error {
+		if err := os.WriteFile(filepath.Join(s.storagePath, key), body, 0644); err != nil {
+			return fmt.Errorf("save media: %w", err)
+		}
+		if s.cfg.R2Enabled || s.cfg.StorageProvider == "r2" {
+			if err := s.uploadToR2(key, body, mimeType); err != nil {
+				return fmt.Errorf("upload media to R2: %w", err)
 			}
 		}
+		return nil
 	}
-
-	altText := strings.TrimSuffix(header.Filename, ext)
-	asset := models.MediaAsset{
-		ID:           assetID,
-		StorageKey:   storageKey,
-		OriginalName: header.Filename,
-		MimeType:     mimeType,
-		Bytes:        len(fileBytes),
-		Width:        width,
-		Height:       height,
-		AltText:      &altText,
-		Status:       "ready",
-		UploaderID:   uploaderID,
+	key := assetID + ext
+	if err = write(key, data); err != nil {
+		return nil, err
 	}
-
-	assetURL := s.cfg.ResolveMediaURL(storageKey)
-
-	return &UploadResult{
-		Asset:       asset,
-		Variants:    variants,
-		AssetURL:    assetURL,
-		VariantURLs: variantItems,
-	}, nil
+	variants := make([]models.MediaVariant, 0)
+	urls := make([]VariantItem, 0)
+	if source != nil {
+		definitions := []struct {
+			key   string
+			width int
+		}{{"thumb", s.cfg.ImageThumbWidth}, {"medium", s.cfg.ImageMediumWidth}, {"large", s.cfg.ImageLargeWidth}}
+		for _, definition := range definitions {
+			if definition.width <= 0 {
+				continue
+			}
+			img := fitImage(source, definition.width, source.Bounds().Dy())
+			var encoded bytes.Buffer
+			quality := s.cfg.ImageQuality
+			if quality < 1 || quality > 100 {
+				quality = 82
+			}
+			if err = jpeg.Encode(&encoded, img, &jpeg.Options{Quality: quality}); err != nil {
+				return nil, fmt.Errorf("encode variant: %w", err)
+			}
+			variantKey := assetID + "_" + definition.key + ext
+			if err = write(variantKey, encoded.Bytes()); err != nil {
+				return nil, err
+			}
+			w, h, size := img.Bounds().Dx(), img.Bounds().Dy(), encoded.Len()
+			variants = append(variants, models.MediaVariant{ID: id.New(), AssetID: assetID, VariantKey: definition.key, StorageKey: variantKey, Width: w, Height: h, SizeBytes: size})
+			urls = append(urls, VariantItem{VariantKey: definition.key, StorageKey: variantKey, URL: s.cfg.ResolveMediaURL(variantKey), Width: w, Height: h, SizeBytes: size})
+		}
+	}
+	alt := strings.TrimSuffix(header.Filename, filepath.Ext(header.Filename))
+	asset := models.MediaAsset{ID: assetID, StorageKey: key, OriginalName: header.Filename, MimeType: mimeType, Bytes: len(data), Width: width, Height: height, AltText: &alt, Status: "ready", UploaderID: uploaderID}
+	return &UploadResult{Asset: asset, Variants: variants, AssetURL: s.cfg.ResolveMediaURL(key), VariantURLs: urls}, nil
 }
 
 // uploadToR2 uploads file bytes to Cloudflare R2 S3-compatible API

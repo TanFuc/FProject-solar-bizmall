@@ -5,14 +5,15 @@ import { ArticleItem } from '@/types/bmsolar-api';
 import { Calendar, Clock, ArrowUpRight } from 'lucide-react';
 
 interface NewsSectionProps {
+  title?:string;
   articles?: ArticleItem[];
 }
 
-export function NewsSection({ articles }: NewsSectionProps) {
+export function NewsSection({ articles, title }: NewsSectionProps) {
   if (!articles || articles.length === 0) return null;
 
   return (
-    <section className="py-16 lg:py-24 bg-surface" id="tin-tuc">
+    <section className="solar-news py-16 lg:py-24 bg-surface" id="tin-tuc">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
@@ -20,9 +21,7 @@ export function NewsSection({ articles }: NewsSectionProps) {
             <span className="text-xs font-bold text-accent-orange uppercase tracking-wider">
               Kiến Thức & Thị Trường
             </span>
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-ink tracking-tight">
-              Cẩm Nang Năng Lượng & Chính Sách Mới Nhất
-            </h2>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-ink tracking-tight">{title || 'Cẩm Nang Năng Lượng & Chính Sách Mới Nhất'}</h2>
             <p className="text-xs sm:text-sm text-ink-muted leading-relaxed">
               Cập nhật thông tư, quy định giá điện và cẩm nang lựa chọn thiết bị điện mặt trời từ chuyên gia BM SOLAR.
             </p>

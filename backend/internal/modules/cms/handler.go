@@ -17,6 +17,7 @@ import (
 	"bmsolar-backend/internal/config"
 	"bmsolar-backend/internal/database/models"
 	"bmsolar-backend/internal/modules/identity"
+	"bmsolar-backend/internal/modules/media"
 
 	"github.com/go-chi/chi/v5"
 	"gorm.io/gorm"
@@ -189,11 +190,20 @@ func (h *Handler) GetPublicSiteShell(w http.ResponseWriter, r *http.Request) {
 		legalText = lt
 	}
 
+	logoURL := ""
+	if siteSetting.LogoMediaID != nil {
+		resolved, err := media.ResolvePublicURL(h.db, h.cfg, *siteSetting.LogoMediaID)
+		if err != nil {
+			errors.WriteJSON(w, r, errors.Internal("Failed to resolve logo"))
+			return
+		}
+		logoURL = resolved
+	}
 	resp := SiteShellDTO{
 		Brand: BrandDTO{
 			Name: siteSetting.SiteName,
 			Logo: LogoDTO{
-				URL: fmt.Sprintf("%s/media/logo.webp", h.cfg.AppBaseURL),
+				URL: logoURL,
 				Alt: siteSetting.SiteName,
 			},
 		},
@@ -205,7 +215,7 @@ func (h *Handler) GetPublicSiteShell(w http.ResponseWriter, r *http.Request) {
 			Hotline:     hotline,
 			Email:       email,
 		},
-		Navigation:    navTree,
+		Navigation: navTree,
 		Footer: FooterDTO{
 			Groups:      footerConfig["groups"],
 			Branches:    branchDTOs,
@@ -340,6 +350,11 @@ func (h *Handler) GetPublicPage(w http.ResponseWriter, r *http.Request) {
 		blocks = []Block{}
 	}
 
+	if err := h.hydrateMedia(blocks); err != nil {
+		errors.WriteJSON(w, r, errors.Internal("Failed to resolve page media"))
+		return
+	}
+
 	var seo any
 	if revision.SeoJSON != nil && *revision.SeoJSON != "" {
 		_ = json.Unmarshal([]byte(*revision.SeoJSON), &seo)
@@ -384,6 +399,7 @@ func (h *Handler) GetSiteSettings(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) UpdateSiteSettings(w http.ResponseWriter, r *http.Request) {
 	var input struct {
+		LogoMediaID         *string `json:"logoMediaId"`
 		SiteName            string  `json:"siteName"`
 		DefaultLocale       string  `json:"defaultLocale"`
 		DefaultBranchID     *string `json:"defaultBranchId"`
@@ -401,6 +417,7 @@ func (h *Handler) UpdateSiteSettings(w http.ResponseWriter, r *http.Request) {
 	if err := h.db.First(&settings).Error; err != nil {
 		settings = models.SiteSetting{
 			ID:                  id.New(),
+			LogoMediaID:         input.LogoMediaID,
 			SiteName:            input.SiteName,
 			DefaultLocale:       input.DefaultLocale,
 			DefaultBranchID:     input.DefaultBranchID,
@@ -411,6 +428,7 @@ func (h *Handler) UpdateSiteSettings(w http.ResponseWriter, r *http.Request) {
 		}
 		h.db.Create(&settings)
 	} else {
+		settings.LogoMediaID = input.LogoMediaID
 		settings.SiteName = input.SiteName
 		settings.DefaultLocale = input.DefaultLocale
 		settings.DefaultBranchID = input.DefaultBranchID

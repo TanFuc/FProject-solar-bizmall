@@ -10,11 +10,12 @@ import { resolveInternalRoute } from '@/lib/utils/routes';
 import { MapPin, Phone, Mail, Facebook, Youtube, Linkedin } from 'lucide-react';
 
 interface FooterProps {
+ brand?: SiteShellData['brand'];
   footerData: SiteShellData['footer'];
   branches: SiteShellData['utilityBar']['branches'];
 }
 
-export function Footer({ branches }: FooterProps) {
+export function Footer({ branches, brand }: FooterProps) {
   const { activeHotline, activeZalo } = useBranch();
   const { isEnglish } = useTranslation();
 
@@ -24,7 +25,7 @@ export function Footer({ branches }: FooterProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 pb-12 border-b border-white/10">
           {/* Column 1: Brand & Slogan */}
           <div className="space-y-4 lg:col-span-1">
-            <Link href="/" className="inline-block">
+            <Link href="/" className="inline-flex items-center gap-2">
               <Image
                 src="/images/logo.png"
                 alt="BM SOLAR"
@@ -32,6 +33,7 @@ export function Footer({ branches }: FooterProps) {
                 height={50}
                 className="h-10 w-auto object-contain"
               />
+              <span className="sr-only">BM SOLAR</span>
             </Link>
             <p className="text-white/70 leading-relaxed">
               {isEnglish

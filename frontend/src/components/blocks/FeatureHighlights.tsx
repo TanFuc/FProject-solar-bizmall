@@ -11,10 +11,11 @@ interface FeatureItem {
 }
 
 interface FeatureHighlightsProps {
+ headline?:string;
   items?: FeatureItem[];
 }
 
-export function FeatureHighlights({ items }: FeatureHighlightsProps) {
+export function FeatureHighlights({ items, headline }: FeatureHighlightsProps) {
   const { t } = useTranslation();
 
   const defaultItems: FeatureItem[] = [
@@ -57,9 +58,10 @@ export function FeatureHighlights({ items }: FeatureHighlightsProps) {
   };
 
   return (
-    <section className="py-16 bg-white border-y border-slate-100">
+    <section className="solar-features py-16 bg-white border-y border-slate-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className={`grid grid-cols-1 sm:grid-cols-2 ${headline ? 'lg:grid-cols-5' : 'lg:grid-cols-4'} gap-8`}>
+          {headline && <h2 className="solar-feature-heading">{headline}</h2>}
           {displayItems.map((item, idx) => (
             <div
               key={idx}

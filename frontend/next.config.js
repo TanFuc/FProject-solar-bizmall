@@ -3,6 +3,7 @@ const nextConfig = {
   reactStrictMode: true,
   images: {
     remotePatterns: [
+ {protocol:'https',hostname:'images.bizmallgroup.com',pathname:'/**'},
       {
         protocol: 'http',
         hostname: 'localhost',

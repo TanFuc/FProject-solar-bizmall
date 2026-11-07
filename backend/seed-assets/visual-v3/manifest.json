@@ -1,0 +1,240 @@
+{
+  "version": "visual-v3",
+  "assets": [
+    {
+      "key": "home",
+      "file": "home-illustration.png",
+      "alt": "Ảnh minh họa AI cho thiết kế BM SOLAR: nhà ở năng lượng xanh"
+    },
+    {
+      "key": "factory",
+      "file": "factory-illustration.png",
+      "alt": "Ảnh minh họa AI cho thiết kế BM SOLAR: nhà xưởng"
+    },
+    {
+      "key": "office",
+      "file": "office-illustration.png",
+      "alt": "Ảnh minh họa AI cho thiết kế BM SOLAR: doanh nghiệp"
+    },
+    {
+      "key": "ev",
+      "file": "ev-illustration.png",
+      "alt": "Ảnh minh họa AI cho thiết kế BM SOLAR: trạm sạc"
+    },
+    {
+      "key": "panel",
+      "file": "panel-illustration.svg",
+      "alt": "Hình minh họa thiết bị, không thay thế ảnh hoặc thông số sản phẩm thực tế: panel"
+    },
+    {
+      "key": "inverter",
+      "file": "inverter-illustration.svg",
+      "alt": "Hình minh họa thiết bị, không thay thế ảnh hoặc thông số sản phẩm thực tế: inverter"
+    },
+    {
+      "key": "battery",
+      "file": "battery-illustration.svg",
+      "alt": "Hình minh họa thiết bị, không thay thế ảnh hoặc thông số sản phẩm thực tế: battery"
+    },
+    {
+      "key": "charger",
+      "file": "charger-illustration.svg",
+      "alt": "Hình minh họa thiết bị, không thay thế ảnh hoặc thông số sản phẩm thực tế: charger"
+    },
+    {
+      "key": "electrical",
+      "file": "electrical-illustration.svg",
+      "alt": "Hình minh họa thiết bị, không thay thế ảnh hoặc thông số sản phẩm thực tế: electrical"
+    },
+    {
+      "key": "logo",
+      "file": "logo.png",
+      "alt": "BM SOLAR"
+    }
+  ],
+  "pages": [
+    {
+      "key": "home",
+      "route": "/",
+      "title": "Giải pháp\nNăng lượng xanh",
+      "accent": "toàn diện",
+      "heroAsset": "home",
+      "cta": "Nhận tư vấn miễn phí",
+      "subtitle": "Trải nghiệm, tư vấn và phát triển giải pháp năng lượng xanh phù hợp cho công trình của bạn.",
+      "eyebrow": "BM SOLAR",
+      "benefits": [
+        {
+          "iconToken": "leaf",
+          "label": "Tiết kiệm\nchi phí điện"
+        },
+        {
+          "iconToken": "shield-check",
+          "label": "Bền vững\n& an toàn"
+        },
+        {
+          "iconToken": "recycle",
+          "label": "Thân thiện\nmôi trường"
+        }
+      ],
+      "copy": {
+        "solutions": "Chọn giải pháp phù hợp với bạn",
+        "products": "Thiết bị chính hãng – Hiệu suất cao",
+        "projects": "Những công trình đã triển khai",
+        "news": "Cập nhật xu hướng năng lượng xanh",
+        "features": "Vì sao chọn BM SOLAR?",
+        "consultation": "Nhận tư vấn giải pháp",
+        "consultationSubtitle": "Phù hợp cho công trình của bạn"
+      }
+    },
+    {
+      "key": "about",
+      "route": "/gioi-thieu",
+      "title": "Kiến tạo tương lai",
+      "accent": "năng lượng xanh",
+      "heroAsset": "ev",
+      "cta": "Nhận tư vấn miễn phí",
+      "subtitle": "Trải nghiệm, tư vấn và phát triển giải pháp năng lượng xanh phù hợp cho công trình của bạn."
+    },
+    {
+      "key": "solutions",
+      "route": "/giai-phap",
+      "title": "Giải pháp năng lượng xanh",
+      "accent": "cho mọi nhu cầu",
+      "heroAsset": "home",
+      "cta": "Nhận tư vấn miễn phí",
+      "subtitle": "Trải nghiệm, tư vấn và phát triển giải pháp năng lượng xanh phù hợp cho công trình của bạn."
+    },
+    {
+      "key": "products",
+      "route": "/san-pham",
+      "title": "Thiết bị năng lượng xanh",
+      "accent": "chính hãng · đồng bộ",
+      "heroAsset": "home",
+      "cta": "Nhận tư vấn miễn phí",
+      "subtitle": "Trải nghiệm, tư vấn và phát triển giải pháp năng lượng xanh phù hợp cho công trình của bạn."
+    },
+    {
+      "key": "projects",
+      "route": "/du-an",
+      "title": "Dự án tiêu biểu",
+      "accent": "Giá trị xanh bền vững",
+      "heroAsset": "factory",
+      "cta": "Nhận tư vấn miễn phí",
+      "subtitle": "Trải nghiệm, tư vấn và phát triển giải pháp năng lượng xanh phù hợp cho công trình của bạn."
+    },
+    {
+      "key": "news",
+      "route": "/tin-tuc",
+      "title": "Tin tức & Kiến thức",
+      "accent": "năng lượng xanh",
+      "heroAsset": "home",
+      "cta": "Nhận tư vấn miễn phí",
+      "subtitle": "Trải nghiệm, tư vấn và phát triển giải pháp năng lượng xanh phù hợp cho công trình của bạn."
+    },
+    {
+      "key": "contact",
+      "route": "/lien-he",
+      "title": "Kết nối với BM SOLAR",
+      "accent": "Chúng tôi luôn sẵn sàng",
+      "heroAsset": "ev",
+      "cta": "Nhận tư vấn miễn phí",
+      "subtitle": "Trải nghiệm, tư vấn và phát triển giải pháp năng lượng xanh phù hợp cho công trình của bạn.",
+      "copy": {
+        "contact": "Chọn cách kết nối thuận tiện",
+        "form": "Để chúng tôi hiểu nhu cầu của bạn",
+        "branches": "BM SOLAR gần bạn",
+        "faq": "Thông tin hỗ trợ nhanh"
+      }
+    }
+  ],
+  "categoryBindings": [
+    {
+      "match": "tam-pin",
+      "asset": "panel"
+    },
+    {
+      "match": "inverter",
+      "asset": "inverter"
+    },
+    {
+      "match": "pin-luu-tru",
+      "asset": "battery"
+    },
+    {
+      "match": "tram-sac",
+      "asset": "charger"
+    },
+    {
+      "match": "phu-kien",
+      "asset": "electrical"
+    },
+    {
+      "match": "bien-tan",
+      "asset": "inverter"
+    }
+  ],
+  "audienceBindings": [
+    {
+      "match": "household",
+      "asset": "home"
+    },
+    {
+      "match": "business",
+      "asset": "office"
+    },
+    {
+      "match": "industrial",
+      "asset": "factory"
+    }
+  ],
+  "categories": [
+    {
+      "slug": "tam-pin-nang-luong-mat-troi",
+      "name": "Điện mặt trời",
+      "asset": "panel"
+    },
+    {
+      "slug": "bien-tan-inverter",
+      "name": "Inverter",
+      "asset": "inverter"
+    },
+    {
+      "slug": "pin-luu-tru-lithium",
+      "name": "Pin lưu trữ (BESS)",
+      "asset": "battery"
+    },
+    {
+      "slug": "tram-sac-xe-dien",
+      "name": "Trạm sạc xe điện",
+      "asset": "charger"
+    },
+    {
+      "slug": "phu-kien-he-thong-khung",
+      "name": "Thiết bị & phụ kiện",
+      "asset": "electrical"
+    }
+  ],
+  "brandHeadline": "Thương hiệu thiết bị",
+  "featureItems": [
+    {
+      "iconToken": "award",
+      "label": "Sản phẩm chính hãng",
+      "description": "Tư vấn lựa chọn thiết bị"
+    },
+    {
+      "iconToken": "map-pin",
+      "label": "Đội ngũ chuyên gia",
+      "description": "Tư vấn – Thiết kế – Thi công"
+    },
+    {
+      "iconToken": "shield-check",
+      "label": "Chất lượng & an toàn",
+      "description": "Theo yêu cầu công trình"
+    },
+    {
+      "iconToken": "zap",
+      "label": "Hỗ trợ lâu dài",
+      "description": "Đồng hành khi vận hành"
+    }
+  ]
+}

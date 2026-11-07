@@ -12,6 +12,7 @@ import (
 	"bmsolar-backend/internal/config"
 	"bmsolar-backend/internal/database/models"
 	"bmsolar-backend/internal/modules/identity"
+	"bmsolar-backend/internal/modules/media"
 
 	"github.com/go-chi/chi/v5"
 	"gorm.io/gorm"
@@ -87,7 +88,11 @@ func (h *Handler) ListPublicArticles(w http.ResponseWriter, r *http.Request) {
 	for _, a := range articles {
 		var coverURL *string
 		if a.CoverMediaID != nil {
-			url := h.cfg.AppBaseURL + "/media/" + *a.CoverMediaID
+			url, mediaErr := media.ResolvePublicURL(h.db, h.cfg, *a.CoverMediaID)
+			if mediaErr != nil {
+				errors.WriteJSON(w, r, errors.Internal("Failed to resolve media"))
+				return
+			}
 			coverURL = &url
 		}
 
@@ -119,7 +124,11 @@ func (h *Handler) GetPublicArticleDetail(w http.ResponseWriter, r *http.Request)
 
 	var coverURL *string
 	if article.CoverMediaID != nil {
-		url := h.cfg.AppBaseURL + "/media/" + *article.CoverMediaID
+		url, mediaErr := media.ResolvePublicURL(h.db, h.cfg, *article.CoverMediaID)
+		if mediaErr != nil {
+			errors.WriteJSON(w, r, errors.Internal("Failed to resolve media"))
+			return
+		}
 		coverURL = &url
 	}
 

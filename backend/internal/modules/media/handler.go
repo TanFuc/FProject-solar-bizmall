@@ -92,15 +92,21 @@ func (h *Handler) Upload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.db.Create(&result.Asset).Error; err != nil {
-		errors.WriteJSON(w, r, errors.Internal("Failed to persist media asset"))
+	if err := h.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(&result.Asset).Error; err != nil {
+			return err
+		}
+		if len(result.Variants) > 0 {
+			if err := tx.Create(&result.Variants).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	}); err != nil {
+		errors.WriteJSON(w, r, errors.Internal("Failed to persist uploaded media"))
 		return
 	}
-
-	for _, v := range result.Variants {
-		_ = h.db.Create(&v).Error
-	}
-
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{

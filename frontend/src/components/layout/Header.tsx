@@ -12,10 +12,11 @@ import { Menu, ChevronDown, Search, ArrowRight } from 'lucide-react';
 import { MobileDrawer } from './MobileDrawer';
 
 interface HeaderProps {
+ brand?: import('@/types/bmsolar-api').SiteShellData['brand'];
   navigation: NavigationItemTree[];
 }
 
-export function Header({ navigation }: HeaderProps) {
+export function Header({ navigation, brand }: HeaderProps) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const { openConsultationModal } = useBranch();
   const { t, isEnglish } = useTranslation();
@@ -53,9 +54,10 @@ export function Header({ navigation }: HeaderProps) {
               alt="BM SOLAR — Tổng Thầu EPC Điện Mặt Trời"
               width={160}
               height={52}
-              className="h-11 md:h-12 w-auto object-contain transition-transform group-hover:scale-102"
+              className="h-9 md:h-11 w-auto object-contain transition-transform group-hover:scale-102"
               priority
             />
+            <span className="sr-only">{brand?.name || 'BM SOLAR'}</span>
           </Link>
 
           {/* Desktop Navigation Menu */}

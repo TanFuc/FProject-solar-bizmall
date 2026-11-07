@@ -28,14 +28,18 @@ type Block struct {
 
 // HeroSlide for heroCarousel block
 type HeroSlide struct {
-	Title          string     `json:"title"`
-	Subtitle       string     `json:"subtitle,omitempty"`
-	DesktopMediaID string     `json:"desktopMediaId"`
-	MobileMediaID  string     `json:"mobileMediaId,omitempty"`
-	DesktopMediaURL string    `json:"desktopMediaUrl,omitempty"`
-	MobileMediaURL  string    `json:"mobileMediaUrl,omitempty"`
-	OverlayOpacity float64    `json:"overlayOpacity,omitempty"`
-	CTA            *CtaButton `json:"cta,omitempty"`
+	Eyebrow          string                 `json:"eyebrow,omitempty"`
+	Benefits         []FeatureHighlightItem `json:"benefits,omitempty"`
+	SecondaryCtaText string                 `json:"secondaryCtaText,omitempty"`
+	AccentPhrase     string                 `json:"accentPhrase,omitempty"`
+	Title            string                 `json:"title"`
+	Subtitle         string                 `json:"subtitle,omitempty"`
+	DesktopMediaID   string                 `json:"desktopMediaId"`
+	MobileMediaID    string                 `json:"mobileMediaId,omitempty"`
+	DesktopMediaURL  string                 `json:"desktopMediaUrl,omitempty"`
+	MobileMediaURL   string                 `json:"mobileMediaUrl,omitempty"`
+	OverlayOpacity   float64                `json:"overlayOpacity,omitempty"`
+	CTA              *CtaButton             `json:"cta,omitempty"`
 }
 
 type CtaButton struct {

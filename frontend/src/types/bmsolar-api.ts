@@ -136,6 +136,7 @@ export interface AudienceItem {
 }
 
 export interface ProductCard {
+  brandName?: string;
   id: string;
   sku: string;
   slug: string;
@@ -148,7 +149,7 @@ export interface ProductCard {
   tier?: string;
   priceEstimate?: string;
   category?: {
-    id: string;
+    id?: string;
     name: string;
     slug: string;
   };
@@ -185,12 +186,12 @@ export interface ProjectItem {
   completedAt?: string;
   capacityKwp?: number;
   projectType?: {
-    id: string;
+    id?: string;
     name: string;
     slug: string;
   };
   province?: {
-    id: string;
+    id?: string;
     name: string;
     code: string;
   };
@@ -233,6 +234,13 @@ export type CMSBlockType =
   | 'featureHighlights'
   | 'featuredProducts'
   | 'projectShowcase'
+  | 'projectGallery'
+  | 'productGrid'
+  | 'articleFeed'
+  | 'solutionGrid'
+  | 'socialGrid'
+  | 'richText'
+  | 'ctaBanner'
   | 'newsSection'
   | 'leadForm'
   | 'faq'

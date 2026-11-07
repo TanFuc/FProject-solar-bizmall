@@ -7,14 +7,15 @@ import { ProjectItem } from '@/types/bmsolar-api';
 import { MapPin, Zap, Calendar, ArrowUpRight } from 'lucide-react';
 
 interface ProjectShowcaseProps {
+  title?:string;
   projects?: ProjectItem[];
 }
 
-export function ProjectShowcase({ projects }: ProjectShowcaseProps) {
+export function ProjectShowcase({ projects, title }: ProjectShowcaseProps) {
   if (!projects || projects.length === 0) return null;
 
   return (
-    <section className="py-16 lg:py-24 bg-white" id="du-an">
+    <section className="solar-projects py-16 lg:py-24 bg-white" id="du-an">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
@@ -22,9 +23,7 @@ export function ProjectShowcase({ projects }: ProjectShowcaseProps) {
             <span className="text-xs font-bold text-brand-primary uppercase tracking-wider">
               Năng Lực Thi Công Thực Tế
             </span>
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-ink tracking-tight">
-              Dự Án Điện Mặt Trời Tiêu Biểu Đã Hoàn Thành
-            </h2>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-ink tracking-tight">{title || 'Dự Án Điện Mặt Trời Tiêu Biểu Đã Hoàn Thành'}</h2>
             <p className="text-xs sm:text-sm text-ink-muted leading-relaxed">
               Trực tiếp thiết kế, cung ứng thiết bị và tổng thầu EPC bởi đội ngũ kỹ sư BM SOLAR tại miền Trung & Nam Bộ.
             </p>

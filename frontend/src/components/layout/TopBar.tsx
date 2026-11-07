@@ -30,7 +30,7 @@ export function TopBar() {
                     : 'text-white/60 hover:text-white hover:bg-white/10'
                 }`}
               >
-                {b.code === 'QN-HQ' ? 'Quy Nhơn' : 'Gò Vấp - TP.HCM'}
+                {b.name}
               </button>
             ))}
           </div>

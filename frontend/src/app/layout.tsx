@@ -49,20 +49,21 @@ export default async function RootLayout({
       <head>
         <JsonLd data={[orgSchema, webSiteSchema, hqSchema, hcmSchema]} />
       </head>
-      <body className="min-h-screen flex flex-col bg-surface-white text-ink antialiased">
+      <body className="solar-site min-h-screen flex flex-col bg-surface-white text-ink antialiased">
         <I18nProvider>
           <BranchProvider initialBranches={siteShell.utilityBar.branches}>
             {/* Desktop Topbar */}
             <TopBar />
 
             {/* Main Navigation Header */}
-            <Header navigation={siteShell.navigation} />
+            <Header navigation={siteShell.navigation} brand={siteShell.brand} />
 
             {/* Main Content Area */}
             <main className="flex-1 w-full">{children}</main>
 
             {/* Global Footer */}
             <Footer
+              brand={siteShell.brand}
               footerData={siteShell.footer}
               branches={siteShell.utilityBar.branches}
             />

@@ -6,6 +6,7 @@ import (
 
 // SiteSetting singleton configuration
 type SiteSetting struct {
+	LogoMediaID         *string   `gorm:"size:26" json:"logoMediaId"`
 	ID                  string    `gorm:"primaryKey;size:26" json:"id"`
 	DefaultBranchID     *string   `gorm:"size:26" json:"defaultBranchId"`
 	SiteName            string    `gorm:"size:120;not null" json:"siteName"`
