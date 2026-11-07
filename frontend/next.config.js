@@ -32,7 +32,22 @@ const nextConfig = {
       },
     ],
   },
-}
+  async rewrites() {
+    return [
+      { source: '/home', destination: '/' },
+      { source: '/trang-chu', destination: '/' },
+      { source: '/about', destination: '/gioi-thieu' },
+      { source: '/solutions', destination: '/giai-phap' },
+      { source: '/solutions/:slug*', destination: '/giai-phap/:slug*' },
+      { source: '/products', destination: '/san-pham' },
+      { source: '/products/:slug*', destination: '/san-pham/:slug*' },
+      { source: '/projects', destination: '/du-an' },
+      { source: '/projects/:slug*', destination: '/du-an/:slug*' },
+      { source: '/news', destination: '/tin-tuc' },
+      { source: '/news/:slug*', destination: '/tin-tuc/:slug*' },
+      { source: '/contact', destination: '/lien-he' },
+    ];
+  },
+};
 
-module.exports = nextConfig
-
+module.exports = nextConfig;

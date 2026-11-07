@@ -196,21 +196,25 @@ func SeedAll(db *gorm.DB, cfg *config.Config) error {
 		Locale:  "vi-VN",
 		Status:  "published",
 	}
-	if db.Where("menu_key = 'main_header'").First(&models.NavigationMenu{}).Error != nil {
+	var existingHeaderMenu models.NavigationMenu
+	if db.Where("menu_key = 'main_header'").First(&existingHeaderMenu).Error != nil {
 		db.Create(&headerMenu)
+	} else {
+		headerMenu = existingHeaderMenu
+		db.Where("menu_id = ?", headerMenu.ID).Delete(&models.NavigationItem{})
+	}
 
-		menuItems := []models.NavigationItem{
-			{ID: id.New(), MenuID: headerMenu.ID, Label: "Trang chủ", TargetKind: "internalRoute", TargetRef: strPtr("home"), SortOrder: 1, Visibility: "all"},
-			{ID: id.New(), MenuID: headerMenu.ID, Label: "Giới thiệu", TargetKind: "internalRoute", TargetRef: strPtr("about"), SortOrder: 2, Visibility: "all"},
-			{ID: id.New(), MenuID: headerMenu.ID, Label: "Giải pháp", TargetKind: "internalRoute", TargetRef: strPtr("solutions"), SortOrder: 3, Visibility: "all"},
-			{ID: id.New(), MenuID: headerMenu.ID, Label: "Sản phẩm", TargetKind: "internalRoute", TargetRef: strPtr("products"), SortOrder: 4, Visibility: "all"},
-			{ID: id.New(), MenuID: headerMenu.ID, Label: "Dự án", TargetKind: "internalRoute", TargetRef: strPtr("projects"), SortOrder: 5, Visibility: "all"},
-			{ID: id.New(), MenuID: headerMenu.ID, Label: "Tin tức", TargetKind: "internalRoute", TargetRef: strPtr("news"), SortOrder: 6, Visibility: "all"},
-			{ID: id.New(), MenuID: headerMenu.ID, Label: "Liên hệ", TargetKind: "internalRoute", TargetRef: strPtr("contact"), SortOrder: 7, Visibility: "all"},
-		}
-		for _, mi := range menuItems {
-			db.Create(&mi)
-		}
+	menuItems := []models.NavigationItem{
+		{ID: id.New(), MenuID: headerMenu.ID, Label: "Trang chủ", TargetKind: "internalRoute", TargetRef: strPtr("/"), SortOrder: 1, Visibility: "all"},
+		{ID: id.New(), MenuID: headerMenu.ID, Label: "Giới thiệu", TargetKind: "internalRoute", TargetRef: strPtr("/gioi-thieu"), SortOrder: 2, Visibility: "all"},
+		{ID: id.New(), MenuID: headerMenu.ID, Label: "Giải pháp", TargetKind: "internalRoute", TargetRef: strPtr("/giai-phap"), SortOrder: 3, Visibility: "all"},
+		{ID: id.New(), MenuID: headerMenu.ID, Label: "Sản phẩm", TargetKind: "internalRoute", TargetRef: strPtr("/san-pham"), SortOrder: 4, Visibility: "all"},
+		{ID: id.New(), MenuID: headerMenu.ID, Label: "Dự án", TargetKind: "internalRoute", TargetRef: strPtr("/du-an"), SortOrder: 5, Visibility: "all"},
+		{ID: id.New(), MenuID: headerMenu.ID, Label: "Tin tức", TargetKind: "internalRoute", TargetRef: strPtr("/tin-tuc"), SortOrder: 6, Visibility: "all"},
+		{ID: id.New(), MenuID: headerMenu.ID, Label: "Liên hệ", TargetKind: "internalRoute", TargetRef: strPtr("/lien-he"), SortOrder: 7, Visibility: "all"},
+	}
+	for _, mi := range menuItems {
+		db.Create(&mi)
 	}
 
 	// 6. Audiences

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useBranch } from '@/lib/contacts/branchContext';
 import { useTranslation } from '@/lib/i18n';
+import { resolveInternalRoute } from '@/lib/utils/routes';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { NavigationItemTree } from '@/types/bmsolar-api';
 import { X, Phone, MessageCircle, MapPin, ChevronRight, Globe } from 'lucide-react';
@@ -105,7 +106,7 @@ export function MobileDrawer({ isOpen, onClose, navigation }: MobileDrawerProps)
           {navigation.map((item) => (
             <div key={item.id} className="border-b border-slate-50 last:border-none">
               <Link
-                href={item.targetRef || '#'}
+                href={resolveInternalRoute(item.targetRef)}
                 onClick={onClose}
                 className="flex items-center justify-between py-3 px-2 text-base font-medium text-ink hover:text-brand-primary hover:bg-slate-50 rounded-lg transition-colors"
               >
@@ -121,7 +122,7 @@ export function MobileDrawer({ isOpen, onClose, navigation }: MobileDrawerProps)
                   {item.children.map((sub) => (
                     <Link
                       key={sub.id}
-                      href={sub.targetRef || '#'}
+                      href={resolveInternalRoute(sub.targetRef)}
                       onClick={onClose}
                       className="block py-2 px-3 text-sm text-ink-muted hover:text-brand-primary rounded-md transition-colors"
                     >

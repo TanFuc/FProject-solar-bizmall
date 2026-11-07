@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { NavigationItemTree } from '@/types/bmsolar-api';
 import { useBranch } from '@/lib/contacts/branchContext';
 import { useTranslation } from '@/lib/i18n';
+import { resolveInternalRoute } from '@/lib/utils/routes';
 import { Menu, ChevronDown, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { MobileDrawer } from './MobileDrawer';
@@ -54,7 +55,7 @@ export function Header({ navigation }: HeaderProps) {
             {navigation.map((item) => (
               <div key={item.id} className="relative group">
                 <Link
-                  href={item.targetRef || '#'}
+                  href={resolveInternalRoute(item.targetRef)}
                   className="px-3 py-2 text-sm font-semibold text-ink hover:text-brand-primary flex items-center gap-1 rounded-md transition-colors"
                 >
                   <span>{getNavLabel(item)}</span>
@@ -70,7 +71,7 @@ export function Header({ navigation }: HeaderProps) {
                       {item.children.map((sub) => (
                         <Link
                           key={sub.id}
-                          href={sub.targetRef || '#'}
+                          href={resolveInternalRoute(sub.targetRef)}
                           className="block px-3 py-2.5 text-xs md:text-sm font-medium text-ink hover:text-brand-primary hover:bg-surface rounded-lg transition-colors"
                         >
                           {sub.label}
