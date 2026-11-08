@@ -6,6 +6,7 @@ import {
   ArticleItem,
   AudienceItem,
   ProductCategoryItem,
+  BranchItem,
 } from '@/types/bmsolar-api';
 
 export const fallbackSiteShell: SiteShellData = {
@@ -272,6 +273,8 @@ export const fallbackSiteShell: SiteShellData = {
     radius: '12px',
   },
 };
+
+export const fallbackBranches: BranchItem[] = fallbackSiteShell.utilityBar.branches;
 
 export const fallbackCategories: ProductCategoryItem[] = [
   {

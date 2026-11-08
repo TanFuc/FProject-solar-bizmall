@@ -55,12 +55,14 @@ func (h *Handler) RegisterRoutes(r chi.Router) {
 		// Branches
 		pr.Get("/admin/branches", h.ListBranches)
 		pr.Post("/admin/branches", h.CreateBranch)
+		pr.Post("/admin/branches/bulk", h.BulkBranches)
 		pr.Put("/admin/branches/{id}", h.UpdateBranch)
 		pr.Delete("/admin/branches/{id}", h.DeleteBranch)
 
 		// Contact Channels
 		pr.Get("/admin/contact-channels", h.ListContactChannels)
 		pr.Post("/admin/contact-channels", h.CreateContactChannel)
+		pr.Post("/admin/contact-channels/bulk", h.BulkContactChannels)
 		pr.Put("/admin/contact-channels/{id}", h.UpdateContactChannel)
 		pr.Delete("/admin/contact-channels/{id}", h.DeleteContactChannel)
 
@@ -634,6 +636,95 @@ func (h *Handler) DeleteContactChannel(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{
 		"data": map[string]bool{"success": true},
+	})
+}
+
+type BulkContactChannelRequest struct {
+	Action  string   `json:"action"` // "set_enabled", "delete", "reset_dock"
+	IDs     []string `json:"ids"`
+	Enabled *bool    `json:"enabled,omitempty"`
+}
+
+func (h *Handler) BulkContactChannels(w http.ResponseWriter, r *http.Request) {
+	var req BulkContactChannelRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		errors.WriteJSON(w, r, errors.BadRequest("INVALID_JSON", "Malformed body"))
+		return
+	}
+
+	switch req.Action {
+	case "set_enabled":
+		if req.Enabled == nil {
+			errors.WriteJSON(w, r, errors.BadRequest("MISSING_FIELD", "enabled field is required"))
+			return
+		}
+		if len(req.IDs) > 0 {
+			h.db.Model(&models.ContactChannel{}).Where("id IN ?", req.IDs).Update("enabled", *req.Enabled)
+		} else {
+			h.db.Model(&models.ContactChannel{}).Where("1 = 1").Update("enabled", *req.Enabled)
+		}
+	case "delete":
+		if len(req.IDs) > 0 {
+			h.db.Where("id IN ?", req.IDs).Delete(&models.ContactChannel{})
+		}
+	case "reset_dock":
+		// Enable only the 6 primary global dock channels (branch_id IS NULL) and disable branch channels
+		h.db.Model(&models.ContactChannel{}).Where("branch_id IS NOT NULL").Update("enabled", false)
+		h.db.Model(&models.ContactChannel{}).Where("branch_id IS NULL").Update("enabled", true)
+	default:
+		errors.WriteJSON(w, r, errors.BadRequest("INVALID_ACTION", "Supported actions: set_enabled, delete, reset_dock"))
+		return
+	}
+
+	var channels []models.ContactChannel
+	h.db.Order("sort_order asc").Find(&channels)
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]any{
+		"data":    channels,
+		"message": "Bulk action completed successfully",
+	})
+}
+
+type BulkBranchRequest struct {
+	Action   string   `json:"action"` // "set_active", "delete"
+	IDs      []string `json:"ids"`
+	IsActive *bool    `json:"isActive,omitempty"`
+}
+
+func (h *Handler) BulkBranches(w http.ResponseWriter, r *http.Request) {
+	var req BulkBranchRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		errors.WriteJSON(w, r, errors.BadRequest("INVALID_JSON", "Malformed body"))
+		return
+	}
+
+	switch req.Action {
+	case "set_active":
+		if req.IsActive == nil {
+			errors.WriteJSON(w, r, errors.BadRequest("MISSING_FIELD", "isActive field is required"))
+			return
+		}
+		if len(req.IDs) > 0 {
+			h.db.Model(&models.Branch{}).Where("id IN ?", req.IDs).Update("is_active", *req.IsActive)
+		}
+	case "delete":
+		if len(req.IDs) > 0 {
+			h.db.Where("branch_id IN ?", req.IDs).Delete(&models.ContactChannel{})
+			h.db.Where("id IN ?", req.IDs).Delete(&models.Branch{})
+		}
+	default:
+		errors.WriteJSON(w, r, errors.BadRequest("INVALID_ACTION", "Supported actions: set_active, delete"))
+		return
+	}
+
+	var branches []models.Branch
+	h.db.Preload("Channels").Order("sort_order asc").Find(&branches)
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]any{
+		"data":    branches,
+		"message": "Bulk action completed successfully",
 	})
 }
 

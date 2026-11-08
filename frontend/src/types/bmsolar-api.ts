@@ -54,6 +54,10 @@ export interface BranchItem {
   name: string;
   streetAddress: string;
   hours?: Record<string, string>;
+  hoursJson?: string;
+  sortOrder?: number;
+  geoLat?: number;
+  geoLng?: number;
   isActive: boolean;
   channels: ContactChannelItem[];
 }

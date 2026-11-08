@@ -655,6 +655,81 @@ export async function togglePublishAdminArticle(id: string, publish: boolean, to
   return res.json();
 }
 
+// ---------------- Branches Admin API ----------------
+export async function fetchAdminBranches(token?: string) {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE_URL}/admin/branches`, { headers, cache: 'no-store' });
+  if (!res.ok) throw new Error(`Failed to fetch branches: ${res.status}`);
+  return res.json();
+}
+
+export async function createAdminBranch(data: any, token?: string) {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE_URL}/admin/branches`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error(`Failed to create branch: ${res.status}`);
+  return res.json();
+}
+
+export async function updateAdminBranch(id: string, data: any, token?: string) {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE_URL}/admin/branches/${id}`, {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error(`Failed to update branch: ${res.status}`);
+  return res.json();
+}
+
+export async function deleteAdminBranch(id: string, token?: string) {
+  const headers: Record<string, string> = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE_URL}/admin/branches/${id}`, {
+    method: 'DELETE',
+    headers,
+  });
+  if (!res.ok) throw new Error(`Failed to delete branch: ${res.status}`);
+  return res.json();
+}
+
+export async function bulkAdminBranches(
+  data: { action: string; ids?: string[]; isActive?: boolean },
+  token?: string
+) {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE_URL}/admin/branches/bulk`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error(`Failed to execute bulk action on branches: ${res.status}`);
+  return res.json();
+}
+
+// ---------------- Bulk Contact Channels API ----------------
+export async function bulkAdminContactChannels(
+  data: { action: string; ids?: string[]; enabled?: boolean },
+  token?: string
+) {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE_URL}/admin/contact-channels/bulk`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error(`Failed to execute bulk action on contact channels: ${res.status}`);
+  return res.json();
+}
+
 export async function getFaqs() {
   const { fallbackFaqs } = await import('./mockData');
   return fallbackFaqs;

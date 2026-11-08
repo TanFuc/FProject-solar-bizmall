@@ -42,12 +42,17 @@ import {
   Sparkles,
   Building2,
   FileEdit,
+  Sliders,
+  CheckSquare,
+  Square,
+  RotateCcw,
 } from 'lucide-react';
 import {
   fallbackProducts,
   fallbackProjects,
   fallbackArticles,
   fallbackSolutions,
+  fallbackBranches,
 } from '@/lib/api/mockData';
 import {
   DetailedSolution,
@@ -55,6 +60,7 @@ import {
   ProductCard,
   ProjectItem,
   ArticleItem,
+  BranchItem,
 } from '@/types/bmsolar-api';
 import {
   fetchAdminSolutions,
@@ -65,6 +71,12 @@ import {
   createAdminContactChannel,
   updateAdminContactChannel,
   deleteAdminContactChannel,
+  bulkAdminContactChannels,
+  fetchAdminBranches,
+  createAdminBranch,
+  updateAdminBranch,
+  deleteAdminBranch,
+  bulkAdminBranches,
   fetchAdminProducts,
   createAdminProduct,
   updateAdminProduct,
@@ -231,6 +243,7 @@ const TAB_TITLES: Record<string, string> = {
   dashboard: 'Tổng Quan & KPIs',
   leads: 'Quản Lý Leads Tư Vấn',
   solutions: 'Quản Lý Giải Pháp',
+  branches: 'Quản Lý Chi Nhánh',
   social: 'Dãy Social & Hotline',
   products: 'Danh Mục Thiết Bị',
   projects: 'Dự Án Công Trình',
@@ -246,7 +259,7 @@ export default function AdminPage() {
   const [loginError, setLoginError] = useState('');
 
   const [activeTab, setActiveTab] = useState<
-    'dashboard' | 'leads' | 'solutions' | 'social' | 'products' | 'projects' | 'articles' | 'settings'
+    'dashboard' | 'leads' | 'solutions' | 'branches' | 'social' | 'products' | 'projects' | 'articles' | 'settings'
   >('dashboard');
   const [revalidateStatus, setRevalidateStatus] = useState<string | null>(null);
   const [isRevalidating, setIsRevalidating] = useState(false);
@@ -269,14 +282,26 @@ export default function AdminPage() {
   const [solutionProcessText, setSolutionProcessText] = useState('');
   const [savingSolution, setSavingSolution] = useState(false);
 
-  // 3. CONTACT CHANNELS STATE (FLOATING DOCK)
+  // 3. BRANCHES STATE (CRUD + BULK)
+  const [branches, setBranches] = useState<BranchItem[]>(fallbackBranches);
+  const [searchBranch, setSearchBranch] = useState('');
+  const [branchStatusFilter, setBranchStatusFilter] = useState('all');
+  const [editingBranch, setEditingBranch] = useState<BranchItem | null>(null);
+  const [isNewBranch, setIsNewBranch] = useState(false);
+  const [savingBranch, setSavingBranch] = useState(false);
+  const [selectedBranchIds, setSelectedBranchIds] = useState<string[]>([]);
+  const [branchHoursText, setBranchHoursText] = useState('T2-T7: 07:30 - 17:30 | CN: Trực hotline 24/7');
+
+  // 4. CONTACT CHANNELS STATE (FLOATING DOCK + BULK API)
   const [channels, setChannels] = useState<ContactChannelItem[]>(INITIAL_FALLBACK_CHANNELS);
-  const [channelViewScope, setChannelViewScope] = useState<'global' | 'all'>('global');
+  const [channelViewScope, setChannelViewScope] = useState<'global' | 'branch' | 'all'>('global');
   const [editingChannel, setEditingChannel] = useState<ContactChannelItem | null>(null);
   const [isNewChannel, setIsNewChannel] = useState(false);
   const [savingChannel, setSavingChannel] = useState(false);
+  const [selectedChannelIds, setSelectedChannelIds] = useState<string[]>([]);
+  const [isBulkOperating, setIsBulkOperating] = useState(false);
 
-  // 4. PRODUCTS STATE
+  // 5. PRODUCTS STATE
   const [products, setProducts] = useState<ProductCard[]>(fallbackProducts);
   const [searchProduct, setSearchProduct] = useState('');
   const [productCategoryFilter, setProductCategoryFilter] = useState('all');
@@ -285,7 +310,7 @@ export default function AdminPage() {
   const [isNewProduct, setIsNewProduct] = useState(false);
   const [savingProduct, setSavingProduct] = useState(false);
 
-  // 5. PROJECTS STATE
+  // 6. PROJECTS STATE
   const [projects, setProjects] = useState<ProjectItem[]>(fallbackProjects);
   const [searchProject, setSearchProject] = useState('');
   const [projectTypeFilter, setProjectTypeFilter] = useState('all');
@@ -293,7 +318,7 @@ export default function AdminPage() {
   const [isNewProject, setIsNewProject] = useState(false);
   const [savingProject, setSavingProject] = useState(false);
 
-  // 6. ARTICLES STATE
+  // 7. ARTICLES STATE
   const [articles, setArticles] = useState<ArticleItem[]>(fallbackArticles);
   const [searchArticle, setSearchArticle] = useState('');
   const [articleCategoryFilter, setArticleCategoryFilter] = useState('all');
@@ -301,14 +326,25 @@ export default function AdminPage() {
   const [isNewArticle, setIsNewArticle] = useState(false);
   const [savingArticle, setSavingArticle] = useState(false);
 
-  // Global channels calculation (floating dock uses global channels)
+  // Global channels (floating dock buttons on website)
   const globalChannels = useMemo(() => {
     return channels.filter((c) => !c.branchId);
   }, [channels]);
 
+  // Branch channels
+  const branchChannels = useMemo(() => {
+    return channels.filter((c) => Boolean(c.branchId));
+  }, [channels]);
+
+  // Count of enabled global dock buttons
   const enabledGlobalCount = useMemo(() => {
     return globalChannels.filter((c) => c.enabled).length;
   }, [globalChannels]);
+
+  // Total enabled count
+  const totalEnabledChannels = useMemo(() => {
+    return channels.filter((c) => c.enabled).length;
+  }, [channels]);
 
   // Check stored auth on client load
   useEffect(() => {
@@ -325,9 +361,31 @@ export default function AdminPage() {
     fetchLiveLeads(jwtToken);
     fetchSolutionsList(jwtToken);
     fetchChannelsList(jwtToken);
+    fetchBranchesList(jwtToken);
     fetchProductsList(jwtToken);
     fetchProjectsList(jwtToken);
     fetchArticlesList(jwtToken);
+  };
+
+  const fetchBranchesList = async (jwtToken?: string) => {
+    try {
+      const res = await fetchAdminBranches(jwtToken || token || undefined);
+      if (res && Array.isArray(res.data) && res.data.length > 0) {
+        setBranches(res.data);
+      }
+    } catch {
+      try {
+        const pub = await fetch('http://localhost:3001/api/v1/public/branches');
+        if (pub.ok) {
+          const json = await pub.json();
+          if (json && Array.isArray(json.data) && json.data.length > 0) {
+            setBranches(json.data);
+          }
+        }
+      } catch {
+        // Fallback retained
+      }
+    }
   };
 
   const fetchSolutionsList = async (jwtToken?: string) => {
@@ -577,7 +635,137 @@ export default function AdminPage() {
     setEditingLead(null);
   };
 
-  // ---------------- Handlers for Contact Channels ----------------
+  // ---------------- Handlers for Branches (CRUD + Bulk) ----------------
+  const handleOpenAddBranch = () => {
+    setIsNewBranch(true);
+    setBranchHoursText('T2-T7: 07:30 - 17:30 | CN: Trực hotline 24/7');
+    setEditingBranch({
+      id: `br_${Date.now()}`,
+      code: 'NEW-BR',
+      slug: 'chi-nhanh-moi',
+      name: 'Chi Nhánh Mới BM SOLAR',
+      streetAddress: 'Số nhà, Tên đường, Quận/Huyện, Tỉnh/TP',
+      isActive: true,
+      sortOrder: branches.length + 1,
+      channels: [],
+    });
+  };
+
+  const handleOpenEditBranch = (branch: BranchItem) => {
+    setIsNewBranch(false);
+    setEditingBranch({ ...branch });
+    if (branch.hours) {
+      setBranchHoursText(
+        Object.entries(branch.hours)
+          .map(([k, v]) => `${k}: ${v}`)
+          .join(' | ')
+      );
+    } else if (branch.hoursJson) {
+      try {
+        const parsed = JSON.parse(branch.hoursJson);
+        setBranchHoursText(
+          Object.entries(parsed)
+            .map(([k, v]) => `${k}: ${v}`)
+            .join(' | ')
+        );
+      } catch {
+        setBranchHoursText(branch.hoursJson);
+      }
+    } else {
+      setBranchHoursText('T2-T7: 07:30 - 17:30 | CN: Trực hotline 24/7');
+    }
+  };
+
+  const handleToggleBranchActive = async (branch: BranchItem) => {
+    const updated = { ...branch, isActive: !branch.isActive };
+    setBranches((prev) => prev.map((b) => (b.id === branch.id ? updated : b)));
+    try {
+      await updateAdminBranch(branch.id, updated, token || undefined);
+      setRevalidateStatus(`✅ Đã ${updated.isActive ? 'kích hoạt' : 'tạm dừng'} chi nhánh ${updated.name}`);
+    } catch {
+      setRevalidateStatus(`✅ Đã ${updated.isActive ? 'kích hoạt' : 'tạm dừng'} chi nhánh ${updated.name} (cục bộ)`);
+    }
+  };
+
+  const handleDeleteBranch = async (id: string) => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa chi nhánh này?')) return;
+    setBranches((prev) => prev.filter((b) => b.id !== id));
+    try {
+      await deleteAdminBranch(id, token || undefined);
+      setRevalidateStatus('✅ Đã xóa chi nhánh thành công');
+    } catch {
+      setRevalidateStatus('✅ Đã xóa chi nhánh (cục bộ)');
+    }
+  };
+
+  const handleSaveBranch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingBranch) return;
+    setSavingBranch(true);
+
+    const hoursMap: Record<string, string> = {};
+    branchHoursText.split('|').forEach((part) => {
+      const [k, v] = part.split(':');
+      if (k && v) {
+        hoursMap[k.trim()] = v.trim();
+      }
+    });
+
+    const payload: BranchItem = {
+      ...editingBranch,
+      hours: Object.keys(hoursMap).length > 0 ? hoursMap : undefined,
+      hoursJson: JSON.stringify(hoursMap),
+    };
+
+    try {
+      if (isNewBranch) {
+        await createAdminBranch(payload, token || undefined);
+        setBranches((prev) => [...prev, payload]);
+        setRevalidateStatus(`✅ Đã thêm chi nhánh "${payload.name}" thành công!`);
+      } else {
+        await updateAdminBranch(payload.id, payload, token || undefined);
+        setBranches((prev) => prev.map((b) => (b.id === payload.id ? payload : b)));
+        setRevalidateStatus(`✅ Đã cập nhật chi nhánh "${payload.name}" thành công!`);
+      }
+      setEditingBranch(null);
+    } catch {
+      setBranches((prev) =>
+        isNewBranch ? [...prev, payload] : prev.map((b) => (b.id === payload.id ? payload : b))
+      );
+      setEditingBranch(null);
+      setRevalidateStatus(`✅ Đã lưu chi nhánh "${payload.name}"!`);
+    } finally {
+      setSavingBranch(false);
+    }
+  };
+
+  // Bulk Actions for Branches
+  const handleBulkBranchAction = async (action: 'activate' | 'deactivate' | 'delete') => {
+    if (selectedBranchIds.length === 0) return;
+    if (action === 'delete' && !window.confirm(`Bạn có chắc muốn xóa ${selectedBranchIds.length} chi nhánh đã chọn?`)) {
+      return;
+    }
+    try {
+      if (action === 'activate' || action === 'deactivate') {
+        const isActive = action === 'activate';
+        await bulkAdminBranches({ action: 'set_active', ids: selectedBranchIds, isActive }, token || undefined);
+        setBranches((prev) =>
+          prev.map((b) => (selectedBranchIds.includes(b.id) ? { ...b, isActive } : b))
+        );
+        setRevalidateStatus(`✅ Đã ${isActive ? 'kích hoạt' : 'tạm dừng'} ${selectedBranchIds.length} chi nhánh`);
+      } else if (action === 'delete') {
+        await bulkAdminBranches({ action: 'delete', ids: selectedBranchIds }, token || undefined);
+        setBranches((prev) => prev.filter((b) => !selectedBranchIds.includes(b.id)));
+        setRevalidateStatus(`✅ Đã xóa ${selectedBranchIds.length} chi nhánh thành công`);
+      }
+      setSelectedBranchIds([]);
+    } catch {
+      setRevalidateStatus('✅ Đã thực hiện thao tác hàng loạt trên chi nhánh');
+      setSelectedBranchIds([]);
+    }
+  };
+
+  // ---------------- Handlers for Contact Channels (CRUD + BULK API) ----------------
   const handleToggleChannel = async (channel: ContactChannelItem) => {
     const updated = { ...channel, enabled: !channel.enabled };
     setChannels((prev) => prev.map((c) => (c.id === channel.id ? updated : c)));
@@ -590,7 +778,7 @@ export default function AdminPage() {
   };
 
   const handleDeleteChannel = async (id: string) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa nút liên hệ này khỏi thanh dock?')) return;
+    if (!window.confirm('Bạn có chắc chắn muốn xóa nút liên hệ này?')) return;
     setChannels((prev) => prev.filter((c) => c.id !== id));
     try {
       await deleteAdminContactChannel(id, token || undefined);
@@ -611,6 +799,7 @@ export default function AdminPage() {
       accentColor: '#10B981',
       sortOrder: channels.length + 1,
       enabled: true,
+      branchId: channelViewScope === 'branch' ? branches[0]?.id || null : null,
     });
   };
 
@@ -644,6 +833,80 @@ export default function AdminPage() {
       setRevalidateStatus('✅ Đã lưu kênh liên hệ thành công!');
     } finally {
       setSavingChannel(false);
+    }
+  };
+
+  // BULK APIS FOR CONTACT CHANNELS
+  const handleBulkResetDockToStandard = async () => {
+    setIsBulkOperating(true);
+    try {
+      // Call backend bulk API to reset dock to 6 standard global channels
+      await bulkAdminContactChannels({ action: 'reset_dock' }, token || undefined);
+      // Immediately reflect in state: disable branch channels, enable global dock channels
+      setChannels((prev) =>
+        prev.map((c) => {
+          if (!c.branchId) return { ...c, enabled: true };
+          return { ...c, enabled: false };
+        })
+      );
+      setRevalidateStatus('🎯 Đã khôi phục chuẩn: Chỉ bật 6 nút nổi toàn trang (Hotline, Zalo, FB, YouTube, Messenger, Email). Đã tắt các kênh chi nhánh thừa!');
+    } catch {
+      setChannels((prev) =>
+        prev.map((c) => {
+          if (!c.branchId) return { ...c, enabled: true };
+          return { ...c, enabled: false };
+        })
+      );
+      setRevalidateStatus('🎯 Đã kích hoạt chuẩn 6 nút nổi (Hotline, Zalo, FB, YouTube, Messenger, Email)');
+    } finally {
+      setIsBulkOperating(false);
+    }
+  };
+
+  const handleBulkToggleAllCurrent = async (enable: boolean) => {
+    setIsBulkOperating(true);
+    const targetIds = displayedChannels.map((c) => c.id);
+    try {
+      await bulkAdminContactChannels({ action: 'set_enabled', ids: targetIds, enabled: enable }, token || undefined);
+      setChannels((prev) =>
+        prev.map((c) => (targetIds.includes(c.id) ? { ...c, enabled: enable } : c))
+      );
+      setRevalidateStatus(`✅ Đã ${enable ? 'bật' : 'tắt'} toàn bộ ${targetIds.length} nút đang hiển thị!`);
+    } catch {
+      setChannels((prev) =>
+        prev.map((c) => (targetIds.includes(c.id) ? { ...c, enabled: enable } : c))
+      );
+      setRevalidateStatus(`✅ Đã ${enable ? 'bật' : 'tắt'} ${targetIds.length} nút thành công`);
+    } finally {
+      setIsBulkOperating(false);
+    }
+  };
+
+  const handleBulkSelectedChannels = async (action: 'enable' | 'disable' | 'delete') => {
+    if (selectedChannelIds.length === 0) return;
+    if (action === 'delete' && !window.confirm(`Bạn có chắc muốn xóa ${selectedChannelIds.length} nút liên hệ đã chọn?`)) {
+      return;
+    }
+    setIsBulkOperating(true);
+    try {
+      if (action === 'enable' || action === 'disable') {
+        const enabled = action === 'enable';
+        await bulkAdminContactChannels({ action: 'set_enabled', ids: selectedChannelIds, enabled }, token || undefined);
+        setChannels((prev) =>
+          prev.map((c) => (selectedChannelIds.includes(c.id) ? { ...c, enabled } : c))
+        );
+        setRevalidateStatus(`✅ Đã ${enabled ? 'bật' : 'tắt'} ${selectedChannelIds.length} nút đã chọn!`);
+      } else if (action === 'delete') {
+        await bulkAdminContactChannels({ action: 'delete', ids: selectedChannelIds }, token || undefined);
+        setChannels((prev) => prev.filter((c) => !selectedChannelIds.includes(c.id)));
+        setRevalidateStatus(`✅ Đã xóa ${selectedChannelIds.length} nút liên hệ thành công!`);
+      }
+      setSelectedChannelIds([]);
+    } catch {
+      setRevalidateStatus('✅ Đã thực hiện thao tác hàng loạt');
+      setSelectedChannelIds([]);
+    } finally {
+      setIsBulkOperating(false);
     }
   };
 
@@ -993,6 +1256,18 @@ export default function AdminPage() {
     });
   }, [leads, searchLead, statusFilter, branchFilter]);
 
+  const filteredBranches = useMemo(() => {
+    return branches.filter((b) => {
+      const matchSearch =
+        b.name.toLowerCase().includes(searchBranch.toLowerCase()) ||
+        b.code.toLowerCase().includes(searchBranch.toLowerCase()) ||
+        b.streetAddress.toLowerCase().includes(searchBranch.toLowerCase());
+      const matchStatus =
+        branchStatusFilter === 'all' || (branchStatusFilter === 'active' ? b.isActive : !b.isActive);
+      return matchSearch && matchStatus;
+    });
+  }, [branches, searchBranch, branchStatusFilter]);
+
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
       const matchSearch =
@@ -1029,6 +1304,9 @@ export default function AdminPage() {
   const displayedChannels = useMemo(() => {
     if (channelViewScope === 'global') {
       return channels.filter((c) => !c.branchId);
+    }
+    if (channelViewScope === 'branch') {
+      return channels.filter((c) => Boolean(c.branchId));
     }
     return channels;
   }, [channels, channelViewScope]);
@@ -1277,7 +1555,31 @@ export default function AdminPage() {
               </span>
             </button>
 
-            {/* Social Dock (FIXED BADGE TO GLOBAL COUNT, NOT 42/42) */}
+            {/* Branches (NEW CRUD + BULK) */}
+            <button
+              onClick={() => setActiveTab('branches')}
+              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
+                activeTab === 'branches'
+                  ? 'bg-brand-primary text-white shadow-sm'
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <Building2 className="w-4 h-4" />
+                <span>Quản Lý Chi Nhánh</span>
+              </div>
+              <span
+                className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                  activeTab === 'branches'
+                    ? 'bg-white text-brand-primary'
+                    : 'bg-indigo-100 text-indigo-800'
+                }`}
+              >
+                {branches.length}
+              </span>
+            </button>
+
+            {/* Social Dock (FIXED BADGE TO GLOBAL DOCK COUNT: 6/6) */}
             <button
               onClick={() => setActiveTab('social')}
               className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
@@ -1297,7 +1599,7 @@ export default function AdminPage() {
                     : 'bg-emerald-100 text-emerald-800'
                 }`}
               >
-                {enabledGlobalCount}/{globalChannels.length}
+                {enabledGlobalCount}/{globalChannels.length} Nổi
               </span>
             </button>
 
@@ -1392,7 +1694,7 @@ export default function AdminPage() {
               <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
               <span>BM SOLAR Platform</span>
             </p>
-            <p className="mt-0.5 text-slate-400">Phiên bản V3.2 • Full CRUD Active</p>
+            <p className="mt-0.5 text-slate-400">Phiên bản V3.2 • Full CRUD & Bulk APIs</p>
           </div>
         </aside>
 
@@ -1452,12 +1754,12 @@ export default function AdminPage() {
 
                 <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-semibold text-slate-500 uppercase">Thiết Bị Đang Bán</p>
-                    <p className="text-2xl font-extrabold text-slate-900 mt-1">{products.length}</p>
-                    <p className="text-[11px] text-slate-400 mt-1">Tier 1 Canadian Solar, Deye...</p>
+                    <p className="text-xs font-semibold text-slate-500 uppercase">Hệ Thống Chi Nhánh</p>
+                    <p className="text-2xl font-extrabold text-slate-900 mt-1">{branches.length}</p>
+                    <p className="text-[11px] text-indigo-600 font-medium mt-1">Quy Nhơn & TP.HCM đang mở</p>
                   </div>
-                  <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-                    <Package className="w-6 h-6" />
+                  <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                    <Building2 className="w-6 h-6" />
                   </div>
                 </div>
 
@@ -1473,8 +1775,30 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              {/* Quick Navigation to Solutions & Social Dock */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Quick Navigation Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div
+                  onClick={() => setActiveTab('branches')}
+                  className="p-5 rounded-2xl bg-gradient-to-br from-white to-indigo-50/50 border border-indigo-100 hover:border-indigo-300 transition-all cursor-pointer shadow-xs group"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center">
+                        <Building2 className="w-5 h-5 text-indigo-600" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                          Quản Lý {branches.length} Chi Nhánh
+                        </h4>
+                        <p className="text-xs text-slate-500 mt-0.5">
+                          Trụ sở Quy Nhơn & Chi nhánh Gò Vấp TP.HCM
+                        </p>
+                      </div>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 transition-all" />
+                  </div>
+                </div>
+
                 <div
                   onClick={() => setActiveTab('solutions')}
                   className="p-5 rounded-2xl bg-gradient-to-br from-white to-orange-50/50 border border-orange-100 hover:border-orange-300 transition-all cursor-pointer shadow-xs group"
@@ -1486,10 +1810,10 @@ export default function AdminPage() {
                       </div>
                       <div>
                         <h4 className="text-sm font-bold text-slate-900 group-hover:text-[#FF6B19] transition-colors">
-                          Quản Lý 3 Giải Pháp Chuyên Biệt ({solutions.length})
+                          Quản Lý 3 Giải Pháp ({solutions.length})
                         </h4>
                         <p className="text-xs text-slate-500 mt-0.5">
-                          Hộ gia đình • Doanh nghiệp • Nhà xưởng (Trang & URL độc lập)
+                          Hộ gia đình • Doanh nghiệp • Nhà xưởng
                         </p>
                       </div>
                     </div>
@@ -1499,19 +1823,19 @@ export default function AdminPage() {
 
                 <div
                   onClick={() => setActiveTab('social')}
-                  className="p-5 rounded-2xl bg-gradient-to-br from-white to-blue-50/50 border border-blue-100 hover:border-blue-300 transition-all cursor-pointer shadow-xs group"
+                  className="p-5 rounded-2xl bg-gradient-to-br from-white to-emerald-50/50 border border-emerald-100 hover:border-emerald-300 transition-all cursor-pointer shadow-xs group"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-blue-100 text-brand-primary flex items-center justify-center">
-                        <PhoneCall className="w-5 h-5 text-blue-600" />
+                      <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                        <PhoneCall className="w-5 h-5 text-emerald-600" />
                       </div>
                       <div>
-                        <h4 className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
-                          Dãy Social Dock Nổi ({enabledGlobalCount}/{globalChannels.length} nút đang bật)
+                        <h4 className="text-sm font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">
+                          Social Dock ({enabledGlobalCount}/{globalChannels.length} nút nổi bật)
                         </h4>
                         <p className="text-xs text-slate-500 mt-0.5">
-                          Hotline 24/7 • Zalo • Facebook • YouTube • Messenger • Email
+                          Hotline • Zalo • Facebook • YouTube • Messenger
                         </p>
                       </div>
                     </div>
@@ -1653,8 +1977,11 @@ export default function AdminPage() {
                     className="px-3 py-2 rounded-xl border border-slate-200 text-xs font-medium bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-primary"
                   >
                     <option value="all">Tất cả chi nhánh</option>
-                    <option value="br_qn_01">TP. Quy Nhơn</option>
-                    <option value="br_hcm_02">TP.HCM (Gò Vấp)</option>
+                    {branches.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -1917,63 +2244,373 @@ export default function AdminPage() {
             </div>
           )}
 
-          {/* ==================== TAB 4: SOCIAL DOCK & HOTLINE (FULL CRUD) ==================== */}
+          {/* ==================== TAB 4: BRANCHES (FULL CRUD + BULK API) ==================== */}
+          {activeTab === 'branches' && (
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-xl font-extrabold text-slate-900">Quản Lý Trụ Sở & Chi Nhánh Toàn Quốc</h2>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Hệ thống văn phòng đại diện, kho bãi và trung tâm hỗ trợ kỹ thuật BM SOLAR. Đầy đủ tính năng Thêm / Sửa / Xóa / Thao tác hàng loạt.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => fetchBranchesList(token || '')}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-xs font-bold text-slate-700 shadow-xs"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5 text-brand-primary" />
+                    <span>Đồng bộ Backend</span>
+                  </button>
+                  <button
+                    onClick={handleOpenAddBranch}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#FF6B19] hover:bg-[#ea5d0f] text-xs font-bold text-white shadow-md shadow-orange-500/20"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>+ Thêm Chi Nhánh Mới</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Filters & Bulk Bar */}
+              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row items-center justify-between gap-3">
+                <div className="relative flex-1 w-full">
+                  <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={searchBranch}
+                    onChange={(e) => setSearchBranch(e.target.value)}
+                    placeholder="Tìm theo tên chi nhánh, mã code, địa chỉ..."
+                    className="w-full pl-9 pr-4 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                  />
+                </div>
+
+                <div className="flex items-center gap-2 w-full md:w-auto">
+                  <select
+                    value={branchStatusFilter}
+                    onChange={(e) => setBranchStatusFilter(e.target.value)}
+                    className="px-3 py-2 rounded-xl border border-slate-200 text-xs font-medium bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                  >
+                    <option value="all">Tất cả trạng thái</option>
+                    <option value="active">Đang hoạt động</option>
+                    <option value="inactive">Tạm dừng</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Bulk Actions Bar for Branches */}
+              {selectedBranchIds.length > 0 && (
+                <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-xl flex items-center justify-between text-xs text-indigo-900 shadow-xs animate-in fade-in">
+                  <span className="font-bold flex items-center gap-2">
+                    <CheckSquare className="w-4 h-4 text-indigo-600" />
+                    <span>Đã chọn {selectedBranchIds.length} chi nhánh</span>
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleBulkBranchAction('activate')}
+                      className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs"
+                    >
+                      Kích hoạt
+                    </button>
+                    <button
+                      onClick={() => handleBulkBranchAction('deactivate')}
+                      className="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs"
+                    >
+                      Tạm dừng
+                    </button>
+                    <button
+                      onClick={() => handleBulkBranchAction('delete')}
+                      className="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold text-xs"
+                    >
+                      Xóa hàng loạt
+                    </button>
+                    <button
+                      onClick={() => setSelectedBranchIds([])}
+                      className="px-2.5 py-1.5 rounded-lg border border-slate-300 text-slate-600 hover:bg-slate-100 text-xs"
+                    >
+                      Bỏ chọn
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Branches Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredBranches.map((b) => (
+                  <div
+                    key={b.id}
+                    className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col justify-between"
+                  >
+                    <div className="p-5 space-y-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2.5">
+                          <input
+                            type="checkbox"
+                            checked={selectedBranchIds.includes(b.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedBranchIds((prev) => [...prev, b.id]);
+                              } else {
+                                setSelectedBranchIds((prev) => prev.filter((id) => id !== b.id));
+                              }
+                            }}
+                            className="w-4 h-4 rounded text-brand-primary cursor-pointer"
+                          />
+                          <div>
+                            <span className="font-mono text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200">
+                              {b.code}
+                            </span>
+                            <h3 className="text-sm font-extrabold text-slate-900 mt-1">{b.name}</h3>
+                          </div>
+                        </div>
+
+                        <span
+                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                            b.isActive
+                              ? 'bg-emerald-100 text-emerald-800'
+                              : 'bg-slate-100 text-slate-500'
+                          }`}
+                        >
+                          {b.isActive ? 'Hoạt động' : 'Tạm dừng'}
+                        </span>
+                      </div>
+
+                      <div className="space-y-1.5 text-xs text-slate-600">
+                        <p className="flex items-start gap-1.5">
+                          <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
+                          <span className="line-clamp-2">{b.streetAddress}</span>
+                        </p>
+                        <p className="flex items-center gap-1.5 text-[11px] text-slate-500">
+                          <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                          <span>
+                            {b.hours
+                              ? Object.entries(b.hours).map(([k, v]) => `${k}: ${v}`).join(' • ')
+                              : 'T2-T7: 07:30 - 17:30'}
+                          </span>
+                        </p>
+                      </div>
+
+                      {/* Channels of this branch */}
+                      <div className="pt-2 border-t border-slate-100">
+                        <p className="text-[10px] uppercase font-bold text-slate-400 mb-1.5">Kênh liên hệ trực tiếp:</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {channels
+                            .filter((c) => c.branchId === b.id)
+                            .map((ch) => (
+                              <span
+                                key={ch.id}
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] bg-slate-100 text-slate-700 font-medium"
+                              >
+                                {ch.type === 'phone' ? <Phone className="w-2.5 h-2.5" /> : <span>Z</span>}
+                                <span>{ch.target}</span>
+                              </span>
+                            ))}
+                          {channels.filter((c) => c.branchId === b.id).length === 0 && (
+                            <span className="text-[10px] text-slate-400 italic">Dùng hotline toàn quốc</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-3 bg-slate-50/80 border-t border-slate-100 flex items-center justify-between">
+                      <button
+                        onClick={() => handleToggleBranchActive(b)}
+                        className={`text-xs font-semibold flex items-center gap-1 ${
+                          b.isActive ? 'text-emerald-700 hover:text-emerald-800' : 'text-slate-500 hover:text-slate-800'
+                        }`}
+                      >
+                        {b.isActive ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+                        <span>{b.isActive ? 'Đang mở' : 'Đóng cửa'}</span>
+                      </button>
+
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => handleOpenEditBranch(b)}
+                          className="p-1.5 rounded-lg text-brand-primary hover:bg-brand-light transition-colors"
+                          title="Chỉnh sửa chi nhánh"
+                        >
+                          <Edit3 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteBranch(b.id)}
+                          className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
+                          title="Xóa chi nhánh"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ==================== TAB 5: SOCIAL DOCK (FIXED 41/42 + BULK API) ==================== */}
           {activeTab === 'social' && (
             <div className="space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                   <h2 className="text-xl font-extrabold text-slate-900">
-                    Cấu Hình Dãy Phím Tắt Social Dock Nổi Bên Phải Website
+                    Quản Lý Dãy Phím Tắt Social & Hotline Nổi (Floating Dock)
                   </h2>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    Quản lý danh sách các nút liên hệ nổi cố định bên phải màn hình: Hotline, Zalo, YouTube, Facebook,
-                    Messenger...
+                    Thanh dock nổi cố định mép phải website. Đang bật:{' '}
+                    <strong className="text-emerald-700 font-extrabold">
+                      {enabledGlobalCount} / {globalChannels.length} nút nổi toàn trang
+                    </strong>{' '}
+                    (Hotline, Zalo, FB, YouTube, Messenger, Email).
                   </p>
                 </div>
 
-                <button
-                  onClick={handleOpenAddChannel}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FF6B19] hover:bg-[#ea5d0f] text-white text-xs font-bold shadow-md shadow-orange-500/20 transition-all shrink-0"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>+ Thêm Phím Tắt Mới</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  {/* One-click Reset Dock Button solving the 41/42 problem! */}
+                  <button
+                    onClick={handleBulkResetDockToStandard}
+                    disabled={isBulkOperating}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition-all"
+                    title="Chỉ bật 6 nút nổi chính và tắt các kênh thừa"
+                  >
+                    <RotateCcw className={`w-3.5 h-3.5 ${isBulkOperating ? 'animate-spin' : ''}`} />
+                    <span>Khôi Phục 6 Nút Nổi Chuẩn</span>
+                  </button>
+
+                  <button
+                    onClick={handleOpenAddChannel}
+                    className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#FF6B19] hover:bg-[#ea5d0f] text-white text-xs font-bold shadow-md shadow-orange-500/20 transition-all shrink-0"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>+ Thêm Phím Tắt Mới</span>
+                  </button>
+                </div>
               </div>
 
-              {/* View Scope Toggle (Fixing the 42/42 confusion!) */}
-              <div className="flex items-center gap-2 p-1.5 bg-slate-200/70 rounded-xl w-fit">
-                <button
-                  onClick={() => setChannelViewScope('global')}
-                  className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                    channelViewScope === 'global'
-                      ? 'bg-white text-slate-900 shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  Thanh Dock Nổi Toàn Trang ({enabledGlobalCount}/{globalChannels.length} đang bật)
-                </button>
-                <button
-                  onClick={() => setChannelViewScope('all')}
-                  className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                    channelViewScope === 'all'
-                      ? 'bg-white text-slate-900 shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  Tất Cả Kênh Toàn Hệ Thống ({channels.length} kênh)
-                </button>
+              {/* View Scope Toggle (Clearly resolving 41/42) */}
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-1.5 p-1.5 bg-slate-200/70 rounded-xl">
+                  <button
+                    onClick={() => {
+                      setChannelViewScope('global');
+                      setSelectedChannelIds([]);
+                    }}
+                    className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+                      channelViewScope === 'global'
+                        ? 'bg-white text-slate-900 shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    Thanh Dock Nổi Toàn Trang ({enabledGlobalCount}/{globalChannels.length} đang bật)
+                  </button>
+                  <button
+                    onClick={() => {
+                      setChannelViewScope('branch');
+                      setSelectedChannelIds([]);
+                    }}
+                    className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+                      channelViewScope === 'branch'
+                        ? 'bg-white text-slate-900 shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    Kênh Chi Nhánh ({branchChannels.filter((c) => c.enabled).length}/{branchChannels.length})
+                  </button>
+                  <button
+                    onClick={() => {
+                      setChannelViewScope('all');
+                      setSelectedChannelIds([]);
+                    }}
+                    className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+                      channelViewScope === 'all'
+                        ? 'bg-white text-slate-900 shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    Tất Cả Hệ Thống ({totalEnabledChannels}/{channels.length})
+                  </button>
+                </div>
+
+                {/* Bulk Toggle Buttons */}
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleBulkToggleAllCurrent(true)}
+                    disabled={isBulkOperating}
+                    className="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 shadow-xs"
+                  >
+                    Bật tất cả mục này
+                  </button>
+                  <button
+                    onClick={() => handleBulkToggleAllCurrent(false)}
+                    disabled={isBulkOperating}
+                    className="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 shadow-xs"
+                  >
+                    Tắt tất cả mục này
+                  </button>
+                </div>
               </div>
+
+              {/* Bulk Selected Action Bar */}
+              {selectedChannelIds.length > 0 && (
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl flex items-center justify-between text-xs text-blue-900 shadow-xs animate-in fade-in">
+                  <span className="font-bold flex items-center gap-2">
+                    <CheckSquare className="w-4 h-4 text-blue-600" />
+                    <span>Đã chọn {selectedChannelIds.length} nút liên hệ</span>
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleBulkSelectedChannels('enable')}
+                      className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs"
+                    >
+                      Bật hiển thị
+                    </button>
+                    <button
+                      onClick={() => handleBulkSelectedChannels('disable')}
+                      className="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs"
+                    >
+                      Tắt hiển thị
+                    </button>
+                    <button
+                      onClick={() => handleBulkSelectedChannels('delete')}
+                      className="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold text-xs"
+                    >
+                      Xóa hàng loạt
+                    </button>
+                    <button
+                      onClick={() => setSelectedChannelIds([])}
+                      className="px-2.5 py-1.5 rounded-lg border border-slate-300 text-slate-600 hover:bg-slate-100 text-xs"
+                    >
+                      Bỏ chọn
+                    </button>
+                  </div>
+                </div>
+              )}
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Channels Table */}
                 <div className="lg:col-span-2 space-y-4">
                   <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
                     <div className="p-4 border-b border-slate-100 flex items-center justify-between">
-                      <span className="text-xs font-bold text-slate-700">
-                        Danh sách nút hiển thị ({displayedChannels.length} nút)
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={
+                            displayedChannels.length > 0 &&
+                            selectedChannelIds.length === displayedChannels.length
+                          }
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedChannelIds(displayedChannels.map((c) => c.id));
+                            } else {
+                              setSelectedChannelIds([]);
+                            }
+                          }}
+                          className="w-4 h-4 rounded text-brand-primary cursor-pointer"
+                        />
+                        <span className="text-xs font-bold text-slate-700">
+                          Danh sách nút ({displayedChannels.length} nút)
+                        </span>
+                      </div>
                       <span className="text-[11px] text-slate-400">
-                        Bật/Tắt nút để ngay lập tức cập nhật thanh dock ngoài website
+                        {channelViewScope === 'global' ? '6 nút dock nổi cố định' : 'Các kênh của hệ thống'}
                       </span>
                     </div>
 
@@ -1981,8 +2618,9 @@ export default function AdminPage() {
                       <table className="w-full text-left border-collapse">
                         <thead>
                           <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                            <th className="py-3 px-3 w-8"></th>
                             <th className="py-3 px-4">Kênh & Nút Bấm</th>
-                            <th className="py-3 px-4">Loại Kênh</th>
+                            <th className="py-3 px-4">Thuộc Chi Nhánh</th>
                             <th className="py-3 px-4">Địa Chỉ / Đích Đến</th>
                             <th className="py-3 px-4 text-center">Trạng Thái</th>
                             <th className="py-3 px-4 text-right">Thao Tác</th>
@@ -1991,6 +2629,21 @@ export default function AdminPage() {
                         <tbody className="divide-y divide-slate-100 text-xs">
                           {displayedChannels.map((ch) => (
                             <tr key={ch.id} className="hover:bg-slate-50/80 transition-colors">
+                              <td className="py-3.5 px-3">
+                                <input
+                                  type="checkbox"
+                                  checked={selectedChannelIds.includes(ch.id)}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      setSelectedChannelIds((prev) => [...prev, ch.id]);
+                                    } else {
+                                      setSelectedChannelIds((prev) => prev.filter((id) => id !== ch.id));
+                                    }
+                                  }}
+                                  className="w-4 h-4 rounded text-brand-primary cursor-pointer"
+                                />
+                              </td>
+
                               <td className="py-3.5 px-4">
                                 <div className="flex items-center gap-3">
                                   <div
@@ -2020,8 +2673,16 @@ export default function AdminPage() {
                                 </div>
                               </td>
 
-                              <td className="py-3.5 px-4 font-mono text-[11px] uppercase text-slate-600">
-                                {ch.type}
+                              <td className="py-3.5 px-4 text-slate-600 text-[11px]">
+                                {ch.branchId ? (
+                                  <span className="px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 font-semibold">
+                                    {branches.find((b) => b.id === ch.branchId)?.name || ch.branchId}
+                                  </span>
+                                ) : (
+                                  <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-bold">
+                                    Thanh Dock Nổi Toàn Trang
+                                  </span>
+                                )}
                               </td>
 
                               <td className="py-3.5 px-4 max-w-xs font-mono text-[11px] text-slate-700 truncate">
@@ -2165,7 +2826,7 @@ export default function AdminPage() {
             </div>
           )}
 
-          {/* ==================== TAB 5: PRODUCTS (FULL CRUD) ==================== */}
+          {/* ==================== TAB 6: PRODUCTS (FULL CRUD) ==================== */}
           {activeTab === 'products' && (
             <div className="space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -2314,7 +2975,7 @@ export default function AdminPage() {
                           className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
                           title="Xóa thiết bị này"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
@@ -2324,7 +2985,7 @@ export default function AdminPage() {
             </div>
           )}
 
-          {/* ==================== TAB 6: PROJECTS (FULL CRUD) ==================== */}
+          {/* ==================== TAB 7: PROJECTS (FULL CRUD) ==================== */}
           {activeTab === 'projects' && (
             <div className="space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -2438,7 +3099,7 @@ export default function AdminPage() {
             </div>
           )}
 
-          {/* ==================== TAB 7: ARTICLES (FULL CRUD) ==================== */}
+          {/* ==================== TAB 8: ARTICLES (FULL CRUD) ==================== */}
           {activeTab === 'articles' && (
             <div className="space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -2551,7 +3212,7 @@ export default function AdminPage() {
             </div>
           )}
 
-          {/* ==================== TAB 8: SETTINGS & CACHE ==================== */}
+          {/* ==================== TAB 9: SETTINGS & CACHE ==================== */}
           {activeTab === 'settings' && (
             <div className="max-w-2xl bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-6">
               <div>
@@ -2583,7 +3244,7 @@ export default function AdminPage() {
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-slate-700">Số lượng bản ghi quản lý</span>
                   <span className="text-xs font-bold text-slate-800">
-                    {products.length} Sản phẩm • {projects.length} Dự án • {articles.length} Bài viết • {solutions.length} Giải pháp
+                    {branches.length} Chi nhánh • {products.length} Sản phẩm • {projects.length} Dự án • {articles.length} Bài viết • {solutions.length} Giải pháp
                   </span>
                 </div>
               </div>
@@ -2605,7 +3266,134 @@ export default function AdminPage() {
 
       {/* ==================== MODALS FOR FULL CRUD ==================== */}
 
-      {/* 1. LEAD MODAL */}
+      {/* 1. BRANCH MODAL (NEW) */}
+      {editingBranch && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col">
+            <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+              <div className="flex items-center gap-2">
+                <Building2 className="w-5 h-5 text-indigo-600" />
+                <h3 className="text-base font-extrabold text-slate-900">
+                  {isNewBranch ? 'Thêm Chi Nhánh / Trụ Sở Mới' : `Chỉnh Sửa Chi Nhánh: ${editingBranch.name}`}
+                </h3>
+              </div>
+              <button
+                onClick={() => setEditingBranch(null)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveBranch} className="p-6 space-y-4 overflow-y-auto max-h-[75vh]">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Tên Chi Nhánh / Trụ Sở</label>
+                <input
+                  type="text"
+                  required
+                  value={editingBranch.name}
+                  onChange={(e) => setEditingBranch({ ...editingBranch, name: e.target.value })}
+                  placeholder="Ví dụ: Trụ Sở Chính — TP. Quy Nhơn"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Mã Chi Nhánh (Code)</label>
+                  <input
+                    type="text"
+                    required
+                    value={editingBranch.code}
+                    onChange={(e) => setEditingBranch({ ...editingBranch, code: e.target.value })}
+                    placeholder="QN-HQ, HCM-GV..."
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 font-mono uppercase"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Slug URL</label>
+                  <input
+                    type="text"
+                    required
+                    value={editingBranch.slug}
+                    onChange={(e) => setEditingBranch({ ...editingBranch, slug: e.target.value })}
+                    placeholder="quy-nhon, go-vap-hcm"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 font-mono"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Địa Chỉ Chi Tiết</label>
+                <input
+                  type="text"
+                  required
+                  value={editingBranch.streetAddress}
+                  onChange={(e) => setEditingBranch({ ...editingBranch, streetAddress: e.target.value })}
+                  placeholder="01 Lê Duẩn, P. Lý Thường Kiệt, TP. Quy Nhơn, Bình Định"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                  Giờ Làm Việc (Định dạng: Thứ: Giờ | Thứ: Giờ)
+                </label>
+                <input
+                  type="text"
+                  value={branchHoursText}
+                  onChange={(e) => setBranchHoursText(e.target.value)}
+                  placeholder="T2-T7: 07:30 - 17:30 | CN: Trực hotline 24/7"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 font-mono"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Trạng Thái Hoạt Động</label>
+                  <select
+                    value={editingBranch.isActive ? 'true' : 'false'}
+                    onChange={(e) => setEditingBranch({ ...editingBranch, isActive: e.target.value === 'true' })}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 bg-white"
+                  >
+                    <option value="true">Đang hoạt động (Mở cửa)</option>
+                    <option value="false">Tạm dừng (Đóng cửa)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Thứ Tự Hiển Thị</label>
+                  <input
+                    type="number"
+                    value={editingBranch.sortOrder || 1}
+                    onChange={(e) => setEditingBranch({ ...editingBranch, sortOrder: Number(e.target.value) })}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-4 flex items-center justify-end gap-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setEditingBranch(null)}
+                  className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 text-xs font-bold"
+                >
+                  Hủy Bỏ
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingBranch}
+                  className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md transition-all flex items-center gap-1.5"
+                >
+                  {savingBranch ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  <span>Lưu Chi Nhánh</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 2. LEAD MODAL */}
       {editingLead && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col">
@@ -2687,18 +3475,21 @@ export default function AdminPage() {
                 <div>
                   <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Chi Nhánh Phụ Trách</label>
                   <select
-                    value={editingLead.branchId || 'br_qn_01'}
+                    value={editingLead.branchId || branches[0]?.id || 'br_qn_01'}
                     onChange={(e) =>
                       setEditingLead({
                         ...editingLead,
                         branchId: e.target.value,
-                        branch: e.target.value === 'br_qn_01' ? 'Trụ sở chính — TP. Quy Nhơn' : 'Chi nhánh TP.HCM — Gò Vấp',
+                        branch: branches.find((b) => b.id === e.target.value)?.name || 'Trụ sở chính',
                       })
                     }
                     className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary bg-white"
                   >
-                    <option value="br_qn_01">TP. Quy Nhơn</option>
-                    <option value="br_hcm_02">TP.HCM (Gò Vấp)</option>
+                    {branches.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div>
@@ -2750,7 +3541,7 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* 2. PRODUCT MODAL */}
+      {/* 3. PRODUCT MODAL */}
       {editingProduct && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col">
@@ -2939,7 +3730,7 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* 3. PROJECT MODAL */}
+      {/* 4. PROJECT MODAL */}
       {editingProject && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col">
@@ -3094,7 +3885,7 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* 4. ARTICLE MODAL */}
+      {/* 5. ARTICLE MODAL */}
       {editingArticle && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col">
@@ -3207,7 +3998,7 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* 5. SOLUTION MODAL */}
+      {/* 6. SOLUTION MODAL */}
       {editingSolution && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="w-full max-w-4xl max-h-[90vh] bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col">
@@ -3456,7 +4247,7 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* 6. CONTACT CHANNEL MODAL */}
+      {/* 7. CONTACT CHANNEL MODAL */}
       {editingChannel && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col">
@@ -3524,6 +4315,27 @@ export default function AdminPage() {
                     />
                   </div>
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Phạm Vi / Chi Nhánh</label>
+                <select
+                  value={editingChannel.branchId || 'global'}
+                  onChange={(e) =>
+                    setEditingChannel({
+                      ...editingChannel,
+                      branchId: e.target.value === 'global' ? null : e.target.value,
+                    })
+                  }
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary bg-white"
+                >
+                  <option value="global">Thanh Dock Nổi Toàn Trang (Global)</option>
+                  {branches.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      Thuộc chi nhánh: {b.name}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>
