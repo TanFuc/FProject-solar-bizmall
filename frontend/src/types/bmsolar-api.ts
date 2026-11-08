@@ -52,9 +52,16 @@ export interface BranchItem {
   code: string;
   slug: string;
   name: string;
+  isHeadquarters?: boolean;
+  provinceName?: string;
   streetAddress: string;
+  phone?: string;
+  email?: string;
+  zalo?: string;
   hours?: Record<string, string>;
   hoursJson?: string;
+  mapEmbedUrl?: string;
+  imageUrl?: string;
   sortOrder?: number;
   geoLat?: number;
   geoLng?: number;

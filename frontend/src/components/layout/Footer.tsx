@@ -107,10 +107,16 @@ export function Footer({ brand, footerData, branches }: Props) {
               <Link
                 key={branch.id}
                 href="/lien-he#chi-nhanh"
-                className="flex items-start gap-2 text-white/70 hover:text-white transition-colors text-xs"
+                className="flex items-start gap-2 text-white/70 hover:text-white transition-colors text-xs group"
               >
                 <MapPin size={14} className="shrink-0 text-accent-orange mt-0.5" />
-                <span>{branch.name}</span>
+                <div>
+                  <span className="font-semibold text-white/90 group-hover:text-accent-orange transition-colors">
+                    {branch.isHeadquarters ? '⭐ ' : ''}
+                    {branch.name}
+                  </span>
+                  <p className="text-[11px] text-white/50 line-clamp-1">{branch.streetAddress}</p>
+                </div>
               </Link>
             ))}
             {activeZalo && (

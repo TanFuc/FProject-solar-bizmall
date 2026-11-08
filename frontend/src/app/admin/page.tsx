@@ -46,6 +46,7 @@ import {
   CheckSquare,
   Square,
   RotateCcw,
+  Star,
 } from 'lucide-react';
 import {
   fallbackProducts,
@@ -286,11 +287,12 @@ export default function AdminPage() {
   const [branches, setBranches] = useState<BranchItem[]>(fallbackBranches);
   const [searchBranch, setSearchBranch] = useState('');
   const [branchStatusFilter, setBranchStatusFilter] = useState('all');
+  const [branchTypeFilter, setBranchTypeFilter] = useState<'all' | 'hq' | 'branch'>('all');
   const [editingBranch, setEditingBranch] = useState<BranchItem | null>(null);
   const [isNewBranch, setIsNewBranch] = useState(false);
   const [savingBranch, setSavingBranch] = useState(false);
   const [selectedBranchIds, setSelectedBranchIds] = useState<string[]>([]);
-  const [branchHoursText, setBranchHoursText] = useState('T2-T7: 07:30 - 17:30 | CN: Trực hotline 24/7');
+  const [branchHoursText, setBranchHoursText] = useState('T2-T7: 07:30 - 18:00 | CN: Trực hotline 24/7');
 
   // 4. CONTACT CHANNELS STATE (FLOATING DOCK + BULK API)
   const [channels, setChannels] = useState<ContactChannelItem[]>(INITIAL_FALLBACK_CHANNELS);
@@ -674,13 +676,22 @@ export default function AdminPage() {
   // ---------------- Handlers for Branches (CRUD + Bulk) ----------------
   const handleOpenAddBranch = () => {
     setIsNewBranch(true);
-    setBranchHoursText('T2-T7: 07:30 - 17:30 | CN: Trực hotline 24/7');
+    setBranchHoursText('T2-T7: 07:30 - 18:00 | CN: Trực hotline 24/7');
     setEditingBranch({
       id: `br_${Date.now()}`,
       code: 'NEW-BR',
       slug: 'chi-nhanh-moi',
       name: 'Chi Nhánh Mới BM SOLAR',
-      streetAddress: 'Số nhà, Tên đường, Quận/Huyện, Tỉnh/TP',
+      isHeadquarters: false,
+      provinceName: 'TP. Hồ Chí Minh',
+      streetAddress: '',
+      phone: '0901 234 567',
+      email: 'chinhanh@bmsolar.vn',
+      zalo: '0901234567',
+      mapEmbedUrl: '',
+      imageUrl: '',
+      hours: { 'T2 - T7': '07:30 - 18:00', 'Chủ Nhật': 'Trực hotline 24/7' },
+      hoursJson: JSON.stringify({ 'T2 - T7': '07:30 - 18:00', 'Chủ Nhật': 'Trực hotline 24/7' }),
       isActive: true,
       sortOrder: branches.length + 1,
       channels: [],
@@ -689,8 +700,7 @@ export default function AdminPage() {
 
   const handleOpenEditBranch = (branch: BranchItem) => {
     setIsNewBranch(false);
-    setEditingBranch({ ...branch });
-    if (branch.hours) {
+    if (branch.hours && typeof branch.hours === 'object') {
       setBranchHoursText(
         Object.entries(branch.hours)
           .map(([k, v]) => `${k}: ${v}`)
@@ -708,29 +718,60 @@ export default function AdminPage() {
         setBranchHoursText(branch.hoursJson);
       }
     } else {
-      setBranchHoursText('T2-T7: 07:30 - 17:30 | CN: Trực hotline 24/7');
+      setBranchHoursText('T2-T7: 07:30 - 18:00 | CN: Trực hotline 24/7');
     }
+    setEditingBranch({ ...branch });
   };
 
   const handleToggleBranchActive = async (branch: BranchItem) => {
     const updated = { ...branch, isActive: !branch.isActive };
+    const originalBranches = [...branches];
     setBranches((prev) => prev.map((b) => (b.id === branch.id ? updated : b)));
     try {
-      await updateAdminBranch(branch.id, updated, token || undefined);
-      setRevalidateStatus(`✅ Đã ${updated.isActive ? 'kích hoạt' : 'tạm dừng'} chi nhánh ${updated.name}`);
-    } catch {
-      setRevalidateStatus(`✅ Đã ${updated.isActive ? 'kích hoạt' : 'tạm dừng'} chi nhánh ${updated.name} (cục bộ)`);
+      let authToken = await ensureValidToken();
+      let res;
+      try {
+        res = await updateAdminBranch(branch.id, updated, authToken);
+      } catch (err: any) {
+        if (err.message?.includes('401')) {
+          authToken = await forceReLogin();
+          res = await updateAdminBranch(branch.id, updated, authToken);
+        } else {
+          throw err;
+        }
+      }
+      const finalBranch = res?.data || updated;
+      setBranches((prev) => prev.map((b) => (b.id === finalBranch.id ? finalBranch : b)));
+      setRevalidateStatus(`✅ Đã ${updated.isActive ? 'mở cửa hoạt động' : 'tạm dừng'} chi nhánh "${updated.name}"`);
+      notifyDockUpdated();
+    } catch (err: any) {
+      setBranches(originalBranches);
+      setRevalidateStatus(`❌ Không thể cập nhật chi nhánh: ${err.message || 'Lỗi kết nối'}`);
     }
   };
 
   const handleDeleteBranch = async (id: string) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa chi nhánh này?')) return;
+    if (!window.confirm('Bạn có chắc chắn muốn xóa chi nhánh này và toàn bộ kênh liên hệ trực thuộc?')) return;
+    const originalBranches = [...branches];
     setBranches((prev) => prev.filter((b) => b.id !== id));
     try {
-      await deleteAdminBranch(id, token || undefined);
-      setRevalidateStatus('✅ Đã xóa chi nhánh thành công');
-    } catch {
-      setRevalidateStatus('✅ Đã xóa chi nhánh (cục bộ)');
+      let authToken = await ensureValidToken();
+      try {
+        await deleteAdminBranch(id, authToken);
+      } catch (err: any) {
+        if (err.message?.includes('401')) {
+          authToken = await forceReLogin();
+          await deleteAdminBranch(id, authToken);
+        } else {
+          throw err;
+        }
+      }
+      setRevalidateStatus('✅ Đã xóa chi nhánh và kênh trực thuộc thành công');
+      fetchChannelsList(authToken);
+      notifyDockUpdated();
+    } catch (err: any) {
+      setBranches(originalBranches);
+      setRevalidateStatus(`❌ Lỗi xóa chi nhánh: ${err.message || 'Lỗi máy chủ'}`);
     }
   };
 
@@ -753,23 +794,47 @@ export default function AdminPage() {
       hoursJson: JSON.stringify(hoursMap),
     };
 
+    const originalBranches = [...branches];
     try {
+      let authToken = await ensureValidToken();
       if (isNewBranch) {
-        await createAdminBranch(payload, token || undefined);
-        setBranches((prev) => [...prev, payload]);
-        setRevalidateStatus(`✅ Đã thêm chi nhánh "${payload.name}" thành công!`);
+        let res;
+        try {
+          res = await createAdminBranch(payload, authToken);
+        } catch (err: any) {
+          if (err.message?.includes('401')) {
+            authToken = await forceReLogin();
+            res = await createAdminBranch(payload, authToken);
+          } else {
+            throw err;
+          }
+        }
+        const created = res?.data || payload;
+        setBranches((prev) => [...prev.filter((b) => b.id !== created.id), created]);
+        setRevalidateStatus(`✅ Đã thêm ${created.isHeadquarters ? 'Trụ sở chính' : 'Chi nhánh'} "${created.name}" thành công!`);
       } else {
-        await updateAdminBranch(payload.id, payload, token || undefined);
-        setBranches((prev) => prev.map((b) => (b.id === payload.id ? payload : b)));
-        setRevalidateStatus(`✅ Đã cập nhật chi nhánh "${payload.name}" thành công!`);
+        let res;
+        try {
+          res = await updateAdminBranch(payload.id, payload, authToken);
+        } catch (err: any) {
+          if (err.message?.includes('401')) {
+            authToken = await forceReLogin();
+            res = await updateAdminBranch(payload.id, payload, authToken);
+          } else {
+            throw err;
+          }
+        }
+        const updated = res?.data || payload;
+        setBranches((prev) => prev.map((b) => (b.id === updated.id ? updated : b)));
+        setRevalidateStatus(`✅ Đã cập nhật chi nhánh "${updated.name}" thành công!`);
       }
       setEditingBranch(null);
-    } catch {
-      setBranches((prev) =>
-        isNewBranch ? [...prev, payload] : prev.map((b) => (b.id === payload.id ? payload : b))
-      );
-      setEditingBranch(null);
-      setRevalidateStatus(`✅ Đã lưu chi nhánh "${payload.name}"!`);
+      // Refresh channels so newly created branch phone/email channels are synced
+      fetchChannelsList(authToken);
+      notifyDockUpdated();
+    } catch (err: any) {
+      setBranches(originalBranches);
+      setRevalidateStatus(`❌ Lỗi lưu chi nhánh: ${err.message || 'Lỗi máy chủ'}`);
     } finally {
       setSavingBranch(false);
     }
@@ -1428,15 +1493,22 @@ export default function AdminPage() {
 
   const filteredBranches = useMemo(() => {
     return branches.filter((b) => {
+      const q = searchBranch.toLowerCase();
       const matchSearch =
-        b.name.toLowerCase().includes(searchBranch.toLowerCase()) ||
-        b.code.toLowerCase().includes(searchBranch.toLowerCase()) ||
-        b.streetAddress.toLowerCase().includes(searchBranch.toLowerCase());
+        b.name.toLowerCase().includes(q) ||
+        b.code.toLowerCase().includes(q) ||
+        b.streetAddress.toLowerCase().includes(q) ||
+        (b.provinceName && b.provinceName.toLowerCase().includes(q)) ||
+        (b.phone && b.phone.toLowerCase().includes(q)) ||
+        (b.email && b.email.toLowerCase().includes(q));
       const matchStatus =
         branchStatusFilter === 'all' || (branchStatusFilter === 'active' ? b.isActive : !b.isActive);
-      return matchSearch && matchStatus;
+      const matchType =
+        branchTypeFilter === 'all' ||
+        (branchTypeFilter === 'hq' ? b.isHeadquarters : !b.isHeadquarters);
+      return matchSearch && matchStatus && matchType;
     });
-  }, [branches, searchBranch, branchStatusFilter]);
+  }, [branches, searchBranch, branchStatusFilter, branchTypeFilter]);
 
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
@@ -2458,16 +2530,26 @@ export default function AdminPage() {
                     type="text"
                     value={searchBranch}
                     onChange={(e) => setSearchBranch(e.target.value)}
-                    placeholder="Tìm theo tên chi nhánh, mã code, địa chỉ..."
+                    placeholder="Tìm theo tên chi nhánh, tỉnh thành, mã code, địa chỉ, số hotline..."
                     className="w-full pl-9 pr-4 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-brand-primary"
                   />
                 </div>
 
                 <div className="flex items-center gap-2 w-full md:w-auto">
                   <select
+                    value={branchTypeFilter}
+                    onChange={(e) => setBranchTypeFilter(e.target.value as 'all' | 'hq' | 'branch')}
+                    className="px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                  >
+                    <option value="all">Tất cả phân loại</option>
+                    <option value="hq">⭐ Trụ sở chính</option>
+                    <option value="branch">🏢 Chi nhánh / VPĐD</option>
+                  </select>
+
+                  <select
                     value={branchStatusFilter}
                     onChange={(e) => setBranchStatusFilter(e.target.value)}
-                    className="px-3 py-2 rounded-xl border border-slate-200 text-xs font-medium bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                    className="px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-primary"
                   >
                     <option value="all">Tất cả trạng thái</option>
                     <option value="active">Đang hoạt động</option>
@@ -2521,7 +2603,7 @@ export default function AdminPage() {
                   >
                     <div className="p-5 space-y-3">
                       <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-center gap-2.5">
+                        <div className="flex items-start gap-2.5">
                           <input
                             type="checkbox"
                             checked={selectedBranchIds.includes(b.id)}
@@ -2532,18 +2614,36 @@ export default function AdminPage() {
                                 setSelectedBranchIds((prev) => prev.filter((id) => id !== b.id));
                               }
                             }}
-                            className="w-4 h-4 rounded text-brand-primary cursor-pointer"
+                            className="w-4 h-4 mt-1 rounded text-brand-primary cursor-pointer"
                           />
                           <div>
-                            <span className="font-mono text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200">
-                              {b.code}
-                            </span>
-                            <h3 className="text-sm font-extrabold text-slate-900 mt-1">{b.name}</h3>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="font-mono text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                {b.code}
+                              </span>
+                              {b.isHeadquarters ? (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-amber-500 text-slate-900 border border-amber-400 shadow-xs">
+                                  <Star className="w-2.5 h-2.5 fill-slate-900" />
+                                  Trụ Sở Chính
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                                  <Building2 className="w-2.5 h-2.5" />
+                                  Chi Nhánh
+                                </span>
+                              )}
+                              {b.provinceName && (
+                                <span className="text-[10px] font-semibold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+                                  📍 {b.provinceName}
+                                </span>
+                              )}
+                            </div>
+                            <h3 className="text-sm font-extrabold text-slate-900 mt-1.5 leading-snug">{b.name}</h3>
                           </div>
                         </div>
 
                         <span
-                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold shrink-0 ${
                             b.isActive
                               ? 'bg-emerald-100 text-emerald-800'
                               : 'bg-slate-100 text-slate-500'
@@ -2558,7 +2658,32 @@ export default function AdminPage() {
                           <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
                           <span className="line-clamp-2">{b.streetAddress}</span>
                         </p>
-                        <p className="flex items-center gap-1.5 text-[11px] text-slate-500">
+
+                        {(b.phone || b.email) && (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 pt-1 text-[11px]">
+                            {b.phone && (
+                              <a
+                                href={`tel:${b.phone.replace(/\s+/g, '')}`}
+                                className="inline-flex items-center gap-1 text-slate-700 hover:text-brand-primary font-medium"
+                              >
+                                <Phone className="w-3 h-3 text-brand-primary shrink-0" />
+                                <span>{b.phone}</span>
+                              </a>
+                            )}
+                            {b.email && (
+                              <a
+                                href={`mailto:${b.email}`}
+                                className="inline-flex items-center gap-1 text-slate-700 hover:text-brand-primary font-medium truncate"
+                                title={b.email}
+                              >
+                                <Mail className="w-3 h-3 text-brand-primary shrink-0" />
+                                <span className="truncate">{b.email}</span>
+                              </a>
+                            )}
+                          </div>
+                        )}
+
+                        <p className="flex items-center gap-1.5 text-[11px] text-slate-500 pt-0.5">
                           <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                           <span>
                             {b.hours
@@ -2570,7 +2695,20 @@ export default function AdminPage() {
 
                       {/* Channels of this branch */}
                       <div className="pt-2 border-t border-slate-100">
-                        <p className="text-[10px] uppercase font-bold text-slate-400 mb-1.5">Kênh liên hệ trực tiếp:</p>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <p className="text-[10px] uppercase font-bold text-slate-400">Kênh liên hệ trực tiếp:</p>
+                          {b.mapEmbedUrl && (
+                            <a
+                              href={b.mapEmbedUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-[10px] font-semibold text-brand-primary hover:underline inline-flex items-center gap-0.5"
+                            >
+                              <ExternalLink className="w-2.5 h-2.5" />
+                              <span>Google Maps</span>
+                            </a>
+                          )}
+                        </div>
                         <div className="flex flex-wrap gap-1.5">
                           {channels
                             .filter((c) => c.branchId === b.id)
@@ -2579,12 +2717,18 @@ export default function AdminPage() {
                                 key={ch.id}
                                 className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] bg-slate-100 text-slate-700 font-medium"
                               >
-                                {ch.type === 'phone' ? <Phone className="w-2.5 h-2.5" /> : <span>Z</span>}
+                                {ch.type === 'phone' ? (
+                                  <Phone className="w-2.5 h-2.5 text-emerald-600" />
+                                ) : ch.type === 'email' ? (
+                                  <Mail className="w-2.5 h-2.5 text-blue-600" />
+                                ) : (
+                                  <span className="text-blue-500 font-bold">Z</span>
+                                )}
                                 <span>{ch.target}</span>
                               </span>
                             ))}
                           {channels.filter((c) => c.branchId === b.id).length === 0 && (
-                            <span className="text-[10px] text-slate-400 italic">Dùng hotline toàn quốc</span>
+                            <span className="text-[10px] text-slate-400 italic">Dùng hotline toàn quốc ({b.phone || '0901 234 567'})</span>
                           )}
                         </div>
                       </div>
@@ -3464,16 +3608,52 @@ export default function AdminPage() {
             </div>
 
             <form onSubmit={handleSaveBranch} className="p-6 space-y-4 overflow-y-auto max-h-[75vh]">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Tên Chi Nhánh / Trụ Sở</label>
-                <input
-                  type="text"
-                  required
-                  value={editingBranch.name}
-                  onChange={(e) => setEditingBranch({ ...editingBranch, name: e.target.value })}
-                  placeholder="Ví dụ: Trụ Sở Chính — TP. Quy Nhơn"
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600"
-                />
+              {/* Headquarters Toggle */}
+              <div className="p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200 flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-amber-500 text-slate-900 flex items-center justify-center font-bold shadow-xs">
+                    <Star className="w-4 h-4 fill-slate-900" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-black uppercase text-slate-900 block">Trụ Sở Chính Toàn Quốc</span>
+                    <span className="text-[11px] text-slate-500">
+                      Hiển thị ưu tiên hàng đầu trên TopBar, chân trang Footer và biểu mẫu báo giá
+                    </span>
+                  </div>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={editingBranch.isHeadquarters || false}
+                    onChange={(e) => setEditingBranch({ ...editingBranch, isHeadquarters: e.target.checked })}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                </label>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Tên Chi Nhánh / Văn Phòng</label>
+                  <input
+                    type="text"
+                    required
+                    value={editingBranch.name}
+                    onChange={(e) => setEditingBranch({ ...editingBranch, name: e.target.value })}
+                    placeholder="Ví dụ: Trụ Sở Chính — TP. Hồ Chí Minh"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Khu Vực / Tỉnh Thành</label>
+                  <input
+                    type="text"
+                    value={editingBranch.provinceName || ''}
+                    onChange={(e) => setEditingBranch({ ...editingBranch, provinceName: e.target.value })}
+                    placeholder="TP. Hồ Chí Minh, Bình Định, Đà Nẵng, Hà Nội..."
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -3484,7 +3664,7 @@ export default function AdminPage() {
                     required
                     value={editingBranch.code}
                     onChange={(e) => setEditingBranch({ ...editingBranch, code: e.target.value })}
-                    placeholder="QN-HQ, HCM-GV..."
+                    placeholder="HCM-GV, BDI-QN, DNG-HC..."
                     className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 font-mono uppercase"
                   />
                 </div>
@@ -3495,7 +3675,7 @@ export default function AdminPage() {
                     required
                     value={editingBranch.slug}
                     onChange={(e) => setEditingBranch({ ...editingBranch, slug: e.target.value })}
-                    placeholder="quy-nhon, go-vap-hcm"
+                    placeholder="ho-chi-minh, quy-nhon, da-nang"
                     className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 font-mono"
                   />
                 </div>
@@ -3511,6 +3691,63 @@ export default function AdminPage() {
                   placeholder="01 Lê Duẩn, P. Lý Thường Kiệt, TP. Quy Nhơn, Bình Định"
                   className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600"
                 />
+              </div>
+
+              {/* Direct Branch Contacts */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">Hotline / SĐT Chi Nhánh</label>
+                  <input
+                    type="text"
+                    value={editingBranch.phone || ''}
+                    onChange={(e) => setEditingBranch({ ...editingBranch, phone: e.target.value })}
+                    placeholder="0901 234 567"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600 font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">Email Chi Nhánh</label>
+                  <input
+                    type="email"
+                    value={editingBranch.email || ''}
+                    onChange={(e) => setEditingBranch({ ...editingBranch, email: e.target.value })}
+                    placeholder="chinhanh@bmsolar.vn"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600 font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">Zalo Tư Vấn Chi Nhánh</label>
+                  <input
+                    type="text"
+                    value={editingBranch.zalo || ''}
+                    onChange={(e) => setEditingBranch({ ...editingBranch, zalo: e.target.value })}
+                    placeholder="0901234567"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600 font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Link Google Maps (Embed hoặc URL)</label>
+                  <input
+                    type="text"
+                    value={editingBranch.mapEmbedUrl || ''}
+                    onChange={(e) => setEditingBranch({ ...editingBranch, mapEmbedUrl: e.target.value })}
+                    placeholder="https://maps.google.com/..."
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600 font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Ảnh Đại Diện Showroom / Văn Phòng</label>
+                  <input
+                    type="text"
+                    value={editingBranch.imageUrl || ''}
+                    onChange={(e) => setEditingBranch({ ...editingBranch, imageUrl: e.target.value })}
+                    placeholder="/images/branches/hcm.webp hoặc link ảnh"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600 font-mono"
+                  />
+                </div>
               </div>
 
               <div>

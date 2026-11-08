@@ -38,20 +38,27 @@ func (ThemeSetting) TableName() string { return "theme_settings" }
 
 // Branch physical branch locations
 type Branch struct {
-	ID            string           `gorm:"primaryKey;size:26" json:"id"`
-	Code          string           `gorm:"size:50;not null;uniqueIndex" json:"code"`
-	Slug          string           `gorm:"size:100;not null;uniqueIndex" json:"slug"`
-	Name          string           `gorm:"size:150;not null" json:"name"`
-	ProvinceID    *string          `gorm:"size:26" json:"provinceId"`
-	StreetAddress string           `gorm:"size:255;not null" json:"streetAddress"`
-	HoursJSON     *string          `gorm:"type:text" json:"hoursJson"`
-	GeoLat        *float64         `json:"geoLat"`
-	GeoLng        *float64         `json:"geoLng"`
-	IsActive      bool             `gorm:"not null;default:true" json:"isActive"`
-	SortOrder     int              `gorm:"not null;default:0" json:"sortOrder"`
-	CreatedAt     time.Time        `json:"createdAt"`
-	UpdatedAt     time.Time        `json:"updatedAt"`
-	Channels      []ContactChannel `gorm:"foreignKey:BranchID" json:"channels,omitempty"`
+	ID             string           `gorm:"primaryKey;size:26" json:"id"`
+	Code           string           `gorm:"size:50;not null;uniqueIndex" json:"code"`
+	Slug           string           `gorm:"size:100;not null;uniqueIndex" json:"slug"`
+	Name           string           `gorm:"size:150;not null" json:"name"`
+	IsHeadquarters bool             `gorm:"not null;default:false" json:"isHeadquarters"`
+	ProvinceName   string           `gorm:"size:100" json:"provinceName"`
+	ProvinceID     *string          `gorm:"size:26" json:"provinceId"`
+	StreetAddress  string           `gorm:"size:255;not null" json:"streetAddress"`
+	Phone          string           `gorm:"size:50" json:"phone"`
+	Email          string           `gorm:"size:100" json:"email"`
+	Zalo           string           `gorm:"size:50" json:"zalo"`
+	HoursJSON      *string          `gorm:"type:text" json:"hoursJson"`
+	MapEmbedURL    string           `gorm:"size:500" json:"mapEmbedUrl"`
+	ImageURL       string           `gorm:"size:255" json:"imageUrl"`
+	GeoLat         *float64         `json:"geoLat"`
+	GeoLng         *float64         `json:"geoLng"`
+	IsActive       bool             `gorm:"not null;default:true" json:"isActive"`
+	SortOrder      int              `gorm:"not null;default:0" json:"sortOrder"`
+	CreatedAt      time.Time        `json:"createdAt"`
+	UpdatedAt      time.Time        `json:"updatedAt"`
+	Channels       []ContactChannel `gorm:"foreignKey:BranchID" json:"channels"`
 }
 
 func (Branch) TableName() string { return "branches" }

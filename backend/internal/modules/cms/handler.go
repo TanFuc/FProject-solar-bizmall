@@ -121,43 +121,11 @@ func (h *Handler) GetPublicSiteShell(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var branches []models.Branch
-	h.db.Preload("Channels", "enabled = true").Where("is_active = true").Order("sort_order asc").Find(&branches)
+	h.db.Preload("Channels").Where("is_active = true").Order("sort_order asc").Find(&branches)
 
 	branchDTOs := make([]BranchDTO, 0, len(branches))
 	for _, b := range branches {
-		chans := make([]ChannelDTO, 0, len(b.Channels))
-		for _, c := range b.Channels {
-			target := c.Target
-			if c.Type == "phone" {
-				target = NormalizePhone(target)
-			} else if c.Type == "zalo" {
-				target = ValidateZaloTarget(target)
-			}
-			chans = append(chans, ChannelDTO{
-				ID:          c.ID,
-				BranchID:    c.BranchID,
-				Type:        c.Type,
-				Label:       c.Label,
-				Target:      target,
-				Formatted:   target,
-				SortOrder:   c.SortOrder,
-				Enabled:     c.Enabled,
-				IsActive:    c.Enabled,
-				Icon:        c.Icon,
-				AccentColor: c.AccentColor,
-			})
-		}
-		branchDTOs = append(branchDTOs, BranchDTO{
-			ID:            b.ID,
-			Code:          b.Code,
-			Slug:          b.Slug,
-			Name:          b.Name,
-			StreetAddress: b.StreetAddress,
-			GeoLat:        b.GeoLat,
-			GeoLng:        b.GeoLng,
-			IsActive:      b.IsActive,
-			Channels:      chans,
-		})
+		branchDTOs = append(branchDTOs, mapBranchToDTO(b))
 	}
 
 	// Global channels
@@ -262,10 +230,213 @@ func (h *Handler) GetPublicSiteShell(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func parseHoursJSON(hoursJSON *string) any {
+	if hoursJSON == nil || strings.TrimSpace(*hoursJSON) == "" {
+		return map[string]string{
+			"T2 - T7":   "07:30 - 17:30",
+			"Chủ Nhật": "Trực hotline 24/7",
+		}
+	}
+	var res map[string]any
+	if err := json.Unmarshal([]byte(*hoursJSON), &res); err == nil && len(res) > 0 {
+		return res
+	}
+	parts := strings.Split(*hoursJSON, "|")
+	m := make(map[string]string)
+	for _, p := range parts {
+		kv := strings.SplitN(p, ":", 2)
+		if len(kv) == 2 {
+			m[strings.TrimSpace(kv[0])] = strings.TrimSpace(kv[1])
+		}
+	}
+	if len(m) > 0 {
+		return m
+	}
+	return map[string]string{
+		"Giờ mở cửa": *hoursJSON,
+	}
+}
+
+func mapBranchToDTO(b models.Branch) BranchDTO {
+	chans := make([]ChannelDTO, 0, len(b.Channels))
+	phone := b.Phone
+	email := b.Email
+	zalo := b.Zalo
+
+	for _, c := range b.Channels {
+		target := c.Target
+		if c.Type == "phone" {
+			target = NormalizePhone(target)
+			if phone == "" {
+				phone = target
+			}
+		} else if c.Type == "zalo" {
+			target = ValidateZaloTarget(target)
+			if zalo == "" {
+				zalo = target
+			}
+		} else if c.Type == "email" {
+			if email == "" {
+				email = target
+			}
+		}
+		chans = append(chans, ChannelDTO{
+			ID:          c.ID,
+			BranchID:    c.BranchID,
+			Type:        c.Type,
+			Label:       c.Label,
+			Target:      target,
+			Formatted:   target,
+			SortOrder:   c.SortOrder,
+			Enabled:     c.Enabled,
+			IsActive:    c.Enabled,
+			Icon:        c.Icon,
+			AccentColor: c.AccentColor,
+		})
+	}
+
+	if len(chans) == 0 {
+		if phone != "" {
+			chans = append(chans, ChannelDTO{
+				ID:        "ch_phone_" + b.ID,
+				BranchID:  &b.ID,
+				Type:      "phone",
+				Label:     "Hotline " + b.Name,
+				Target:    NormalizePhone(phone),
+				Formatted: phone,
+				SortOrder: 1,
+				Enabled:   true,
+				IsActive:  true,
+			})
+		}
+		if email != "" {
+			chans = append(chans, ChannelDTO{
+				ID:        "ch_email_" + b.ID,
+				BranchID:  &b.ID,
+				Type:      "email",
+				Label:     "Email " + b.Name,
+				Target:    email,
+				Formatted: email,
+				SortOrder: 2,
+				Enabled:   true,
+				IsActive:  true,
+			})
+		}
+		if zalo != "" {
+			chans = append(chans, ChannelDTO{
+				ID:        "ch_zalo_" + b.ID,
+				BranchID:  &b.ID,
+				Type:      "zalo",
+				Label:     "Zalo " + b.Name,
+				Target:    ValidateZaloTarget(zalo),
+				Formatted: zalo,
+				SortOrder: 3,
+				Enabled:   true,
+				IsActive:  true,
+			})
+		}
+	}
+
+	hoursJSONStr := ""
+	if b.HoursJSON != nil {
+		hoursJSONStr = *b.HoursJSON
+	}
+
+	mapURL := b.MapEmbedURL
+	if mapURL == "" && b.StreetAddress != "" {
+		mapURL = "https://maps.google.com/maps?q=" + strings.ReplaceAll(b.StreetAddress, " ", "+") + "&output=embed"
+	}
+
+	return BranchDTO{
+		ID:             b.ID,
+		Code:           b.Code,
+		Slug:           b.Slug,
+		Name:           b.Name,
+		IsHeadquarters: b.IsHeadquarters,
+		ProvinceName:   b.ProvinceName,
+		StreetAddress:  b.StreetAddress,
+		Phone:          phone,
+		Email:          email,
+		Zalo:           zalo,
+		Hours:          parseHoursJSON(b.HoursJSON),
+		HoursJSON:      hoursJSONStr,
+		MapEmbedURL:    mapURL,
+		ImageURL:       b.ImageURL,
+		GeoLat:         b.GeoLat,
+		GeoLng:         b.GeoLng,
+		IsActive:       b.IsActive,
+		SortOrder:      b.SortOrder,
+		Channels:       chans,
+	}
+}
+
+func (h *Handler) syncBranchChannels(b *models.Branch) {
+	if b == nil || b.ID == "" {
+		return
+	}
+	if b.Phone != "" {
+		var phoneChan models.ContactChannel
+		if err := h.db.Where("branch_id = ? AND type = 'phone'", b.ID).First(&phoneChan).Error; err != nil {
+			h.db.Create(&models.ContactChannel{
+				ID:        id.New(),
+				BranchID:  &b.ID,
+				Type:      "phone",
+				Label:     "Hotline " + b.Name,
+				Target:    NormalizePhone(b.Phone),
+				SortOrder: 1,
+				Enabled:   true,
+			})
+		} else {
+			phoneChan.Target = NormalizePhone(b.Phone)
+			phoneChan.Label = "Hotline " + b.Name
+			phoneChan.Enabled = true
+			h.db.Save(&phoneChan)
+		}
+	}
+	if b.Email != "" {
+		var emailChan models.ContactChannel
+		if err := h.db.Where("branch_id = ? AND type = 'email'", b.ID).First(&emailChan).Error; err != nil {
+			h.db.Create(&models.ContactChannel{
+				ID:        id.New(),
+				BranchID:  &b.ID,
+				Type:      "email",
+				Label:     "Email " + b.Name,
+				Target:    b.Email,
+				SortOrder: 2,
+				Enabled:   true,
+			})
+		} else {
+			emailChan.Target = b.Email
+			emailChan.Label = "Email " + b.Name
+			emailChan.Enabled = true
+			h.db.Save(&emailChan)
+		}
+	}
+	if b.Zalo != "" {
+		var zaloChan models.ContactChannel
+		if err := h.db.Where("branch_id = ? AND type = 'zalo'", b.ID).First(&zaloChan).Error; err != nil {
+			h.db.Create(&models.ContactChannel{
+				ID:        id.New(),
+				BranchID:  &b.ID,
+				Type:      "zalo",
+				Label:     "Zalo " + b.Name,
+				Target:    ValidateZaloTarget(b.Zalo),
+				SortOrder: 3,
+				Enabled:   true,
+			})
+		} else {
+			zaloChan.Target = ValidateZaloTarget(b.Zalo)
+			zaloChan.Label = "Zalo " + b.Name
+			zaloChan.Enabled = true
+			h.db.Save(&zaloChan)
+		}
+	}
+}
+
 func (h *Handler) GetPublicBranches(w http.ResponseWriter, r *http.Request) {
 	activeOnly := r.URL.Query().Get("active") != "false"
 
-	query := h.db.Preload("Channels", "enabled = true").Order("sort_order asc")
+	query := h.db.Preload("Channels").Order("sort_order asc")
 	if activeOnly {
 		query = query.Where("is_active = true")
 	}
@@ -276,9 +447,15 @@ func (h *Handler) GetPublicBranches(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	dtos := make([]BranchDTO, 0, len(branches))
+	for _, b := range branches {
+		dtos = append(dtos, mapBranchToDTO(b))
+	}
+
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 	_ = json.NewEncoder(w).Encode(map[string]any{
-		"data": branches,
+		"data": dtos,
 	})
 }
 
@@ -529,9 +706,14 @@ func (h *Handler) ListBranches(w http.ResponseWriter, r *http.Request) {
 	var branches []models.Branch
 	h.db.Preload("Channels").Order("sort_order asc").Find(&branches)
 
+	dtos := make([]BranchDTO, 0, len(branches))
+	for _, b := range branches {
+		dtos = append(dtos, mapBranchToDTO(b))
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{
-		"data": branches,
+		"data": dtos,
 	})
 }
 
@@ -541,24 +723,32 @@ func (h *Handler) CreateBranch(w http.ResponseWriter, r *http.Request) {
 		errors.WriteJSON(w, r, errors.BadRequest("INVALID_JSON", "Malformed body"))
 		return
 	}
-	b.ID = id.New()
+	if b.ID == "" {
+		b.ID = id.New()
+	}
+	if b.Phone != "" {
+		b.Phone = NormalizePhone(b.Phone)
+	}
 
 	if err := h.db.Create(&b).Error; err != nil {
 		errors.WriteJSON(w, r, errors.Conflict("BRANCH_EXISTS", "Branch code or slug already exists"))
 		return
 	}
 
+	h.syncBranchChannels(&b)
+	h.db.Preload("Channels").First(&b, "id = ?", b.ID)
+
 	w.WriteHeader(http.StatusCreated)
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{
-		"data": b,
+		"data": mapBranchToDTO(b),
 	})
 }
 
 func (h *Handler) UpdateBranch(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
+	idParam := chi.URLParam(r, "id")
 	var existing models.Branch
-	if err := h.db.Where("id = ?", id).First(&existing).Error; err != nil {
+	if err := h.db.Where("id = ?", idParam).First(&existing).Error; err != nil {
 		errors.WriteJSON(w, r, errors.NotFound("Branch not found"))
 		return
 	}
@@ -567,11 +757,17 @@ func (h *Handler) UpdateBranch(w http.ResponseWriter, r *http.Request) {
 		errors.WriteJSON(w, r, errors.BadRequest("INVALID_JSON", "Malformed body"))
 		return
 	}
+	if existing.Phone != "" {
+		existing.Phone = NormalizePhone(existing.Phone)
+	}
 
 	h.db.Save(&existing)
+	h.syncBranchChannels(&existing)
+	h.db.Preload("Channels").First(&existing, "id = ?", existing.ID)
+
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{
-		"data": existing,
+		"data": mapBranchToDTO(existing),
 	})
 }
 
@@ -684,8 +880,7 @@ func (h *Handler) BulkContactChannels(w http.ResponseWriter, r *http.Request) {
 			h.db.Where("id IN ?", req.IDs).Delete(&models.ContactChannel{})
 		}
 	case "reset_dock":
-		// Enable only primary global dock channels (branch_id IS NULL or empty) and disable branch channels
-		h.db.Model(&models.ContactChannel{}).Where("branch_id IS NOT NULL AND branch_id != ''").Update("enabled", false)
+		// Enable standard global dock channels (branch_id IS NULL or empty) without disabling branch channels
 		h.db.Model(&models.ContactChannel{}).Where("branch_id IS NULL OR branch_id = ''").Update("enabled", true)
 	default:
 		errors.WriteJSON(w, r, errors.BadRequest("INVALID_ACTION", "Supported actions: set_enabled, delete, reset_dock"))
@@ -737,9 +932,14 @@ func (h *Handler) BulkBranches(w http.ResponseWriter, r *http.Request) {
 	var branches []models.Branch
 	h.db.Preload("Channels").Order("sort_order asc").Find(&branches)
 
+	dtos := make([]BranchDTO, 0, len(branches))
+	for _, b := range branches {
+		dtos = append(dtos, mapBranchToDTO(b))
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{
-		"data":    branches,
+		"data":    dtos,
 		"message": "Bulk action completed successfully",
 	})
 }

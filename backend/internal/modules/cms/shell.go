@@ -64,16 +64,25 @@ type UtilityBarDTO struct {
 }
 
 type BranchDTO struct {
-	ID            string       `json:"id"`
-	Code          string       `json:"code"`
-	Slug          string       `json:"slug"`
-	Name          string       `json:"name"`
-	StreetAddress string       `json:"streetAddress"`
-	Hours         any          `json:"hours,omitempty"`
-	GeoLat        *float64     `json:"geoLat,omitempty"`
-	GeoLng        *float64     `json:"geoLng,omitempty"`
-	IsActive      bool         `json:"isActive"`
-	Channels      []ChannelDTO `json:"channels"`
+	ID             string       `json:"id"`
+	Code           string       `json:"code"`
+	Slug           string       `json:"slug"`
+	Name           string       `json:"name"`
+	IsHeadquarters bool         `json:"isHeadquarters"`
+	ProvinceName   string       `json:"provinceName,omitempty"`
+	StreetAddress  string       `json:"streetAddress"`
+	Phone          string       `json:"phone,omitempty"`
+	Email          string       `json:"email,omitempty"`
+	Zalo           string       `json:"zalo,omitempty"`
+	Hours          any          `json:"hours,omitempty"`
+	HoursJSON      string       `json:"hoursJson,omitempty"`
+	MapEmbedURL    string       `json:"mapEmbedUrl,omitempty"`
+	ImageURL       string       `json:"imageUrl,omitempty"`
+	GeoLat         *float64     `json:"geoLat,omitempty"`
+	GeoLng         *float64     `json:"geoLng,omitempty"`
+	IsActive       bool         `json:"isActive"`
+	SortOrder      int          `json:"sortOrder"`
+	Channels       []ChannelDTO `json:"channels"`
 }
 
 type ChannelDTO struct {
