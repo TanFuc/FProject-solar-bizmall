@@ -18,11 +18,11 @@ export function FloatingSocialDock({ initialChannels = [] }: FloatingSocialDockP
     async function loadFreshChannels() {
       try {
         const apiOrigin = (process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001').replace(/\/$/, '');
-        const url = `${apiOrigin.endsWith('/api/v1') ? apiOrigin : `${apiOrigin}/api/v1`}/public/contact-channels`;
+        const url = `${apiOrigin.endsWith('/api/v1') ? apiOrigin : `${apiOrigin}/api/v1`}/public/contact-channels?_t=${Date.now()}`;
         const res = await fetch(url, { cache: 'no-store' });
         if (res.ok) {
           const json = await res.json();
-          if (isMounted && json && Array.isArray(json.data) && json.data.length > 0) {
+          if (isMounted && json && Array.isArray(json.data)) {
             setChannels(json.data);
           }
         }
@@ -32,6 +32,12 @@ export function FloatingSocialDock({ initialChannels = [] }: FloatingSocialDockP
     }
     loadFreshChannels();
 
+    const handleChannelsUpdated = () => {
+      loadFreshChannels();
+    };
+    window.addEventListener('bmsolar:channels-updated', handleChannelsUpdated);
+    window.addEventListener('storage', handleChannelsUpdated);
+
     const handleScroll = () => {
       setShowBackToTop(window.scrollY > 350);
     };
@@ -40,6 +46,8 @@ export function FloatingSocialDock({ initialChannels = [] }: FloatingSocialDockP
     return () => {
       isMounted = false;
       window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('bmsolar:channels-updated', handleChannelsUpdated);
+      window.removeEventListener('storage', handleChannelsUpdated);
     };
   }, []);
 

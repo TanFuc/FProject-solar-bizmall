@@ -51,10 +51,13 @@ export function BranchProvider({
     }
   };
 
-  const activeBranch = branches.find((b) => b.slug === activeBranchSlug) || branches[0] || null;
+  const activeBranch = (branches || []).find((b) => b.slug === activeBranchSlug) || (branches || [])[0] || null;
 
-  const activeHotline = activeBranch?.channels.find((c) => c.type === 'phone') || globalChannels.find(c=>c.type==='phone') || null;
-  const activeZalo = activeBranch?.channels.find((c) => c.type === 'zalo') || globalChannels.find(c=>c.type==='zalo') || null;
+  const branchChannels = activeBranch?.channels || [];
+  const safeGlobalChannels = globalChannels || [];
+
+  const activeHotline = branchChannels.find((c) => c.type === 'phone') || safeGlobalChannels.find((c) => c.type === 'phone') || null;
+  const activeZalo = branchChannels.find((c) => c.type === 'zalo') || safeGlobalChannels.find((c) => c.type === 'zalo') || null;
 
   const openConsultationModal = (note?: string) => {
     setConsultationNote(note || '');

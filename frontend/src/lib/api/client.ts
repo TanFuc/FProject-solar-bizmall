@@ -418,6 +418,7 @@ export async function createAdminContactChannel(data: any, token?: string) {
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error(`Failed to create contact channel: ${res.status}`);
+  invalidatePublicCache();
   return res.json();
 }
 
@@ -430,6 +431,7 @@ export async function updateAdminContactChannel(id: string, data: any, token?: s
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error(`Failed to update contact channel: ${res.status}`);
+  invalidatePublicCache();
   return res.json();
 }
 
@@ -441,6 +443,7 @@ export async function deleteAdminContactChannel(id: string, token?: string) {
     headers,
   });
   if (!res.ok) throw new Error(`Failed to delete contact channel: ${res.status}`);
+  invalidatePublicCache();
   return res.json();
 }
 
@@ -727,6 +730,7 @@ export async function bulkAdminContactChannels(
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error(`Failed to execute bulk action on contact channels: ${res.status}`);
+  invalidatePublicCache();
   return res.json();
 }
 

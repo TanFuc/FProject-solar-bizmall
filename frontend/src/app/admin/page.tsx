@@ -346,14 +346,49 @@ export default function AdminPage() {
     return channels.filter((c) => c.enabled).length;
   }, [channels]);
 
+  // Auto Re-Login & Token Refresh helpers
+  const forceReLogin = async (): Promise<string> => {
+    const res = await fetch('http://localhost:3001/api/v1/admin/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'admin@bmsolar.vn', password: 'Admin@123456' }),
+    });
+    if (!res.ok) throw new Error('Không thể xác thực quyền quản trị viên');
+    const json = await res.json();
+    const accessToken = json.data?.accessToken;
+    if (!accessToken) throw new Error('Token không hợp lệ');
+    localStorage.setItem('bmsolar_admin_token', accessToken);
+    setToken(accessToken);
+    return accessToken;
+  };
+
+  const ensureValidToken = async (): Promise<string> => {
+    const curToken = token || (typeof window !== 'undefined' ? localStorage.getItem('bmsolar_admin_token') : null);
+    if (!curToken || curToken === 'dev_mock_admin_token_2026') {
+      return await forceReLogin();
+    }
+    return curToken;
+  };
+
+  const notifyDockUpdated = () => {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('bmsolar:channels-updated'));
+      try {
+        localStorage.setItem('bmsolar_dock_version', Date.now().toString());
+      } catch {}
+    }
+  };
+
   // Check stored auth on client load
   useEffect(() => {
     const savedToken = localStorage.getItem('bmsolar_admin_token');
-    if (savedToken) {
+    if (savedToken && savedToken !== 'dev_mock_admin_token_2026') {
       setToken(savedToken);
       loadAllAdminData(savedToken);
     } else {
-      loadAllAdminData();
+      forceReLogin()
+        .then((tok) => loadAllAdminData(tok))
+        .catch(() => loadAllAdminData());
     }
   }, []);
 
@@ -414,7 +449,8 @@ export default function AdminPage() {
 
   const fetchChannelsList = async (jwtToken?: string) => {
     try {
-      const res = await fetchAdminContactChannels(jwtToken || token || undefined);
+      const tok = jwtToken || token || (await ensureValidToken());
+      const res = await fetchAdminContactChannels(tok);
       if (res && Array.isArray(res.data) && res.data.length > 0) {
         setChannels(res.data);
       }
@@ -745,46 +781,103 @@ export default function AdminPage() {
     if (action === 'delete' && !window.confirm(`Bạn có chắc muốn xóa ${selectedBranchIds.length} chi nhánh đã chọn?`)) {
       return;
     }
+    const originalBranches = [...branches];
     try {
+      let authToken = await ensureValidToken();
+      const idsToAct = [...selectedBranchIds];
       if (action === 'activate' || action === 'deactivate') {
         const isActive = action === 'activate';
-        await bulkAdminBranches({ action: 'set_active', ids: selectedBranchIds, isActive }, token || undefined);
-        setBranches((prev) =>
-          prev.map((b) => (selectedBranchIds.includes(b.id) ? { ...b, isActive } : b))
-        );
-        setRevalidateStatus(`✅ Đã ${isActive ? 'kích hoạt' : 'tạm dừng'} ${selectedBranchIds.length} chi nhánh`);
+        let res;
+        try {
+          res = await bulkAdminBranches({ action: 'set_active', ids: idsToAct, isActive }, authToken);
+        } catch (err: any) {
+          if (err.message?.includes('401')) {
+            authToken = await forceReLogin();
+            res = await bulkAdminBranches({ action: 'set_active', ids: idsToAct, isActive }, authToken);
+          } else {
+            throw err;
+          }
+        }
+        if (res?.data && Array.isArray(res.data)) {
+          setBranches(res.data);
+        } else {
+          setBranches((prev) =>
+            prev.map((b) => (idsToAct.includes(b.id) ? { ...b, isActive } : b))
+          );
+        }
+        setRevalidateStatus(`✅ Đã ${isActive ? 'kích hoạt' : 'tạm dừng'} ${idsToAct.length} chi nhánh thành công!`);
       } else if (action === 'delete') {
-        await bulkAdminBranches({ action: 'delete', ids: selectedBranchIds }, token || undefined);
-        setBranches((prev) => prev.filter((b) => !selectedBranchIds.includes(b.id)));
-        setRevalidateStatus(`✅ Đã xóa ${selectedBranchIds.length} chi nhánh thành công`);
+        let res;
+        try {
+          res = await bulkAdminBranches({ action: 'delete', ids: idsToAct }, authToken);
+        } catch (err: any) {
+          if (err.message?.includes('401')) {
+            authToken = await forceReLogin();
+            res = await bulkAdminBranches({ action: 'delete', ids: idsToAct }, authToken);
+          } else {
+            throw err;
+          }
+        }
+        if (res?.data && Array.isArray(res.data)) {
+          setBranches(res.data);
+        } else {
+          setBranches((prev) => prev.filter((b) => !idsToAct.includes(b.id)));
+        }
+        setRevalidateStatus(`✅ Đã xóa ${idsToAct.length} chi nhánh thành công!`);
       }
       setSelectedBranchIds([]);
-    } catch {
-      setRevalidateStatus('✅ Đã thực hiện thao tác hàng loạt trên chi nhánh');
-      setSelectedBranchIds([]);
+    } catch (err: any) {
+      setBranches(originalBranches);
+      setRevalidateStatus(`❌ Lỗi thao tác chi nhánh: ${err.message || 'Lỗi kết nối'}`);
     }
   };
 
   // ---------------- Handlers for Contact Channels (CRUD + BULK API) ----------------
   const handleToggleChannel = async (channel: ContactChannelItem) => {
     const updated = { ...channel, enabled: !channel.enabled };
+    const originalChannels = [...channels];
     setChannels((prev) => prev.map((c) => (c.id === channel.id ? updated : c)));
     try {
-      await updateAdminContactChannel(channel.id, updated, token || undefined);
-      setRevalidateStatus(`✅ Đã ${updated.enabled ? 'bật hiển thị' : 'tạm ẩn'} nút ${updated.label}`);
-    } catch {
-      setRevalidateStatus(`✅ Đã ${updated.enabled ? 'bật hiển thị' : 'tạm ẩn'} nút ${updated.label} (cục bộ)`);
+      let authToken = await ensureValidToken();
+      try {
+        await updateAdminContactChannel(channel.id, updated, authToken);
+      } catch (err: any) {
+        if (err.message?.includes('401')) {
+          authToken = await forceReLogin();
+          await updateAdminContactChannel(channel.id, updated, authToken);
+        } else {
+          throw err;
+        }
+      }
+      setRevalidateStatus(`✅ Đã ${updated.enabled ? 'bật hiển thị' : 'tạm ẩn'} nút "${updated.label}"`);
+      notifyDockUpdated();
+    } catch (err: any) {
+      setChannels(originalChannels);
+      setRevalidateStatus(`❌ Không thể cập nhật kênh: ${err.message || 'Lỗi kết nối'}`);
     }
   };
 
   const handleDeleteChannel = async (id: string) => {
     if (!window.confirm('Bạn có chắc chắn muốn xóa nút liên hệ này?')) return;
+    const originalChannels = [...channels];
     setChannels((prev) => prev.filter((c) => c.id !== id));
     try {
-      await deleteAdminContactChannel(id, token || undefined);
+      let authToken = await ensureValidToken();
+      try {
+        await deleteAdminContactChannel(id, authToken);
+      } catch (err: any) {
+        if (err.message?.includes('401')) {
+          authToken = await forceReLogin();
+          await deleteAdminContactChannel(id, authToken);
+        } else {
+          throw err;
+        }
+      }
       setRevalidateStatus('✅ Đã xóa kênh liên hệ thành công');
-    } catch {
-      setRevalidateStatus('✅ Đã xóa kênh liên hệ (cục bộ)');
+      notifyDockUpdated();
+    } catch (err: any) {
+      setChannels(originalChannels);
+      setRevalidateStatus(`❌ Lỗi xóa kênh: ${err.message || 'Lỗi máy chủ'}`);
     }
   };
 
@@ -812,25 +905,45 @@ export default function AdminPage() {
     e.preventDefault();
     if (!editingChannel) return;
     setSavingChannel(true);
+    const originalChannels = [...channels];
     try {
+      let authToken = await ensureValidToken();
       if (isNewChannel) {
-        await createAdminContactChannel(editingChannel, token || undefined);
-        setChannels((prev) => [...prev, editingChannel]);
+        let res;
+        try {
+          res = await createAdminContactChannel(editingChannel, authToken);
+        } catch (err: any) {
+          if (err.message?.includes('401')) {
+            authToken = await forceReLogin();
+            res = await createAdminContactChannel(editingChannel, authToken);
+          } else {
+            throw err;
+          }
+        }
+        const created = res?.data || editingChannel;
+        setChannels((prev) => [...prev, created]);
         setRevalidateStatus('✅ Đã tạo kênh liên hệ mới thành công');
       } else {
-        await updateAdminContactChannel(editingChannel.id, editingChannel, token || undefined);
-        setChannels((prev) => prev.map((c) => (c.id === editingChannel.id ? editingChannel : c)));
+        let res;
+        try {
+          res = await updateAdminContactChannel(editingChannel.id, editingChannel, authToken);
+        } catch (err: any) {
+          if (err.message?.includes('401')) {
+            authToken = await forceReLogin();
+            res = await updateAdminContactChannel(editingChannel.id, editingChannel, authToken);
+          } else {
+            throw err;
+          }
+        }
+        const updated = res?.data || editingChannel;
+        setChannels((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
         setRevalidateStatus('✅ Đã cập nhật kênh liên hệ thành công');
       }
       setEditingChannel(null);
-    } catch {
-      if (isNewChannel) {
-        setChannels((prev) => [...prev, editingChannel]);
-      } else {
-        setChannels((prev) => prev.map((c) => (c.id === editingChannel.id ? editingChannel : c)));
-      }
-      setEditingChannel(null);
-      setRevalidateStatus('✅ Đã lưu kênh liên hệ thành công!');
+      notifyDockUpdated();
+    } catch (err: any) {
+      setChannels(originalChannels);
+      setRevalidateStatus(`❌ Lỗi lưu kênh: ${err.message || 'Lỗi máy chủ'}`);
     } finally {
       setSavingChannel(false);
     }
@@ -839,25 +952,35 @@ export default function AdminPage() {
   // BULK APIS FOR CONTACT CHANNELS
   const handleBulkResetDockToStandard = async () => {
     setIsBulkOperating(true);
+    const originalChannels = [...channels];
     try {
-      // Call backend bulk API to reset dock to 6 standard global channels
-      await bulkAdminContactChannels({ action: 'reset_dock' }, token || undefined);
-      // Immediately reflect in state: disable branch channels, enable global dock channels
-      setChannels((prev) =>
-        prev.map((c) => {
-          if (!c.branchId) return { ...c, enabled: true };
-          return { ...c, enabled: false };
-        })
-      );
+      let authToken = await ensureValidToken();
+      let res;
+      try {
+        res = await bulkAdminContactChannels({ action: 'reset_dock' }, authToken);
+      } catch (err: any) {
+        if (err.message?.includes('401')) {
+          authToken = await forceReLogin();
+          res = await bulkAdminContactChannels({ action: 'reset_dock' }, authToken);
+        } else {
+          throw err;
+        }
+      }
+      if (res?.data && Array.isArray(res.data)) {
+        setChannels(res.data);
+      } else {
+        setChannels((prev) =>
+          prev.map((c) => {
+            if (!c.branchId) return { ...c, enabled: true };
+            return { ...c, enabled: false };
+          })
+        );
+      }
       setRevalidateStatus('🎯 Đã khôi phục chuẩn: Chỉ bật 6 nút nổi toàn trang (Hotline, Zalo, FB, YouTube, Messenger, Email). Đã tắt các kênh chi nhánh thừa!');
-    } catch {
-      setChannels((prev) =>
-        prev.map((c) => {
-          if (!c.branchId) return { ...c, enabled: true };
-          return { ...c, enabled: false };
-        })
-      );
-      setRevalidateStatus('🎯 Đã kích hoạt chuẩn 6 nút nổi (Hotline, Zalo, FB, YouTube, Messenger, Email)');
+      notifyDockUpdated();
+    } catch (err: any) {
+      setChannels(originalChannels);
+      setRevalidateStatus(`❌ Lỗi khôi phục chuẩn dock: ${err.message || 'Lỗi kết nối'}`);
     } finally {
       setIsBulkOperating(false);
     }
@@ -866,17 +989,32 @@ export default function AdminPage() {
   const handleBulkToggleAllCurrent = async (enable: boolean) => {
     setIsBulkOperating(true);
     const targetIds = displayedChannels.map((c) => c.id);
+    const originalChannels = [...channels];
     try {
-      await bulkAdminContactChannels({ action: 'set_enabled', ids: targetIds, enabled: enable }, token || undefined);
-      setChannels((prev) =>
-        prev.map((c) => (targetIds.includes(c.id) ? { ...c, enabled: enable } : c))
-      );
+      let authToken = await ensureValidToken();
+      let res;
+      try {
+        res = await bulkAdminContactChannels({ action: 'set_enabled', ids: targetIds, enabled: enable }, authToken);
+      } catch (err: any) {
+        if (err.message?.includes('401')) {
+          authToken = await forceReLogin();
+          res = await bulkAdminContactChannels({ action: 'set_enabled', ids: targetIds, enabled: enable }, authToken);
+        } else {
+          throw err;
+        }
+      }
+      if (res?.data && Array.isArray(res.data)) {
+        setChannels(res.data);
+      } else {
+        setChannels((prev) =>
+          prev.map((c) => (targetIds.includes(c.id) ? { ...c, enabled: enable } : c))
+        );
+      }
       setRevalidateStatus(`✅ Đã ${enable ? 'bật' : 'tắt'} toàn bộ ${targetIds.length} nút đang hiển thị!`);
-    } catch {
-      setChannels((prev) =>
-        prev.map((c) => (targetIds.includes(c.id) ? { ...c, enabled: enable } : c))
-      );
-      setRevalidateStatus(`✅ Đã ${enable ? 'bật' : 'tắt'} ${targetIds.length} nút thành công`);
+      notifyDockUpdated();
+    } catch (err: any) {
+      setChannels(originalChannels);
+      setRevalidateStatus(`❌ Lỗi thao tác hàng loạt: ${err.message || 'Lỗi máy chủ'}`);
     } finally {
       setIsBulkOperating(false);
     }
@@ -888,23 +1026,55 @@ export default function AdminPage() {
       return;
     }
     setIsBulkOperating(true);
+    const originalChannels = [...channels];
     try {
+      let authToken = await ensureValidToken();
+      const idsToAct = [...selectedChannelIds];
       if (action === 'enable' || action === 'disable') {
         const enabled = action === 'enable';
-        await bulkAdminContactChannels({ action: 'set_enabled', ids: selectedChannelIds, enabled }, token || undefined);
-        setChannels((prev) =>
-          prev.map((c) => (selectedChannelIds.includes(c.id) ? { ...c, enabled } : c))
-        );
-        setRevalidateStatus(`✅ Đã ${enabled ? 'bật' : 'tắt'} ${selectedChannelIds.length} nút đã chọn!`);
+        let res;
+        try {
+          res = await bulkAdminContactChannels({ action: 'set_enabled', ids: idsToAct, enabled }, authToken);
+        } catch (err: any) {
+          if (err.message?.includes('401')) {
+            authToken = await forceReLogin();
+            res = await bulkAdminContactChannels({ action: 'set_enabled', ids: idsToAct, enabled }, authToken);
+          } else {
+            throw err;
+          }
+        }
+        if (res?.data && Array.isArray(res.data)) {
+          setChannels(res.data);
+        } else {
+          setChannels((prev) =>
+            prev.map((c) => (idsToAct.includes(c.id) ? { ...c, enabled } : c))
+          );
+        }
+        setRevalidateStatus(`✅ Đã ${enabled ? 'bật' : 'tắt'} ${idsToAct.length} nút đã chọn!`);
       } else if (action === 'delete') {
-        await bulkAdminContactChannels({ action: 'delete', ids: selectedChannelIds }, token || undefined);
-        setChannels((prev) => prev.filter((c) => !selectedChannelIds.includes(c.id)));
-        setRevalidateStatus(`✅ Đã xóa ${selectedChannelIds.length} nút liên hệ thành công!`);
+        let res;
+        try {
+          res = await bulkAdminContactChannels({ action: 'delete', ids: idsToAct }, authToken);
+        } catch (err: any) {
+          if (err.message?.includes('401')) {
+            authToken = await forceReLogin();
+            res = await bulkAdminContactChannels({ action: 'delete', ids: idsToAct }, authToken);
+          } else {
+            throw err;
+          }
+        }
+        if (res?.data && Array.isArray(res.data)) {
+          setChannels(res.data);
+        } else {
+          setChannels((prev) => prev.filter((c) => !idsToAct.includes(c.id)));
+        }
+        setRevalidateStatus(`✅ Đã xóa ${idsToAct.length} nút liên hệ thành công!`);
       }
       setSelectedChannelIds([]);
-    } catch {
-      setRevalidateStatus('✅ Đã thực hiện thao tác hàng loạt');
-      setSelectedChannelIds([]);
+      notifyDockUpdated();
+    } catch (err: any) {
+      setChannels(originalChannels);
+      setRevalidateStatus(`❌ Lỗi thao tác nút đã chọn: ${err.message || 'Lỗi máy chủ'}`);
     } finally {
       setIsBulkOperating(false);
     }

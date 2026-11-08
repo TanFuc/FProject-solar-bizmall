@@ -58,15 +58,17 @@ func (Branch) TableName() string { return "branches" }
 
 // ContactChannel phones, zalos, emails, socials per branch or global
 type ContactChannel struct {
-	ID        string    `gorm:"primaryKey;size:26" json:"id"`
-	BranchID  *string   `gorm:"size:26;index:idx_channel_branch_type" json:"branchId"`
-	Type      string    `gorm:"size:30;not null;index:idx_channel_branch_type" json:"type"` // phone, zalo, email, facebook, etc.
-	Label     string    `gorm:"size:100;not null" json:"label"`
-	Target    string    `gorm:"size:255;not null" json:"target"`
-	SortOrder int       `gorm:"not null;default:0" json:"sortOrder"`
-	Enabled   bool      `gorm:"not null;default:true" json:"enabled"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
+	ID          string    `gorm:"primaryKey;size:26" json:"id"`
+	BranchID    *string   `gorm:"size:26;index:idx_channel_branch_type" json:"branchId"`
+	Type        string    `gorm:"size:30;not null;index:idx_channel_branch_type" json:"type"` // phone, zalo, email, facebook, etc.
+	Label       string    `gorm:"size:100;not null" json:"label"`
+	Target      string    `gorm:"size:255;not null" json:"target"`
+	Icon        string    `gorm:"size:50" json:"icon,omitempty"`
+	AccentColor string    `gorm:"size:30" json:"accentColor,omitempty"`
+	SortOrder   int       `gorm:"not null;default:0" json:"sortOrder"`
+	Enabled     bool      `gorm:"not null;default:true" json:"enabled"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
 }
 
 func (ContactChannel) TableName() string { return "contact_channels" }

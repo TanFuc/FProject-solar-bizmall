@@ -64,25 +64,30 @@ type UtilityBarDTO struct {
 }
 
 type BranchDTO struct {
-	ID            string     `json:"id"`
-	Code          string     `json:"code"`
-	Slug          string     `json:"slug"`
-	Name          string     `json:"name"`
-	StreetAddress string     `json:"streetAddress"`
-	Hours         any        `json:"hours,omitempty"`
-	GeoLat        *float64   `json:"geoLat,omitempty"`
-	GeoLng        *float64   `json:"geoLng,omitempty"`
-	IsActive      bool       `json:"isActive"`
-	Channels      []ChannelDTO `json:"channels,omitempty"`
+	ID            string       `json:"id"`
+	Code          string       `json:"code"`
+	Slug          string       `json:"slug"`
+	Name          string       `json:"name"`
+	StreetAddress string       `json:"streetAddress"`
+	Hours         any          `json:"hours,omitempty"`
+	GeoLat        *float64     `json:"geoLat,omitempty"`
+	GeoLng        *float64     `json:"geoLng,omitempty"`
+	IsActive      bool         `json:"isActive"`
+	Channels      []ChannelDTO `json:"channels"`
 }
 
 type ChannelDTO struct {
-	ID        string `json:"id"`
-	Type      string `json:"type"`
-	Label     string `json:"label"`
-	Target    string `json:"target"`
-	Formatted string `json:"formatted"`
-	SortOrder int    `json:"sortOrder"`
+	ID          string  `json:"id"`
+	BranchID    *string `json:"branchId,omitempty"`
+	Type        string  `json:"type"`
+	Label       string  `json:"label"`
+	Target      string  `json:"target"`
+	Formatted   string  `json:"formatted"`
+	SortOrder   int     `json:"sortOrder"`
+	Enabled     bool    `json:"enabled"`
+	IsActive    bool    `json:"isActive"`
+	Icon        string  `json:"icon,omitempty"`
+	AccentColor string  `json:"accentColor,omitempty"`
 }
 
 type NavigationNodeDTO struct {

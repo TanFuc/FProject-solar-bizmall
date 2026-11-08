@@ -138,7 +138,7 @@ func (h *Handler) GetPublicSolutionBySlug(w http.ResponseWriter, r *http.Request
 // GetPublicContactChannels returns active global contact channels for floating dock & social bar
 func (h *Handler) GetPublicContactChannels(w http.ResponseWriter, r *http.Request) {
 	var channels []models.ContactChannel
-	if err := h.db.Where("branch_id IS NULL AND enabled = true").Order("sort_order asc").Find(&channels).Error; err != nil {
+	if err := h.db.Where("(branch_id IS NULL OR branch_id = '') AND enabled = true").Order("sort_order asc").Find(&channels).Error; err != nil {
 		errors.WriteJSON(w, r, errors.Internal("Failed to fetch contact channels"))
 		return
 	}
@@ -152,17 +152,22 @@ func (h *Handler) GetPublicContactChannels(w http.ResponseWriter, r *http.Reques
 			target = ValidateZaloTarget(target)
 		}
 		dtos = append(dtos, ChannelDTO{
-			ID:        c.ID,
-			Type:      c.Type,
-			Label:     c.Label,
-			Target:    target,
-			Formatted: target,
-			SortOrder: c.SortOrder,
+			ID:          c.ID,
+			BranchID:    c.BranchID,
+			Type:        c.Type,
+			Label:       c.Label,
+			Target:      target,
+			Formatted:   target,
+			SortOrder:   c.SortOrder,
+			Enabled:     c.Enabled,
+			IsActive:    c.Enabled,
+			Icon:        c.Icon,
+			AccentColor: c.AccentColor,
 		})
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Cache-Control", "public, max-age=30")
+	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 	_ = json.NewEncoder(w).Encode(map[string]any{
 		"data": dtos,
 	})

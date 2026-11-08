@@ -134,12 +134,17 @@ func (h *Handler) GetPublicSiteShell(w http.ResponseWriter, r *http.Request) {
 				target = ValidateZaloTarget(target)
 			}
 			chans = append(chans, ChannelDTO{
-				ID:        c.ID,
-				Type:      c.Type,
-				Label:     c.Label,
-				Target:    target,
-				Formatted: target,
-				SortOrder: c.SortOrder,
+				ID:          c.ID,
+				BranchID:    c.BranchID,
+				Type:        c.Type,
+				Label:       c.Label,
+				Target:      target,
+				Formatted:   target,
+				SortOrder:   c.SortOrder,
+				Enabled:     c.Enabled,
+				IsActive:    c.Enabled,
+				Icon:        c.Icon,
+				AccentColor: c.AccentColor,
 			})
 		}
 		branchDTOs = append(branchDTOs, BranchDTO{
@@ -157,7 +162,7 @@ func (h *Handler) GetPublicSiteShell(w http.ResponseWriter, r *http.Request) {
 
 	// Global channels
 	var globalChannels []models.ContactChannel
-	h.db.Where("branch_id IS NULL AND enabled = true").Order("sort_order asc").Find(&globalChannels)
+	h.db.Where("(branch_id IS NULL OR branch_id = '') AND enabled = true").Order("sort_order asc").Find(&globalChannels)
 	globalChanDTOs := make([]ChannelDTO, 0, len(globalChannels))
 	var hotline, email string
 	for _, c := range globalChannels {
@@ -175,12 +180,17 @@ func (h *Handler) GetPublicSiteShell(w http.ResponseWriter, r *http.Request) {
 			target = ValidateZaloTarget(target)
 		}
 		globalChanDTOs = append(globalChanDTOs, ChannelDTO{
-			ID:        c.ID,
-			Type:      c.Type,
-			Label:     c.Label,
-			Target:    target,
-			Formatted: target,
-			SortOrder: c.SortOrder,
+			ID:          c.ID,
+			BranchID:    c.BranchID,
+			Type:        c.Type,
+			Label:       c.Label,
+			Target:      target,
+			Formatted:   target,
+			SortOrder:   c.SortOrder,
+			Enabled:     c.Enabled,
+			IsActive:    c.Enabled,
+			Icon:        c.Icon,
+			AccentColor: c.AccentColor,
 		})
 	}
 
@@ -593,6 +603,9 @@ func (h *Handler) CreateContactChannel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	c.ID = id.New()
+	if c.BranchID != nil && strings.TrimSpace(*c.BranchID) == "" {
+		c.BranchID = nil
+	}
 	if c.Type == "phone" {
 		c.Target = NormalizePhone(c.Target)
 	} else if c.Type == "zalo" {
@@ -616,6 +629,9 @@ func (h *Handler) UpdateContactChannel(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_ = json.NewDecoder(r.Body).Decode(&existing)
+	if existing.BranchID != nil && strings.TrimSpace(*existing.BranchID) == "" {
+		existing.BranchID = nil
+	}
 	if existing.Type == "phone" {
 		existing.Target = NormalizePhone(existing.Target)
 	} else if existing.Type == "zalo" {
@@ -668,9 +684,9 @@ func (h *Handler) BulkContactChannels(w http.ResponseWriter, r *http.Request) {
 			h.db.Where("id IN ?", req.IDs).Delete(&models.ContactChannel{})
 		}
 	case "reset_dock":
-		// Enable only the 6 primary global dock channels (branch_id IS NULL) and disable branch channels
-		h.db.Model(&models.ContactChannel{}).Where("branch_id IS NOT NULL").Update("enabled", false)
-		h.db.Model(&models.ContactChannel{}).Where("branch_id IS NULL").Update("enabled", true)
+		// Enable only primary global dock channels (branch_id IS NULL or empty) and disable branch channels
+		h.db.Model(&models.ContactChannel{}).Where("branch_id IS NOT NULL AND branch_id != ''").Update("enabled", false)
+		h.db.Model(&models.ContactChannel{}).Where("branch_id IS NULL OR branch_id = ''").Update("enabled", true)
 	default:
 		errors.WriteJSON(w, r, errors.BadRequest("INVALID_ACTION", "Supported actions: set_enabled, delete, reset_dock"))
 		return

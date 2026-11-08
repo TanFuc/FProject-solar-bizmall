@@ -89,7 +89,7 @@ func Load() *Config {
 		corsOrigins = []string{"http://localhost:3000", "http://localhost:3002"}
 	}
 
-	jwtAccessTTL, _ := strconv.Atoi(getEnv("JWT_ACCESS_TTL_SECONDS", "900"))
+	jwtAccessTTL, _ := strconv.Atoi(getEnv("JWT_ACCESS_TTL_SECONDS", "86400"))
 	jwtRefreshTTL, _ := strconv.Atoi(getEnv("JWT_REFRESH_TTL_SECONDS", "604800"))
 
 	localStoragePath := getEnv("LOCAL_STORAGE_PATH", getEnv("STORAGE_DIR", "./storage"))
