@@ -117,14 +117,14 @@ export function Header({ navigation, brand }: HeaderProps) {
                 <div key={item.id} className="relative group">
                   <Link
                     href={href}
-                    className={`px-3 py-2 text-sm font-semibold rounded-md transition-colors flex items-center gap-1 relative ${active
-                      ? 'text-accent-orange font-bold after:absolute after:bottom-0 after:left-2 after:right-2 after:h-0.5 after:bg-accent-orange'
+                    className={`px-3.5 xl:px-4 py-2.5 text-[16px] xl:text-[17px] font-bold tracking-tight rounded-lg transition-colors flex items-center gap-1.5 relative ${active
+                      ? 'text-accent-orange font-extrabold after:absolute after:bottom-0 after:left-3 after:right-3 after:h-[2.5px] after:bg-accent-orange'
                       : 'text-ink hover:text-brand-primary'
                       }`}
                   >
                     <span>{getNavLabel(item)}</span>
                     {item.children && item.children.length > 0 && (
-                      <ChevronDown className="w-3.5 h-3.5 text-slate-400 group-hover:text-brand-primary transition-transform group-hover:rotate-180" />
+                      <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-brand-primary transition-transform group-hover:rotate-180" />
                     )}
                   </Link>
 
@@ -189,7 +189,7 @@ export function Header({ navigation, brand }: HeaderProps) {
             {/* Orange Consultation Pill CTA */}
             <button
               onClick={() => openConsultationModal('Yêu cầu tư vấn từ Header')}
-              className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-accent-orange to-amber-500 hover:from-amber-500 hover:to-accent-orange text-white text-xs font-bold tracking-wide shadow-md shadow-accent-orange/25 active:scale-95 transition-all"
+              className="hidden sm:inline-flex items-center gap-2 px-5 sm:px-6 py-2.5 rounded-full bg-gradient-to-r from-accent-orange to-amber-500 hover:from-amber-500 hover:to-accent-orange text-white text-xs sm:text-sm font-extrabold tracking-wide shadow-md shadow-accent-orange/25 active:scale-95 transition-all"
             >
               <span>{isEnglish ? 'Request Quote' : 'Yêu cầu tư vấn'}</span>
               <span className="text-base font-normal leading-none">+</span>
