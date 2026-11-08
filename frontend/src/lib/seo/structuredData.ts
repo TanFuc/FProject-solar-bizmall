@@ -267,19 +267,7 @@ export function getProductSchema(product: ProductDetail | ProductCard) {
     schema.category = product.category.name;
   }
 
-  // Grounded pricing: only emit Offer if real verified price is present
-  if (product.priceEstimate && !product.priceEstimate.toLowerCase().includes('liên hệ')) {
-    schema.offers = {
-      '@type': 'Offer',
-      priceCurrency: 'VND',
-      availability: 'https://schema.org/InStock',
-      url: `${SITE_URL}/san-pham/${product.slug}`,
-      seller: {
-        '@type': 'Organization',
-        name: 'BM SOLAR Việt Nam',
-      },
-    };
-  }
+  // No merchant Offer: this API does not provide a verified numeric price or inventory.
 
   return schema;
 }
@@ -298,8 +286,8 @@ export function getArticleSchema(article: ArticleItem) {
         ? article.coverMediaUrl
         : `${SITE_URL}${article.coverMediaUrl}`
       : `${SITE_URL}/images/logo.png`,
-    datePublished: article.publishedAt || new Date().toISOString(),
-    dateModified: article.publishedAt || new Date().toISOString(),
+    datePublished: article.publishedAt || undefined,
+    dateModified: article.publishedAt || undefined,
     author: {
       '@type': 'Organization',
       name: 'Ban Kỹ Thuật BM SOLAR',

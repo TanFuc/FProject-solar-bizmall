@@ -1,10 +1,10 @@
 {
-  "checkedAt": "2026-11-07T23:47:47.184Z",
+  "checkedAt": "2026-11-08T00:01:28.297Z",
   "routes": [
     {
       "route": "/",
       "status": 200,
-      "ms": 342,
+      "ms": 4408,
       "title": "BM SOLAR — Lắp Đặt Điện Mặt Trời Chính Hãng",
       "h1Count": 1,
       "description": "BM SOLAR cung cấp giải pháp điện mặt trời áp mái hộ gia đình, doanh nghiệp và nhà xưởng với thiết bị Tier 1, bảo hành 25 năm.",
@@ -20,7 +20,7 @@
     {
       "route": "/gioi-thieu",
       "status": 200,
-      "ms": 1021,
+      "ms": 1538,
       "title": "Kiến tạo tương lai | BM SOLAR Việt Nam",
       "h1Count": 1,
       "description": "Trải nghiệm, tư vấn và phát triển giải pháp năng lượng xanh phù hợp cho công trình của bạn.",
@@ -36,7 +36,7 @@
     {
       "route": "/giai-phap",
       "status": 200,
-      "ms": 899,
+      "ms": 1634,
       "title": "Giải pháp năng lượng xanh | BM SOLAR Việt Nam",
       "h1Count": 1,
       "description": "Trải nghiệm, tư vấn và phát triển giải pháp năng lượng xanh phù hợp cho công trình của bạn.",
@@ -52,7 +52,7 @@
     {
       "route": "/san-pham",
       "status": 200,
-      "ms": 276,
+      "ms": 1121,
       "title": "Thiết bị năng lượng xanh | BM SOLAR Việt Nam",
       "h1Count": 1,
       "description": "Trải nghiệm, tư vấn và phát triển giải pháp năng lượng xanh phù hợp cho công trình của bạn.",
@@ -68,7 +68,7 @@
     {
       "route": "/du-an",
       "status": 200,
-      "ms": 1167,
+      "ms": 809,
       "title": "Dự án tiêu biểu | BM SOLAR Việt Nam",
       "h1Count": 1,
       "description": "Trải nghiệm, tư vấn và phát triển giải pháp năng lượng xanh phù hợp cho công trình của bạn.",
@@ -84,7 +84,7 @@
     {
       "route": "/tin-tuc",
       "status": 200,
-      "ms": 949,
+      "ms": 1029,
       "title": "Tin tức &amp; Kiến thức | BM SOLAR Việt Nam",
       "h1Count": 1,
       "description": "Trải nghiệm, tư vấn và phát triển giải pháp năng lượng xanh phù hợp cho công trình của bạn.",
@@ -100,7 +100,7 @@
     {
       "route": "/lien-he",
       "status": 200,
-      "ms": 934,
+      "ms": 1000,
       "title": "Kết nối với BM SOLAR | BM SOLAR Việt Nam",
       "h1Count": 1,
       "description": "Trải nghiệm, tư vấn và phát triển giải pháp năng lượng xanh phù hợp cho công trình của bạn.",
@@ -116,7 +116,7 @@
     {
       "route": "/san-pham/pin-luu-tru-deye-lithium-rw-m6-1-5-12kwh",
       "status": 200,
-      "ms": 2253,
+      "ms": 2464,
       "title": "Pin Lưu Trữ Deye Lithium LiFePO4 5.12kWh RW-M6.1 | BM SOLAR Việt Nam",
       "h1Count": 1,
       "description": "Module pin lưu trữ Lithium sắt phosphate (LiFePO4) an toàn tuyệt đối, dung lượng 5.12kWh, tuổi thọ trên 6000 chu kỳ nạp xả, ghép song song tối đa 32 bộ.",
@@ -132,7 +132,7 @@
     {
       "route": "/san-pham/tam-pin-jinko-tiger-pro-550w-mono-half-cell",
       "status": 200,
-      "ms": 254,
+      "ms": 299,
       "title": "Tấm pin Jinko Tiger Pro 550W Mono Half-Cell | BM SOLAR Việt Nam",
       "h1Count": 1,
       "description": "Tấm pin quang điện Mono Tier 1 công suất 550W, công nghệ 9BB Half-Cell, hiệu suất quang năng 21.29%, bảo hành vật lý 12 năm, hiệu suất 25 năm.",
@@ -148,7 +148,7 @@
     {
       "route": "/san-pham/inverter-deye-hybrid-5kw-sun-5k-sg03lp1-eu",
       "status": 200,
-      "ms": 236,
+      "ms": 295,
       "title": "Inverter Deye Hybrid 5kW 1 Pha SUN-5K-SG03LP1-EU | BM SOLAR Việt Nam",
       "h1Count": 1,
       "description": "Biến tần Hybrid 5kW 1 pha Deye, hỗ trợ lưu trữ 48V, chuẩn IP65, hiệu suất 97.6%, bảo hành 5 năm chính hãng.",
@@ -164,7 +164,7 @@
     {
       "route": "/san-pham/inverter-hybrid-deye-5kw-1-pha",
       "status": 200,
-      "ms": 254,
+      "ms": 306,
       "title": "Inverter Hybrid Deye 5kW 1 Pha (SUN-5K-SG04LP1-EU) | BM SOLAR Việt Nam",
       "h1Count": 1,
       "description": "Biến tần Hybrid Deye 5kW 1 pha tích hợp cổng kết nối máy phát điện và pin lưu trữ, hiệu suất 97.6%.",
@@ -180,7 +180,7 @@
     {
       "route": "/san-pham/tam-pin-longi-550w-mono-half-cell",
       "status": 200,
-      "ms": 287,
+      "ms": 269,
       "title": "Tấm Pin Mặt Trời LONGi Hi-MO 5 550W Mono Half-cell | BM SOLAR Việt Nam",
       "h1Count": 1,
       "description": "Tấm pin Mono PERC hiệu suất cao 21.3%, khả năng chịu tải gió 2400Pa và tải tuyết 5400Pa.",
@@ -196,7 +196,7 @@
     {
       "route": "/san-pham/pin-luu-tru-lithium-deye-5-12kwh",
       "status": 200,
-      "ms": 291,
+      "ms": 293,
       "title": "Pin Lưu Trữ Lithium Deye 5.12kWh 51.2V 100Ah | BM SOLAR Việt Nam",
       "h1Count": 1,
       "description": "Pin lưu trữ LifePO4 an toàn chống cháy nổ, chu kỳ sạc xả trên 6000 lần, ghép nối tối đa 64 bộ song song.",
@@ -212,7 +212,7 @@
     {
       "route": "/du-an/du-an-ap-mai-biet-thu-quy-nhon-15kw",
       "status": 200,
-      "ms": 1796,
+      "ms": 2185,
       "title": "Dự Án Áp Mái Biệt Thự Đảo Quy Nhơn 15kWp Hệ Hybrid | BM SOLAR Việt Nam",
       "h1Count": 1,
       "description": "Hệ thống điện mặt trời hòa lưới có lưu trữ 15kWp sử dụng biến tần Deye 3 pha và 30 tấm pin Jinko 550W, cắt giảm 85% hóa đơn tiền điện hàng tháng.",
@@ -228,7 +228,7 @@
     {
       "route": "/du-an/he-thong-dien-mat-troi-hybrid-10kwp-go-vap-hcm",
       "status": 200,
-      "ms": 338,
+      "ms": 283,
       "title": "Hệ thống điện mặt trời Hybrid 10kWp tại Biệt thự Gò Vấp, TP.HCM | BM SOLAR Việt Nam",
       "h1Count": 1,
       "description": "Lắp đặt hệ thống 10kWp sử dụng Inverter Deye Hybrid và 18 tấm pin LONGi 550W, giải quyết triệt để vấn đề tiền điện bậc cao và mất điện đột xuất.",
@@ -244,7 +244,7 @@
     {
       "route": "/du-an/du-an-dien-mat-troi-ap-mai-500kwp-kcn-nhon-hoi-quy-nhon",
       "status": 200,
-      "ms": 275,
+      "ms": 277,
       "title": "Dự án điện mặt trời áp mái nhà xưởng 500kWp tại KCN Nhơn Hội, Quy Nhơn | BM SOLAR Việt Nam",
       "h1Count": 1,
       "description": "Công trình 500kWp giúp nhà máy chế biến thủy sản tiết kiệm 45% lượng điện năng tiêu thụ lưới ban ngày và giảm phát thải 480 tấn CO2 mỗi năm.",
@@ -260,7 +260,7 @@
     {
       "route": "/tin-tuc/cam-nang-chon-bien-tan-inverter-hybrid-2026",
       "status": 200,
-      "ms": 1834,
+      "ms": 2091,
       "title": "Cẩm Nang Chọn Biến Tần Inverter Hybrid Cho Gia Đình 2026 | BM SOLAR Việt Nam",
       "h1Count": 1,
       "description": "Tại sao hệ thống điện mặt trời Hybrid có lưu trữ đang là xu hướng được quan tâm hàng đầu năm 2026? Cùng chuyên gia BM SOLAR phân tích chi tiết.",
@@ -276,7 +276,7 @@
     {
       "route": "/tin-tuc/huong-dan-chon-inverter-hybrid-va-pin-luu-tru-phu-hop",
       "status": 200,
-      "ms": 305,
+      "ms": 270,
       "title": "Hướng Dẫn Lựa Chọn Inverter Hybrid và Pin Lưu Trữ Phù Hợp Cho Gia Đình | BM SOLAR Việt Nam",
       "h1Count": 1,
       "description": "Tìm hiểu sự khác biệt giữa hệ thống hòa lưới thuần túy và hệ thống lưu trữ Hybrid, tiêu chí tính toán dung lượng pin theo hóa đơn tiền điện.",
@@ -292,7 +292,7 @@
     {
       "route": "/giai-phap/ho-gia-dinh",
       "status": 200,
-      "ms": 2100,
+      "ms": 3597,
       "title": "Giải Pháp Điện Mặt Trời Hộ Gia Đình &amp; Biệt Thự | BM SOLAR Việt Nam",
       "h1Count": 1,
       "description": "Hệ thống điện mặt trời hòa lưới có lưu trữ (Hybrid) cao cấp từ 3kWp đến 15kWp, giúp gia đình làm chủ nguồn năng lượng xanh, tiết kiệm đến 90% hóa đơn tiền điện và duy trì điện liên tục khi mất lưới.",
@@ -308,7 +308,7 @@
     {
       "route": "/giai-phap/doanh-nghiep",
       "status": 200,
-      "ms": 336,
+      "ms": 543,
       "title": "Giải Pháp Điện Mặt Trời Doanh Nghiệp &amp; Thương Mại | BM SOLAR Việt Nam",
       "h1Count": 1,
       "description": "Tối ưu hóa chi phí vận hành cho văn phòng, khách sạn, trung tâm thương mại và resort từ 20kWp đến 100kWp, cắt giảm mạnh biểu giá điện giờ cao điểm.",
@@ -324,7 +324,7 @@
     {
       "route": "/giai-phap/nha-xuong",
       "status": 200,
-      "ms": 397,
+      "ms": 388,
       "title": "Giải Pháp Điện Mặt Trời Nhà Xưởng &amp; Khu Công Nghiệp | BM SOLAR Việt Nam",
       "h1Count": 1,
       "description": "Tổng thầu EPC quy mô lớn từ 100kWp đến hàng MWp với công nghệ Zero-Export, chứng chỉ năng lượng tái tạo I-REC phục vụ xuất khẩu Châu Âu &amp; Mỹ.",
@@ -340,7 +340,7 @@
     {
       "route": "/san-pham?category=bien-tan-inverter",
       "status": 200,
-      "ms": 354,
+      "ms": 524,
       "title": "Thiết bị năng lượng xanh | BM SOLAR Việt Nam",
       "h1Count": 1,
       "description": "Trải nghiệm, tư vấn và phát triển giải pháp năng lượng xanh phù hợp cho công trình của bạn.",
@@ -356,7 +356,7 @@
     {
       "route": "/san-pham?q=Deye&sort=name_asc",
       "status": 200,
-      "ms": 360,
+      "ms": 482,
       "title": "Thiết bị năng lượng xanh | BM SOLAR Việt Nam",
       "h1Count": 1,
       "description": "Trải nghiệm, tư vấn và phát triển giải pháp năng lượng xanh phù hợp cho công trình của bạn.",
@@ -372,7 +372,7 @@
     {
       "route": "/du-an?q=hybrid",
       "status": 200,
-      "ms": 349,
+      "ms": 305,
       "title": "Dự án tiêu biểu | BM SOLAR Việt Nam",
       "h1Count": 1,
       "description": "Trải nghiệm, tư vấn và phát triển giải pháp năng lượng xanh phù hợp cho công trình của bạn.",
@@ -388,7 +388,7 @@
     {
       "route": "/admin",
       "status": 200,
-      "ms": 1166,
+      "ms": 1666,
       "title": "Hệ Thống Quản Trị BM SOLAR — Admin Portal | BM SOLAR Việt Nam",
       "h1Count": 1,
       "description": "Cổng quản lý Leads, Danh mục thiết bị và CMS BM SOLAR",
@@ -404,7 +404,7 @@
     {
       "route": "/admin/media",
       "status": 200,
-      "ms": 1280,
+      "ms": 2164,
       "title": "Hệ Thống Quản Trị BM SOLAR — Admin Portal | BM SOLAR Việt Nam",
       "h1Count": 1,
       "description": "Cổng quản lý Leads, Danh mục thiết bị và CMS BM SOLAR",
@@ -420,12 +420,12 @@
     {
       "route": "/san-pham/qa-item-does-not-exist",
       "status": 200,
-      "ms": 3539,
+      "ms": 260,
       "title": "Không Tìm Thấy Sản Phẩm | BM SOLAR Việt Nam",
       "h1Count": 0,
       "description": "BM SOLAR chuyên tư vấn, thiết kế và thi công trọn gói điện mặt trời mái nhà hòa lưới, pin lưu trữ BESS và trạm sạc EV tại Quy Nhơn, TP.HCM.",
-      "canonical": "http://localhost:3000",
-      "robots": "index, follow",
+      "canonical": "http://localhost:3000/san-pham/qa-item-does-not-exist",
+      "robots": "noindex, nofollow",
       "ogTitle": "Không Tìm Thấy Sản Phẩm",
       "ogImage": "http://localhost:3000/images/logo.png",
       "icon": "/images/logo.png",
@@ -439,13 +439,13 @@
       "path": "/robots.txt",
       "status": 200,
       "contentType": "text/plain",
-      "bytes": 166
+      "bytes": 148
     },
     {
       "path": "/sitemap.xml",
       "status": 200,
       "contentType": "application/xml",
-      "bytes": 3359,
+      "bytes": 2655,
       "locations": [
         "http://localhost:3000",
         "http://localhost:3000/gioi-thieu",
@@ -468,10 +468,28 @@
       ]
     },
     {
+      "path": "/favicon.ico",
+      "status": 200,
+      "contentType": "image/png",
+      "bytes": 8462
+    },
+    {
+      "path": "/apple-icon",
+      "status": 200,
+      "contentType": "image/png",
+      "bytes": 8462
+    },
+    {
+      "path": "/manifest.webmanifest",
+      "status": 200,
+      "contentType": "application/manifest+json",
+      "bytes": 454
+    },
+    {
       "path": "/images/logo.png",
       "status": 200,
       "contentType": "image/png",
-      "bytes": 302965
+      "bytes": 8462
     }
   ],
   "missingInternalLinks": []

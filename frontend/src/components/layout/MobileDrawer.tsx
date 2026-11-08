@@ -177,10 +177,10 @@ export function MobileDrawer({ isOpen, onClose, navigation }: MobileDrawerProps)
             aria-label={brand?.name || 'BM SOLAR'}
           >
             <Image
-              src={brand?.logo.url || '/images/logo.png'}
+              src="/images/logo.png"
               alt={brand?.logo.alt || brand?.name || 'BM SOLAR Logo'}
-              width={130}
-              height={40}
+              width={140}
+              height={44}
               className="h-8 md:h-9 w-auto object-contain"
               priority
             />

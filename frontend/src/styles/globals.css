@@ -258,12 +258,12 @@
 }
 @media(prefers-reduced-motion:reduce) {
   html { scroll-behavior:auto!important; }
-  *,*:before,*:after {
-    animation-duration:.01ms!important;
-    animation-iteration-count:1!important;
-    transition-duration:.01ms!important;
-    scroll-behavior:auto!important;
+  .bmsolar-spinner, .solar-site .animate-spin, .solar-site .animate-pulse {
+    animation: none!important;
   }
+  .solar-site [role="dialog"] [class*="transition"] { transition:none!important; }
+  .solar-site a:hover, .solar-site button:hover { transform:none!important; }
+  .solar-orange-button, .solar-outline-button { transition:background-color .12s linear,color .12s linear; }
 }
 
 /* Restrained, purposeful interactive micro-transitions */

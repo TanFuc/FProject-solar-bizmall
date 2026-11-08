@@ -56,3 +56,8 @@ Remaining:
 ## Local verification handoff — 2026-11-07
 
 User clarified the production website is future-only. Local backend/R2 upload and CMS publication were exercised. See `visual-qa/report.md` for exact evidence and limitations; do not claim 100% fidelity, completed browser admin sign-in, or production deployment. Local backend runs `bin/bmsolar-local-ready.exe`; frontend dev remains on 3000. Original Antigravity baseline is commit 6e3244f; this task did not commit or push.
+
+
+## Current handoff — 2026-11-08
+
+See `../../docs/agent-runs/2026-11-08/FINAL-REPORT.md` (repository docs). Backend now runs bin/bmsolar-usability.exe with scoped limits; React19/Next15.5.29/PostCSS8.5.32 installed. Do not restart older backend binaries or revert to JPEG logo. Final interactive filter acceptance remains incomplete because computer-use stopped on uncertain native Chrome URL. No production deployment. Gemini implementations used native Antigravity; standalone Gemini CLI provider rejected personal OAuth.

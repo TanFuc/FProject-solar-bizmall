@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: ProductDetailPageProps): Prom
   const { slug } = await params;
   const product = await getProductBySlug(slug);
   if (!product) {
-    return constructMetadata({ title: 'Không Tìm Thấy Sản Phẩm' });
+    return constructMetadata({ title: 'Không Tìm Thấy Sản Phẩm', noIndex: true, canonicalPath: `/san-pham/${slug}` });
   }
 
   return constructMetadata({
@@ -110,16 +110,14 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
           {/* Gallery / Image Left */}
           <div className="lg:col-span-6 space-y-4">
             <div className="relative w-full h-80 sm:h-[450px] rounded-2xl overflow-hidden bg-slate-100 border border-slate-200">
-              {product.coverMediaUrl && (
-                <Image
-                  src={product.coverMediaUrl}
-                  alt={product.name}
-                  fill
-                  priority
-                  sizes="(max-width: 1024px) 100vw, 50vw"
-                  className="object-cover object-center"
-                />
-              )}
+              <Image
+                src={product.coverMediaUrl || '/images/designs/san-pham-1.png'}
+                alt={product.name}
+                fill
+                priority
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                className="object-cover object-center"
+              />
               {product.tier && (
                 <span className="absolute top-4 left-4 bg-brand-primary text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">
                   {product.tier}

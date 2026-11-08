@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: ProjectDetailPageProps): Prom
   const { slug } = await params;
   const project = await getProjectBySlug(slug);
   if (!project) {
-    return constructMetadata({ title: 'Không Tìm Thấy Dự Án' });
+    return constructMetadata({ title: 'Không Tìm Thấy Dự Án', noIndex: true, canonicalPath: `/du-an/${slug}` });
   }
 
   return constructMetadata({
@@ -119,16 +119,14 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
           {/* Main Photo & Story */}
           <div className="lg:col-span-8 space-y-8">
             <div className="relative w-full h-80 sm:h-[460px] rounded-2xl overflow-hidden bg-slate-200 shadow-card">
-              {project.coverMediaUrl && (
-                <Image
-                  src={project.coverMediaUrl}
-                  alt={project.title}
-                  fill
-                  priority
-                  sizes="(max-width: 1024px) 100vw, 66vw"
-                  className="object-cover object-center"
-                />
-              )}
+              <Image
+                src={project.coverMediaUrl || '/images/designs/du-an-1.png'}
+                alt={project.title}
+                fill
+                priority
+                sizes="(max-width: 1024px) 100vw, 66vw"
+                className="object-cover object-center"
+              />
             </div>
 
             <div className="space-y-4">

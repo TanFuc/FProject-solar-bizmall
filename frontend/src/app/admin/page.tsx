@@ -273,8 +273,14 @@ export default function AdminPage() {
       <div className="fixed inset-0 z-50 bg-slate-900 flex items-center justify-center p-4">
         <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
           <div className="bg-brand-primary p-6 text-center text-white relative">
-            <div className="w-16 h-16 mx-auto mb-3 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-md border border-white/20">
-              <Lock className="w-8 h-8 text-accent-orange" />
+            <div className="mx-auto mb-3 flex items-center justify-center">
+              <Image
+                src="/images/logo-footer.png"
+                alt="BM SOLAR"
+                width={150}
+                height={45}
+                className="h-10 w-auto object-contain"
+              />
             </div>
             <h1 className="text-xl font-bold tracking-tight">HỆ THỐNG QUẢN TRỊ BM SOLAR</h1>
             <p className="text-xs text-white/80 mt-1">Cổng điều hành CRM, Danh mục thiết bị & CMS B2B</p>
@@ -351,8 +357,14 @@ export default function AdminPage() {
       {/* Top Header */}
       <header className="h-16 bg-brand-navy text-white px-4 sm:px-6 flex items-center justify-between shrink-0 shadow-md z-20">
         <div className="flex items-center gap-4">
-          <Link href="/" className="flex items-center gap-2">
-            <span className="font-extrabold text-lg tracking-wider text-white">BM SOLAR</span>
+          <Link href="/" className="flex items-center gap-3">
+            <Image
+              src="/images/logo-footer.png"
+              alt="BM SOLAR"
+              width={120}
+              height={36}
+              className="h-7 w-auto object-contain"
+            />
             <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-accent-orange text-white uppercase">
               Admin Portal
             </span>

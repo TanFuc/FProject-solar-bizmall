@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
+import {invalidatePublicCache} from '@/lib/api/client';
 import {
   isRouteAllowed,
   verifyWebhookSignature,
@@ -8,10 +9,11 @@ import {
 } from '@/lib/seo/indexingEvents';
 
 const REVALIDATE_SECRET =
-  process.env.CMS_REVALIDATE_SECRET || 'bmsolar_cms_revalidate_secret_key_2026!';
+  process.env.CMS_REVALIDATE_SECRET;
 
 export async function POST(req: NextRequest) {
   try {
+    if(!REVALIDATE_SECRET)return NextResponse.json({error:'Revalidation is not configured'},{status:503});
     const authHeader = req.headers.get('authorization');
     const signatureHeader = req.headers.get('x-bmsolar-signature');
     const rawBody = await req.text();
@@ -49,6 +51,7 @@ export async function POST(req: NextRequest) {
         );
       }
 
+      invalidatePublicCache();
       // Revalidate all affected routes
       for (const p of result.revalidatedPaths) {
         revalidatePath(p);
@@ -73,6 +76,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    invalidatePublicCache();
     revalidatePath(targetPath);
 
     return NextResponse.json({

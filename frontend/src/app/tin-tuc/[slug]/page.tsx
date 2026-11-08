@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: ArticleDetailPageProps): Prom
   const { slug } = await params;
   const article = await getArticleBySlug(slug);
   if (!article) {
-    return constructMetadata({ title: 'Không Tìm Thấy Bài Viết' });
+    return constructMetadata({ title: 'Không Tìm Thấy Bài Viết', noIndex: true, canonicalPath: `/tin-tuc/${slug}` });
   }
 
   return constructMetadata({
@@ -128,18 +128,16 @@ export default async function ArticleDetailPage({ params }: ArticleDetailPagePro
         </p>
 
         {/* Featured Cover Image */}
-        {article.coverMediaUrl && (
-          <div className="relative w-full h-72 sm:h-96 rounded-2xl overflow-hidden bg-slate-100 shadow-card">
-            <Image
-              src={article.coverMediaUrl}
-              alt={article.title}
-              fill
-              priority
-              sizes="(max-width: 1024px) 100vw, 800px"
-              className="object-cover object-center"
-            />
-          </div>
-        )}
+        <div className="relative w-full h-72 sm:h-96 rounded-2xl overflow-hidden bg-slate-100 shadow-card">
+          <Image
+            src={article.coverMediaUrl || '/images/designs/tin-tuc-featured.png'}
+            alt={article.title}
+            fill
+            priority
+            sizes="(max-width: 1024px) 100vw, 800px"
+            className="object-cover object-center"
+          />
+        </div>
 
         {/* Article Body Content */}
         <div className="prose prose-slate max-w-none text-ink text-sm sm:text-base leading-relaxed space-y-6">

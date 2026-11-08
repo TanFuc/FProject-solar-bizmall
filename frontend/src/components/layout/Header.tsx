@@ -96,10 +96,10 @@ export function Header({ navigation, brand }: HeaderProps) {
             aria-label={brand?.name || 'BM SOLAR'}
           >
             <Image
-              src={brand?.logo.url || '/images/logo.png'}
-              alt={brand?.logo.alt || brand?.name || 'BM SOLAR'}
+              src="/images/logo.png"
+              alt={brand?.name || 'BM SOLAR'}
               width={160}
-              height={52}
+              height={48}
               className="h-9 md:h-11 w-auto object-contain transition-transform duration-200 group-hover:scale-[1.02]"
               priority
             />

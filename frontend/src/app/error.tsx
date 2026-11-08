@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
+import {finishNavigation} from '@/components/ui/navigationState';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { AlertTriangle, RotateCcw, Home, PhoneCall } from 'lucide-react';
@@ -13,6 +14,7 @@ export default function ErrorBoundary({
   reset: () => void;
 }) {
   useEffect(() => {
+    finishNavigation();
     // Log error for telemetry without crashing the UI
     console.error('Next.js Page Error:', error);
   }, [error]);

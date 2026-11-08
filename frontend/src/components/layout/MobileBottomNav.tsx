@@ -7,7 +7,7 @@ import { useBranch } from '@/lib/contacts/branchContext';
 import { useTranslation } from '@/lib/i18n';
 import { channelUrl } from '@/lib/contacts/channelUrl';
 import { NavigationItemTree } from '@/types/bmsolar-api';
-import { Home, Phone, MessageCircle, Sparkles, Menu } from 'lucide-react';
+import { Home, Phone, Headset, Menu } from 'lucide-react';
 import { openMobileDrawer } from './mobileDrawerState';
 
 interface MobileBottomNavProps {
@@ -56,20 +56,22 @@ export function MobileBottomNav({ navigation: _navigation }: MobileBottomNavProp
           className="flex flex-col items-center justify-center -mt-4 group focus:outline-none"
           aria-label="Nhận tư vấn báo giá"
         >
-          <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-accent-orange to-amber-500 text-white flex items-center justify-center shadow-lg shadow-accent-orange/40 group-active:scale-95 transition-transform border-2 border-white">
-            <Sparkles className="w-6 h-6 animate-pulse" />
+          <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-[#FF6B19] to-orange-500 text-white flex items-center justify-center shadow-lg shadow-orange-500/40 group-active:scale-95 transition-transform border-2 border-white">
+            <Headset className="w-6 h-6 animate-pulse" />
           </div>
           <span className="text-[10px] font-bold text-accent-orange mt-1">{t('mobileNav.consult')}</span>
         </button>
 
         {/* 4. Zalo */}
         <a
-          href={activeZalo ? channelUrl(activeZalo) : '/lien-he'}
+          href={activeZalo ? channelUrl(activeZalo) : 'https://zalo.me/bmsolar'}
           target="_blank"
           rel="noopener noreferrer"
           className="flex flex-col items-center justify-center h-full text-slate-600 hover:text-blue-600 transition-colors"
         >
-          <MessageCircle className="w-5 h-5 text-blue-500 mb-1" />
+          <div className="w-6 h-6 rounded-full bg-[#0068FF] text-white flex items-center justify-center font-black text-[9px] mb-0.5 tracking-tighter shadow-xs">
+            Zalo
+          </div>
           <span className="text-[10px] leading-tight font-medium">{t('mobileNav.zalo')}</span>
         </a>
 

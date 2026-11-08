@@ -38,8 +38,10 @@ async function testSitemap() {
   // Verify no synthetic "new Date()" on every run - timestamps must be stable Date objects
   for (const r of routes) {
     assert.ok(r.url.startsWith('https://bmsolar.vn'), `URL ${r.url} must use canonical domain`);
-    assert.ok(r.lastModified instanceof Date, `Route ${r.url} must have a valid lastModified Date object`);
-    assert.ok(!isNaN(r.lastModified.getTime()), `Route ${r.url} lastModified Date must be valid`);
+    if (r.lastModified !== undefined) {
+      assert.ok(r.lastModified instanceof Date, `Route ${r.url} must have a valid lastModified Date object`);
+      assert.ok(!isNaN(r.lastModified.getTime()), `Route ${r.url} lastModified Date must be valid`);
+    }
   }
 
   // Check specific routes

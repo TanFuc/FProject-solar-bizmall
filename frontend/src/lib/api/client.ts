@@ -31,6 +31,7 @@ interface CacheEntry<T> {
   expiresAt: number;
 }
 const stableCache = new Map<string, CacheEntry<unknown>>();
+let cacheGeneration=0;
 const CACHE_TTL_MS = 30_000;
 
 function getCached<T>(key: string): T | undefined {
@@ -43,7 +44,8 @@ function getCached<T>(key: string): T | undefined {
   return entry.data as T;
 }
 
-function setCached<T>(key: string, data: T, ttlMs = CACHE_TTL_MS): void {
+function setCached<T>(key: string, data: T, ttlMs = CACHE_TTL_MS, generation=cacheGeneration): void {
+  if(generation!==cacheGeneration)return;
   if (stableCache.size > 200) {
     const oldestKey = stableCache.keys().next().value;
     if (oldestKey) stableCache.delete(oldestKey);
@@ -57,6 +59,7 @@ function setCached<T>(key: string, data: T, ttlMs = CACHE_TTL_MS): void {
  * or updates site settings so clients immediately see fresh data.
  */
 export function invalidatePublicCache(pattern?: string): void {
+  cacheGeneration++;
   if (!pattern) {
     stableCache.clear();
     inFlightRequests.clear();
@@ -107,7 +110,7 @@ async function publicFetch(url: string, options?: RequestInit): Promise<Response
     fetchPromise
       .catch(() => {})
       .finally(() => {
-        inFlightRequests.delete(url);
+        if(inFlightRequests.get(url)===fetchPromise)inFlightRequests.delete(url);
       });
   }
 
@@ -353,6 +356,7 @@ export async function getFaqs() {
 
 export async function getProductCategories(): Promise<ProductCategoryItem[]> {
   const cacheKey = 'meta:product-categories';
+  const generation=cacheGeneration;
   const cached = getCached<ProductCategoryItem[]>(cacheKey);
   if (cached) return cached;
 
@@ -362,12 +366,13 @@ export async function getProductCategories(): Promise<ProductCategoryItem[]> {
   if (!res.ok) throw new Error(`Product categories unavailable: ${res.status}`);
   const json: unknown = await res.json();
   const result: ProductCategoryItem[] = object(json) ? items(json.data, category) || [] : [];
-  if (result.length > 0) setCached(cacheKey, result);
+  if (result.length > 0) setCached(cacheKey, result, CACHE_TTL_MS, generation);
   return result;
 }
 
 export async function getAudiences(): Promise<AudienceItem[]> {
   const cacheKey = 'meta:audiences';
+  const generation=cacheGeneration;
   const cached = getCached<AudienceItem[]>(cacheKey);
   if (cached) return cached;
 
@@ -377,12 +382,13 @@ export async function getAudiences(): Promise<AudienceItem[]> {
   if (!res.ok) throw new Error(`Audiences unavailable: ${res.status}`);
   const json: unknown = await res.json();
   const result: AudienceItem[] = object(json) ? items(json.data, audience) || [] : [];
-  if (result.length > 0) setCached(cacheKey, result);
+  if (result.length > 0) setCached(cacheKey, result, CACHE_TTL_MS, generation);
   return result;
 }
 
 export async function getBrands(): Promise<BrandSummary[]> {
   const cacheKey = 'meta:brands';
+  const generation=cacheGeneration;
   const cached = getCached<BrandSummary[]>(cacheKey);
   if (cached) return cached;
 
@@ -398,12 +404,13 @@ export async function getBrands(): Promise<BrandSummary[]> {
       : []
   );
   const result: BrandSummary[] = Array.from(new Map(brands.map((brand) => [brand.name.toLowerCase(), brand])).values());
-  if (result.length > 0) setCached(cacheKey, result);
+  if (result.length > 0) setCached(cacheKey, result, CACHE_TTL_MS, generation);
   return result;
 }
 
 async function filterOptions(path: string, valueKey: string, labelKey: string): Promise<{ value: string; label: string }[]> {
   const cacheKey = `filter:${path}:${valueKey}:${labelKey}`;
+  const generation=cacheGeneration;
   const cached = getCached<{ value: string; label: string }[]>(cacheKey);
   if (cached) return cached;
 
@@ -419,7 +426,7 @@ async function filterOptions(path: string, valueKey: string, labelKey: string): 
       label = row[labelKey];
     return typeof value === 'string' && typeof label === 'string' ? [{ value, label }] : [];
   });
-  if (result.length > 0) setCached(cacheKey, result);
+  if (result.length > 0) setCached(cacheKey, result, CACHE_TTL_MS, generation);
   return result;
 }
 

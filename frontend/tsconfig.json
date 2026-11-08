@@ -32,11 +32,12 @@
     "noImplicitOverride": true
   },
   "include": [
-    "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
+    ".next-visual-build/types/**/*.ts",
     ".next/types/**/*.ts",
-    ".next-visual-build/types/**/*.ts"
+    "next-env.d.ts",
+    ".next-usability-build/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"

@@ -17,7 +17,7 @@ interface Props {
 export function Footer({ brand, footerData, branches }: Props) {
   const { activeHotline, activeZalo, activeBranch } = useBranch();
   const email = activeBranch?.channels.find((channel) => channel.type === 'email');
-  const logoUrl = brand?.logo.url || '/images/logo.png';
+  const logoUrl = '/images/logo-footer.png';
   const logoAlt = brand?.logo.alt || brand?.name || 'BM SOLAR';
 
   return (
@@ -68,8 +68,8 @@ export function Footer({ brand, footerData, branches }: Props) {
                 {group.title}
               </h4>
               <ul className="space-y-2 text-white/70 text-xs">
-                {group.links.map((link) => (
-                  <li key={link.url}>
+                {group.links.map((link, index) => (
+                  <li key={`${link.url}:${index}`}>
                     <Link
                       href={link.url}
                       className="hover:text-accent-orange transition-colors"

@@ -176,7 +176,7 @@ export default async function SolutionDetailPage({ params }: SolutionDetailPageP
           <div className="lg:col-span-5 sticky top-24 space-y-6">
             <div className="relative h-64 sm:h-80 rounded-2xl overflow-hidden shadow-card bg-slate-200">
               <Image
-                src={solution.heroImage}
+                src={solution.heroImage || '/images/designs/hero-giai-phap.png'}
                 alt={solution.title}
                 fill
                 sizes="(max-width: 1024px) 100vw, 40vw"
