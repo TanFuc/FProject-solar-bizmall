@@ -8,7 +8,7 @@ import { NavigationItemTree } from '@/types/bmsolar-api';
 import { useBranch } from '@/lib/contacts/branchContext';
 import { useTranslation } from '@/lib/i18n';
 import { resolveInternalRoute } from '@/lib/utils/routes';
-import { Menu, ChevronDown, Search } from 'lucide-react';
+import { Menu, ChevronDown, Search, ArrowRight } from 'lucide-react';
 import { MobileDrawer } from './MobileDrawer';
 import { useMobileDrawerState } from './mobileDrawerState';
 import { RouteProgressBar } from '@/components/ui/RouteProgressBar';
@@ -117,15 +117,14 @@ export function Header({ navigation, brand }: HeaderProps) {
                 <div key={item.id} className="relative group">
                   <Link
                     href={href}
-                    className={`px-3 py-2 text-sm font-semibold rounded-md transition-colors flex items-center gap-1 relative ${
-                      active
-                        ? 'text-accent-orange font-bold after:absolute after:bottom-0 after:left-2 after:right-2 after:h-0.5 after:bg-accent-orange'
-                        : 'text-ink hover:text-brand-primary'
-                    }`}
+                    className={`px-3 py-2 text-sm font-semibold rounded-md transition-colors flex items-center gap-1 relative ${active
+                      ? 'text-accent-orange font-bold after:absolute after:bottom-0 after:left-2 after:right-2 after:h-0.5 after:bg-accent-orange'
+                      : 'text-ink hover:text-brand-primary'
+                      }`}
                   >
                     <span>{getNavLabel(item)}</span>
                     {item.children && item.children.length > 0 && (
-                      <ChevronDown className="w-3.5 h-3.5 text-slate-400 group-hover:text-brand-primary transition-transform duration-200 group-hover:rotate-180" />
+                      <ChevronDown className="w-3.5 h-3.5 text-slate-400 group-hover:text-brand-primary transition-transform group-hover:rotate-180" />
                     )}
                   </Link>
 
@@ -157,9 +156,7 @@ export function Header({ navigation, brand }: HeaderProps) {
                                 >
                                   {sub.label}
                                 </span>
-                                <span className="text-[11px] font-semibold text-[#FF6B19] opacity-0 group-hover/sub:opacity-100 transition-opacity">
-                                  â†’
-                                </span>
+                                <ArrowRight className="w-3.5 h-3.5 text-[#FF6B19] opacity-0 group-hover/sub:opacity-100 transition-opacity" />
                               </div>
                               {sub.description && (
                                 <p className="text-[11px] text-slate-500 line-clamp-2 mt-0.5 leading-relaxed font-normal">
@@ -191,9 +188,8 @@ export function Header({ navigation, brand }: HeaderProps) {
 
             {/* Orange Consultation Pill CTA */}
             <button
-              type="button"
               onClick={() => openConsultationModal('Yêu cầu tư vấn từ Header')}
-              className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-accent-orange to-amber-500 hover:from-amber-500 hover:to-accent-orange text-white text-xs font-bold tracking-wide shadow-md shadow-accent-orange/25 active:scale-95 transition-all duration-200 focus-visible:ring-2 focus-visible:ring-accent-orange"
+              className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-accent-orange to-amber-500 hover:from-amber-500 hover:to-accent-orange text-white text-xs font-bold tracking-wide shadow-md shadow-accent-orange/25 active:scale-95 transition-all"
             >
               <span>{isEnglish ? 'Request Quote' : 'Yêu cầu tư vấn'}</span>
               <span className="text-base font-normal leading-none">+</span>
@@ -213,7 +209,7 @@ export function Header({ navigation, brand }: HeaderProps) {
         </div>
       </header>
 
-      {/* Slide-over Mobile Navigation Drawer (Single global instance) */}
+      {/* Slide-over Mobile Navigation Drawer */}
       <MobileDrawer
         isOpen={isDrawerOpen}
         onClose={closeDrawer}

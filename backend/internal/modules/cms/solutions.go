@@ -385,3 +385,4 @@ func (h *Handler) DeleteSolution(w http.ResponseWriter, r *http.Request) {
 		"data": map[string]bool{"success": true},
 	})
 }
+
