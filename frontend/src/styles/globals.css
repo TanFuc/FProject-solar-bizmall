@@ -103,6 +103,58 @@
   }
 }
 
+/* Branded Fullscreen Loader Animations */
+@keyframes solarOrbit {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes solarBreathe {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 50px rgba(255, 107, 25, 0.22), 0 12px 32px rgba(7, 27, 59, 0.45);
+  }
+  50% {
+    transform: scale(1.025);
+    box-shadow: 0 0 65px rgba(255, 107, 25, 0.35), 0 16px 40px rgba(7, 27, 59, 0.6);
+  }
+}
+
+@keyframes solarFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-solar-orbit {
+  animation: solarOrbit 12s linear infinite;
+  transform-origin: center center;
+}
+
+.animate-solar-breathe {
+  animation: solarBreathe 3.2s ease-in-out infinite;
+}
+
+.animate-solar-fade-in {
+  animation: solarFadeIn 0.22s ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-solar-orbit,
+  .animate-solar-breathe,
+  .animate-solar-fade-in {
+    animation: none !important;
+    transform: none !important;
+  }
+}
+
 /* Safe area inset support for mobile bottom navigation */
 .pb-safe {
   padding-bottom: env(safe-area-inset-bottom, 16px);

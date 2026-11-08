@@ -52,3 +52,4 @@ const http = require('http');
   await browser.close();
   console.log('ALL FAVICON VERIFICATIONS PASSED!');
 })();
+

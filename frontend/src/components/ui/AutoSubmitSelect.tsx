@@ -59,8 +59,8 @@ export function AutoSubmitSelect({
 
     const targetUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
 
-    // Signal navigation pending state immediately before transition begins
-    startNavigation();
+    // Signal navigation pending state immediately before transition begins (inline filter change, no fullscreen overlay)
+    startNavigation(false);
 
     startTransition(() => {
       router.push(targetUrl, { scroll: false });

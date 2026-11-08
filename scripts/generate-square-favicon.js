@@ -91,3 +91,4 @@ const fs = require('fs');
   await browser.close();
   console.log('Saved square favicons and browser tab test preview!');
 })();
+

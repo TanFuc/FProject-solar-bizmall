@@ -1,23 +1,36 @@
 'use client';
 
-import { useState, useEffect, useSyncExternalStore } from 'react';
+import { useSyncExternalStore } from 'react';
 
 type Listener = () => void;
 
 let isNavigatingState = false;
+let isFullPageNavigatingState = false;
 let recoveryTimer: ReturnType<typeof setTimeout> | null = null;
 const listeners = new Set<Listener>();
 
 function notify() {
-  listeners.forEach((listener) => listener());
+  listeners.forEach((listener) => {
+    try {
+      listener();
+    } catch {
+      // ignore
+    }
+  });
 }
 
-export function startNavigation() {
+/**
+ * Initiates navigation pending state.
+ * @param isFullPage When true, signals a full cross-route page transition requiring fullscreen takeover.
+ *                   When false, signals an inline query/filter transition preserving scroll and layout.
+ */
+export function startNavigation(isFullPage: boolean = true) {
   if (recoveryTimer) {
     clearTimeout(recoveryTimer);
     recoveryTimer = null;
   }
   isNavigatingState = true;
+  isFullPageNavigatingState = isFullPage;
   notify();
 
   // Bounded recovery: auto-clear after 8 seconds if navigation aborted or fails silently
@@ -26,19 +39,27 @@ export function startNavigation() {
   }, 8000);
 }
 
+/**
+ * Concludes active navigation state truthfully.
+ */
 export function finishNavigation() {
   if (recoveryTimer) {
     clearTimeout(recoveryTimer);
     recoveryTimer = null;
   }
-  if (isNavigatingState) {
+  if (isNavigatingState || isFullPageNavigatingState) {
     isNavigatingState = false;
+    isFullPageNavigatingState = false;
     notify();
   }
 }
 
 export function getNavigationState() {
   return isNavigatingState;
+}
+
+export function getFullPageNavigationState() {
+  return isFullPageNavigatingState;
 }
 
 export function subscribeNavigation(listener: Listener) {
@@ -49,7 +70,8 @@ export function subscribeNavigation(listener: Listener) {
 }
 
 /**
- * Hook to consume active navigation pending state
+ * Hook to consume active navigation pending state (includes both page navigation and inline filtering).
+ * Consumed by inline components like CatalogPendingIndicator.
  */
 export function useNavigationPending(): boolean {
   return useSyncExternalStore(
@@ -60,8 +82,21 @@ export function useNavigationPending(): boolean {
 }
 
 /**
+ * Hook to consume active full-page route navigation pending state (cross-route page changes only).
+ * Consumed by RouteProgressBar to display branded fullscreen overlay without interfering with inline filters.
+ */
+export function useFullPageNavigationPending(): boolean {
+  return useSyncExternalStore(
+    subscribeNavigation,
+    getFullPageNavigationState,
+    () => false
+  );
+}
+
+/**
  * Intercepts user link clicks on same-origin internal links before navigation begins,
  * setting the active pending state truthfully without arbitrary timeouts.
+ * Distinguishes full cross-route transitions from same-page filter/sort/pagination clicks.
  */
 export function setupNavigationClickListener() {
   if (typeof window === 'undefined') return () => {};
@@ -80,7 +115,12 @@ export function setupNavigationClickListener() {
     if (anchorTarget && anchorTarget !== '_self') return;
 
     // Check same origin
-    const url = new URL(anchor.href, window.location.href);
+    let url: URL;
+    try {
+      url = new URL(anchor.href, window.location.href);
+    } catch {
+      return;
+    }
     if (url.origin !== window.location.origin) return;
 
     // Ignore same-page hash jumps
@@ -91,8 +131,9 @@ export function setupNavigationClickListener() {
       return;
     }
 
-    // Start navigation pending state before the router takes over
-    startNavigation();
+    // Determine whether this is a full route change vs same-page filter/sort/pagination
+    const isDifferentPage = url.pathname !== window.location.pathname;
+    startNavigation(isDifferentPage);
   };
 
   const handlePopState = () => {
