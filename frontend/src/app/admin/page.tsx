@@ -1404,85 +1404,93 @@ export default function AdminPage() {
   return (
     <div className="fixed inset-0 z-50 bg-slate-100 flex flex-col overflow-hidden text-slate-800 font-sans">
       {/* ==================== 1. REDESIGNED SLEEK ENTERPRISE HEADER ==================== */}
-      <header className="h-16 bg-white border-b border-slate-200/90 px-4 sm:px-6 flex items-center justify-between shrink-0 shadow-xs z-30">
-        {/* Brand & Breadcrumb */}
-        <div className="flex items-center gap-4">
-          <Link href="/" className="flex items-center gap-3 group">
-            <Image
-              src="/images/logo.png"
-              alt="BM SOLAR"
-              width={140}
-              height={40}
-              priority
-              className="h-8 w-auto object-contain transition-transform group-hover:scale-105"
-            />
-            <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#FF6B19]/10 text-[#FF6B19] border border-[#FF6B19]/30 uppercase tracking-wide">
-              Console v3.2
-            </span>
-          </Link>
+      <div className="relative z-30 shrink-0">
+        {/* Top 2.5px Solar Brand Accent Line */}
+        <div className="h-[2.5px] w-full bg-gradient-to-r from-[#FF6B19] via-[#0D4EA6] to-[#FF6B19]" />
 
-          <div className="hidden lg:flex items-center gap-2 text-xs text-slate-400 pl-4 border-l border-slate-200">
-            <span className="font-medium text-slate-500">Hệ Thống</span>
-            <span className="text-slate-300">/</span>
-            <span className="font-bold text-slate-800 bg-slate-100 px-2.5 py-1 rounded-md">
-              {TAB_TITLES[activeTab] || 'Bảng Điều Khiển'}
-            </span>
-          </div>
-        </div>
+        <header className="h-16 bg-gradient-to-r from-[#07182E] via-[#0B1E36] to-[#0D2E63] border-b border-white/10 px-4 sm:px-6 flex items-center justify-between text-white shadow-lg shadow-black/10">
+          {/* Brand & Breadcrumb */}
+          <div className="flex items-center gap-4">
+            <Link href="/" className="flex items-center gap-3 group" title="Về trang chủ website">
+              <Image
+                src="/images/logo-footer.png"
+                alt="BM SOLAR"
+                width={130}
+                height={36}
+                priority
+                className="h-7 sm:h-8 w-auto object-contain transition-transform group-hover:scale-105 drop-shadow-xs"
+              />
+              <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#FF6B19]/15 text-[#FF914D] border border-[#FF6B19]/35 uppercase tracking-wider backdrop-blur-xs shadow-xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#FF6B19] animate-pulse" />
+                Console v3.2
+              </span>
+            </Link>
 
-        {/* Live Backend & Action Buttons */}
-        <div className="flex items-center gap-3">
-          {/* Server Connection Status Pill */}
-          <div className="hidden md:inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold border border-emerald-200/70 shadow-xs">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-            </span>
-            <Database className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Golang 3001: Kết nối ổn định</span>
+            <div className="hidden lg:flex items-center gap-2 text-xs pl-4 border-l border-white/15">
+              <span className="font-medium text-white/50">Hệ Thống</span>
+              <span className="text-white/30">/</span>
+              <span className="font-bold text-white bg-white/10 border border-white/15 px-3 py-1 rounded-lg backdrop-blur-xs shadow-xs">
+                {TAB_TITLES[activeTab] || 'Bảng Điều Khiển'}
+              </span>
+            </div>
           </div>
 
-          {/* Purge Cache Button */}
-          <button
-            onClick={triggerRevalidate}
-            disabled={isRevalidating}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-xs font-semibold text-slate-700 border border-slate-200 transition-colors shadow-xs"
-            title="Làm mới bộ nhớ đệm SSG Next.js"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 text-brand-primary ${isRevalidating ? 'animate-spin' : ''}`} />
-            <span className="hidden sm:inline">Làm Mới Cache</span>
-          </button>
-
-          {/* External Link to Website */}
-          <Link
-            href="/"
-            target="_blank"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-xs font-semibold text-blue-700 border border-blue-200 transition-colors shadow-xs"
-          >
-            <ExternalLink className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Xem Website</span>
-          </Link>
-
-          {/* Profile & Logout */}
-          <div className="flex items-center gap-2 pl-3 border-l border-slate-200">
-            <div className="w-8 h-8 rounded-full bg-brand-primary text-white flex items-center justify-center font-bold text-xs shadow-xs">
-              AD
+          {/* Live Backend & Action Buttons */}
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            {/* Server Connection Status Pill */}
+            <div className="hidden md:inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-white/90 text-xs font-medium backdrop-blur-xs shadow-xs">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+              </span>
+              <Database className="w-3.5 h-3.5 text-emerald-400" />
+              <span className="text-white/80">
+                Golang 3001: <strong className="text-emerald-300 font-semibold">Kết nối ổn định</strong>
+              </span>
             </div>
-            <div className="hidden xl:block text-left text-xs leading-tight">
-              <p className="font-bold text-slate-800">Admin BM SOLAR</p>
-              <p className="text-[10px] text-slate-400">admin@bmsolar.vn</p>
-            </div>
+
+            {/* Purge Cache Button */}
             <button
-              onClick={handleLogout}
-              className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg hover:bg-red-50 text-slate-500 hover:text-red-600 text-xs font-semibold transition-colors flex items-center gap-1"
-              title="Đăng xuất khỏi bảng điều khiển"
+              onClick={triggerRevalidate}
+              disabled={isRevalidating}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-xs font-semibold text-white/90 hover:text-white border border-white/15 hover:border-white/25 transition-all shadow-xs active:scale-95 disabled:opacity-50"
+              title="Làm mới bộ nhớ đệm SSG Next.js"
             >
-              <LogOut className="w-4 h-4 text-red-500" />
-              <span className="hidden sm:inline">Thoát</span>
+              <RefreshCw className={`w-3.5 h-3.5 text-[#FF914D] ${isRevalidating ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">Làm Mới Cache</span>
             </button>
+
+            {/* External Link to Website */}
+            <Link
+              href="/"
+              target="_blank"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#FF6B19] to-[#FF853E] hover:from-[#ea5d0f] hover:to-[#FF6B19] text-xs font-bold text-white border border-orange-400/30 shadow-sm shadow-orange-950/30 transition-all active:scale-95"
+            >
+              <ExternalLink className="w-3.5 h-3.5 text-white" />
+              <span className="hidden sm:inline">Xem Website</span>
+            </Link>
+
+            {/* Profile & Logout */}
+            <div className="flex items-center gap-2 pl-3 border-l border-white/15">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#0D4EA6] to-[#1E6BDB] text-white border border-white/25 flex items-center justify-center font-extrabold text-xs shadow-xs">
+                AD
+              </div>
+              <div className="hidden xl:block text-left text-xs leading-tight">
+                <p className="font-bold text-white">Admin BM SOLAR</p>
+                <p className="text-[10px] text-white/50">admin@bmsolar.vn</p>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg bg-white/5 hover:bg-red-500/20 text-white/70 hover:text-red-300 border border-white/10 hover:border-red-500/30 text-xs font-semibold transition-all flex items-center gap-1 active:scale-95"
+                title="Đăng xuất khỏi bảng điều khiển"
+              >
+                <LogOut className="w-4 h-4 text-red-400" />
+                <span className="hidden sm:inline">Thoát</span>
+              </button>
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
+      </div>
 
       {/* ==================== 2. MAIN LAYOUT CONTAINER ==================== */}
       <div className="flex-1 flex overflow-hidden">
