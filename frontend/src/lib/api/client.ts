@@ -487,6 +487,174 @@ export async function deleteAdminSolution(id: string, token?: string) {
   return res.json();
 }
 
+// ---------------- Products Admin API ----------------
+export async function fetchAdminProducts(token?: string) {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE_URL}/admin/products?pageSize=100`, { headers, cache: 'no-store' });
+  if (!res.ok) throw new Error(`Failed to fetch products: ${res.status}`);
+  return res.json();
+}
+
+export async function createAdminProduct(data: any, token?: string) {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE_URL}/admin/products`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error(`Failed to create product: ${res.status}`);
+  return res.json();
+}
+
+export async function updateAdminProduct(id: string, data: any, token?: string) {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE_URL}/admin/products/${id}`, {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error(`Failed to update product: ${res.status}`);
+  return res.json();
+}
+
+export async function deleteAdminProduct(id: string, token?: string) {
+  const headers: Record<string, string> = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE_URL}/admin/products/${id}`, {
+    method: 'DELETE',
+    headers,
+  });
+  if (!res.ok) throw new Error(`Failed to delete product: ${res.status}`);
+  return res.json();
+}
+
+export async function togglePublishAdminProduct(id: string, publish: boolean, token?: string) {
+  const headers: Record<string, string> = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const action = publish ? 'publish' : 'unpublish';
+  const res = await fetch(`${API_BASE_URL}/admin/products/${id}/${action}`, {
+    method: 'POST',
+    headers,
+  });
+  if (!res.ok) throw new Error(`Failed to ${action} product: ${res.status}`);
+  return res.json();
+}
+
+// ---------------- Projects Admin API ----------------
+export async function fetchAdminProjects(token?: string) {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE_URL}/admin/projects?pageSize=100`, { headers, cache: 'no-store' });
+  if (!res.ok) throw new Error(`Failed to fetch projects: ${res.status}`);
+  return res.json();
+}
+
+export async function createAdminProject(data: any, token?: string) {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE_URL}/admin/projects`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error(`Failed to create project: ${res.status}`);
+  return res.json();
+}
+
+export async function updateAdminProject(id: string, data: any, token?: string) {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE_URL}/admin/projects/${id}`, {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error(`Failed to update project: ${res.status}`);
+  return res.json();
+}
+
+export async function deleteAdminProject(id: string, token?: string) {
+  const headers: Record<string, string> = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE_URL}/admin/projects/${id}`, {
+    method: 'DELETE',
+    headers,
+  });
+  if (!res.ok) throw new Error(`Failed to delete project: ${res.status}`);
+  return res.json();
+}
+
+export async function togglePublishAdminProject(id: string, publish: boolean, token?: string) {
+  const headers: Record<string, string> = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const action = publish ? 'publish' : 'unpublish';
+  const res = await fetch(`${API_BASE_URL}/admin/projects/${id}/${action}`, {
+    method: 'POST',
+    headers,
+  });
+  if (!res.ok) throw new Error(`Failed to ${action} project: ${res.status}`);
+  return res.json();
+}
+
+// ---------------- Articles Admin API ----------------
+export async function fetchAdminArticles(token?: string) {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE_URL}/admin/articles?pageSize=100`, { headers, cache: 'no-store' });
+  if (!res.ok) throw new Error(`Failed to fetch articles: ${res.status}`);
+  return res.json();
+}
+
+export async function createAdminArticle(data: any, token?: string) {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE_URL}/admin/articles`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error(`Failed to create article: ${res.status}`);
+  return res.json();
+}
+
+export async function updateAdminArticle(id: string, data: any, token?: string) {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE_URL}/admin/articles/${id}`, {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error(`Failed to update article: ${res.status}`);
+  return res.json();
+}
+
+export async function deleteAdminArticle(id: string, token?: string) {
+  const headers: Record<string, string> = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE_URL}/admin/articles/${id}`, {
+    method: 'DELETE',
+    headers,
+  });
+  if (!res.ok) throw new Error(`Failed to delete article: ${res.status}`);
+  return res.json();
+}
+
+export async function togglePublishAdminArticle(id: string, publish: boolean, token?: string) {
+  const headers: Record<string, string> = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const action = publish ? 'publish' : 'unpublish';
+  const res = await fetch(`${API_BASE_URL}/admin/articles/${id}/${action}`, {
+    method: 'POST',
+    headers,
+  });
+  if (!res.ok) throw new Error(`Failed to ${action} article: ${res.status}`);
+  return res.json();
+}
+
 export async function getFaqs() {
   const { fallbackFaqs } = await import('./mockData');
   return fallbackFaqs;
