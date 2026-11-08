@@ -1,7 +1,7 @@
 import { CmsJourney } from '@/components/blocks/CmsSections';
 import Link from 'next/link';
 import { ArrowRight, RotateCcw } from 'lucide-react';
-import { getProducts, getAudiences, getProductCategories } from '@/lib/api/client';
+import { getProducts, getAudiences, getProductCategories, getBrands } from '@/lib/api/client';
 import { getPageVisuals } from '@/lib/api/visuals';
 import { visualMetadata } from '@/lib/api/visual-metadata';
 import { PageHero, SectionHeading } from '@/components/layout/PageHero';
@@ -41,7 +41,7 @@ interface Props {
 export default async function ProductsPage({ searchParams }: Props) {
   const resolvedSearchParams = (await searchParams) || {};
   const page = Math.max(1, Number(resolvedSearchParams.page) || 1);
-  const [visuals, listing, allCategories, audiences] = await Promise.all([
+  const [visuals, listing, allCategories, audiences, brands] = await Promise.all([
     getPageVisuals('products'),
     getProducts({
       page,
@@ -54,6 +54,7 @@ export default async function ProductsPage({ searchParams }: Props) {
     }),
     getProductCategories(),
     getAudiences(),
+    getBrands(),
   ]);
 
   const copy = visuals.copy;
@@ -141,6 +142,31 @@ export default async function ProductsPage({ searchParams }: Props) {
                 {audience.label}
               </Link>
             ))}
+
+            {brands && brands.length > 0 && (
+              <>
+                <h3 className="mt-7">Thương hiệu</h3>
+                <Link
+                  href={href('brand')}
+                  scroll={false}
+                  aria-current={!resolvedSearchParams.brand ? 'page' : undefined}
+                  className="transition-colors"
+                >
+                  Tất cả
+                </Link>
+                {brands.map((brand) => (
+                  <Link
+                    key={brand.id}
+                    href={href('brand', brand.slug)}
+                    scroll={false}
+                    aria-current={resolvedSearchParams.brand === brand.slug ? 'page' : undefined}
+                    className="transition-colors"
+                  >
+                    {brand.name}
+                  </Link>
+                ))}
+              </>
+            )}
 
             {hasActiveFilters && (
               <div className="mt-8 pt-4 border-t border-slate-200">

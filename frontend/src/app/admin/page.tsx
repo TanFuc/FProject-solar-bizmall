@@ -406,8 +406,9 @@ export default function AdminPage() {
 
   const fetchBranchesList = async (jwtToken?: string) => {
     try {
-      const res = await fetchAdminBranches(jwtToken || token || undefined);
-      if (res && Array.isArray(res.data) && res.data.length > 0) {
+      const tok = jwtToken || token || (await ensureValidToken());
+      const res = await fetchAdminBranches(tok);
+      if (res && Array.isArray(res.data)) {
         setBranches(res.data);
       }
     } catch {
@@ -415,21 +416,20 @@ export default function AdminPage() {
         const pub = await fetch('http://localhost:3001/api/v1/public/branches');
         if (pub.ok) {
           const json = await pub.json();
-          if (json && Array.isArray(json.data) && json.data.length > 0) {
+          if (json && Array.isArray(json.data)) {
             setBranches(json.data);
           }
         }
-      } catch {
-        // Fallback retained
-      }
+      } catch {}
     }
   };
 
   const fetchSolutionsList = async (jwtToken?: string) => {
     setLoadingSolutions(true);
     try {
-      const res = await fetchAdminSolutions(jwtToken || token || undefined);
-      if (res && Array.isArray(res.data) && res.data.length > 0) {
+      const tok = jwtToken || token || (await ensureValidToken());
+      const res = await fetchAdminSolutions(tok);
+      if (res && Array.isArray(res.data)) {
         setSolutions(res.data);
       }
     } catch {
@@ -437,13 +437,11 @@ export default function AdminPage() {
         const pub = await fetch('http://localhost:3001/api/v1/public/solutions');
         if (pub.ok) {
           const json = await pub.json();
-          if (json && Array.isArray(json.data) && json.data.length > 0) {
+          if (json && Array.isArray(json.data)) {
             setSolutions(json.data);
           }
         }
-      } catch {
-        // Fallback retained
-      }
+      } catch {}
     } finally {
       setLoadingSolutions(false);
     }
@@ -453,7 +451,7 @@ export default function AdminPage() {
     try {
       const tok = jwtToken || token || (await ensureValidToken());
       const res = await fetchAdminContactChannels(tok);
-      if (res && Array.isArray(res.data) && res.data.length > 0) {
+      if (res && Array.isArray(res.data)) {
         setChannels(res.data);
       }
     } catch {
@@ -461,55 +459,79 @@ export default function AdminPage() {
         const pub = await fetch('http://localhost:3001/api/v1/public/contact-channels');
         if (pub.ok) {
           const json = await pub.json();
-          if (json && Array.isArray(json.data) && json.data.length > 0) {
+          if (json && Array.isArray(json.data)) {
             setChannels(json.data);
           }
         }
-      } catch {
-        // Fallback retained
-      }
+      } catch {}
     }
   };
 
   const fetchProductsList = async (jwtToken?: string) => {
     try {
-      const res = await fetchAdminProducts(jwtToken || token || undefined);
-      if (res && Array.isArray(res.data) && res.data.length > 0) {
+      const tok = jwtToken || token || (await ensureValidToken());
+      const res = await fetchAdminProducts(tok);
+      if (res && Array.isArray(res.data)) {
         setProducts(res.data);
       }
     } catch {
-      // Keep fallback
+      try {
+        const pub = await fetch('http://localhost:3001/api/v1/public/products?pageSize=100');
+        if (pub.ok) {
+          const json = await pub.json();
+          if (json && Array.isArray(json.data)) {
+            setProducts(json.data);
+          }
+        }
+      } catch {}
     }
   };
 
   const fetchProjectsList = async (jwtToken?: string) => {
     try {
-      const res = await fetchAdminProjects(jwtToken || token || undefined);
-      if (res && Array.isArray(res.data) && res.data.length > 0) {
+      const tok = jwtToken || token || (await ensureValidToken());
+      const res = await fetchAdminProjects(tok);
+      if (res && Array.isArray(res.data)) {
         setProjects(res.data);
       }
     } catch {
-      // Keep fallback
+      try {
+        const pub = await fetch('http://localhost:3001/api/v1/public/projects?pageSize=100');
+        if (pub.ok) {
+          const json = await pub.json();
+          if (json && Array.isArray(json.data)) {
+            setProjects(json.data);
+          }
+        }
+      } catch {}
     }
   };
 
   const fetchArticlesList = async (jwtToken?: string) => {
     try {
-      const res = await fetchAdminArticles(jwtToken || token || undefined);
-      if (res && Array.isArray(res.data) && res.data.length > 0) {
+      const tok = jwtToken || token || (await ensureValidToken());
+      const res = await fetchAdminArticles(tok);
+      if (res && Array.isArray(res.data)) {
         setArticles(res.data);
       }
     } catch {
-      // Keep fallback
+      try {
+        const pub = await fetch('http://localhost:3001/api/v1/public/articles?pageSize=100');
+        if (pub.ok) {
+          const json = await pub.json();
+          if (json && Array.isArray(json.data)) {
+            setArticles(json.data);
+          }
+        }
+      } catch {}
     }
   };
 
   const fetchLiveLeads = async (jwtToken?: string) => {
-    const t = jwtToken || token;
-    if (!t) return;
     try {
+      const tok = jwtToken || token || (await ensureValidToken());
       const res = await fetch('http://localhost:3001/api/v1/admin/leads', {
-        headers: { Authorization: `Bearer ${t}` },
+        headers: { Authorization: `Bearer ${tok}` },
       });
       if (res.ok) {
         const json = await res.json();
@@ -527,14 +549,10 @@ export default function AdminPage() {
             status: item.status || 'new',
             createdAt: item.createdAt ? new Date(item.createdAt).toLocaleString('vi-VN') : 'Vừa xong',
           }));
-          if (mapped.length > 0) {
-            setLeads(mapped);
-          }
+          setLeads(mapped);
         }
       }
-    } catch {
-      // Fallback retained
-    }
+    } catch {}
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -1188,12 +1206,26 @@ export default function AdminPage() {
   const handleDeleteSolution = async (id?: string) => {
     if (!id) return;
     if (!window.confirm('Bạn có chắc chắn muốn xóa giải pháp này? Thao tác này sẽ ẩn URL khỏi website.')) return;
+    const originalSolutions = [...solutions];
     setSolutions((prev) => prev.filter((s) => s.id !== id && s.slug !== id));
     try {
-      await deleteAdminSolution(id, token || undefined);
-      setRevalidateStatus('✅ Đã xóa giải pháp thành công');
-    } catch {
-      setRevalidateStatus('✅ Đã xóa giải pháp (cục bộ)');
+      let authToken = await ensureValidToken();
+      try {
+        await deleteAdminSolution(id, authToken);
+      } catch (err: any) {
+        if (err.message?.includes('401')) {
+          authToken = await forceReLogin();
+          await deleteAdminSolution(id, authToken);
+        } else {
+          throw err;
+        }
+      }
+      setRevalidateStatus('✅ Đã xóa giải pháp thành công khỏi cơ sở dữ liệu');
+      notifyDockUpdated();
+      fetchSolutionsList(authToken);
+    } catch (err: any) {
+      setSolutions(originalSolutions);
+      setRevalidateStatus(`❌ Lỗi xóa giải pháp: ${err.message || 'Lỗi máy chủ'}`);
     }
   };
 
@@ -1248,26 +1280,49 @@ export default function AdminPage() {
       processSteps: parsedProcess.length > 0 ? parsedProcess : editingSolution.processSteps,
     };
 
+    const originalSolutions = [...solutions];
     try {
+      let authToken = await ensureValidToken();
       if (isNewSolution) {
-        await createAdminSolution(payload, token || undefined);
-        setSolutions((prev) => [...prev, payload]);
+        let res;
+        try {
+          res = await createAdminSolution(payload, authToken);
+        } catch (err: any) {
+          if (err.message?.includes('401')) {
+            authToken = await forceReLogin();
+            res = await createAdminSolution(payload, authToken);
+          } else {
+            throw err;
+          }
+        }
+        const created = res?.data || payload;
+        setSolutions((prev) => [...prev, created]);
         setRevalidateStatus(`✅ Đã tạo mới giải pháp "${payload.title}" thành công!`);
       } else {
         const targetId = payload.id || payload.slug;
-        await updateAdminSolution(targetId, payload, token || undefined);
+        let res;
+        try {
+          res = await updateAdminSolution(targetId, payload, authToken);
+        } catch (err: any) {
+          if (err.message?.includes('401')) {
+            authToken = await forceReLogin();
+            res = await updateAdminSolution(targetId, payload, authToken);
+          } else {
+            throw err;
+          }
+        }
+        const updated = res?.data || payload;
         setSolutions((prev) =>
-          prev.map((s) => (s.id === payload.id || s.slug === payload.slug ? payload : s))
+          prev.map((s) => (s.id === updated.id || s.slug === updated.slug ? updated : s))
         );
         setRevalidateStatus(`✅ Đã cập nhật giải pháp "${payload.title}" thành công!`);
       }
       setEditingSolution(null);
-    } catch {
-      setSolutions((prev) =>
-        isNewSolution ? [...prev, payload] : prev.map((s) => (s.slug === payload.slug ? payload : s))
-      );
-      setEditingSolution(null);
-      setRevalidateStatus(`✅ Đã lưu giải pháp "${payload.title}"!`);
+      notifyDockUpdated();
+      fetchSolutionsList(authToken);
+    } catch (err: any) {
+      setSolutions(originalSolutions);
+      setRevalidateStatus(`❌ Lỗi lưu giải pháp: ${err.message || 'Lỗi máy chủ'}`);
     } finally {
       setSavingSolution(false);
     }
@@ -1308,24 +1363,52 @@ export default function AdminPage() {
 
   const handleDeleteProduct = async (id: string) => {
     if (!window.confirm('Bạn có chắc chắn muốn xóa thiết bị này khỏi danh mục sản phẩm?')) return;
+    const originalProducts = [...products];
     setProducts((prev) => prev.filter((p) => p.id !== id));
     try {
-      await deleteAdminProduct(id, token || undefined);
+      let authToken = await ensureValidToken();
+      try {
+        await deleteAdminProduct(id, authToken);
+      } catch (err: any) {
+        if (err.message?.includes('401')) {
+          authToken = await forceReLogin();
+          await deleteAdminProduct(id, authToken);
+        } else {
+          throw err;
+        }
+      }
       setRevalidateStatus('✅ Đã xóa thiết bị khỏi danh mục thành công');
-    } catch {
-      setRevalidateStatus('✅ Đã xóa thiết bị khỏi danh mục (cục bộ)');
+      notifyDockUpdated();
+      fetchProductsList(authToken);
+    } catch (err: any) {
+      setProducts(originalProducts);
+      setRevalidateStatus(`❌ Lỗi xóa thiết bị: ${err.message || 'Lỗi máy chủ'}`);
     }
   };
 
   const handleTogglePublishProduct = async (prod: ProductCard) => {
     const newStatus = prod.status === 'published' ? 'draft' : 'published';
     const updated = { ...prod, status: newStatus };
+    const originalProducts = [...products];
     setProducts((prev) => prev.map((p) => (p.id === prod.id ? updated : p)));
     try {
-      await togglePublishAdminProduct(prod.id, newStatus === 'published', token || undefined);
+      let authToken = await ensureValidToken();
+      try {
+        await togglePublishAdminProduct(prod.id, newStatus === 'published', authToken);
+      } catch (err: any) {
+        if (err.message?.includes('401')) {
+          authToken = await forceReLogin();
+          await togglePublishAdminProduct(prod.id, newStatus === 'published', authToken);
+        } else {
+          throw err;
+        }
+      }
       setRevalidateStatus(`✅ Đã chuyển sản phẩm "${prod.name}" sang ${newStatus === 'published' ? 'Đang bán (Published)' : 'Bản nháp (Draft)'}`);
-    } catch {
-      setRevalidateStatus(`✅ Đã chuyển trạng thái sản phẩm "${prod.name}"`);
+      notifyDockUpdated();
+      fetchProductsList(authToken);
+    } catch (err: any) {
+      setProducts(originalProducts);
+      setRevalidateStatus(`❌ Lỗi chuyển trạng thái sản phẩm: ${err.message || 'Lỗi máy chủ'}`);
     }
   };
 
@@ -1333,23 +1416,46 @@ export default function AdminPage() {
     e.preventDefault();
     if (!editingProduct) return;
     setSavingProduct(true);
+    const originalProducts = [...products];
     try {
+      let authToken = await ensureValidToken();
       if (isNewProduct) {
-        await createAdminProduct(editingProduct, token || undefined);
-        setProducts((prev) => [editingProduct, ...prev]);
+        let res;
+        try {
+          res = await createAdminProduct(editingProduct, authToken);
+        } catch (err: any) {
+          if (err.message?.includes('401')) {
+            authToken = await forceReLogin();
+            res = await createAdminProduct(editingProduct, authToken);
+          } else {
+            throw err;
+          }
+        }
+        const created = res?.data || editingProduct;
+        setProducts((prev) => [created, ...prev.filter((p) => p.id !== created.id)]);
         setRevalidateStatus(`✅ Đã thêm thiết bị mới "${editingProduct.name}" thành công!`);
       } else {
-        await updateAdminProduct(editingProduct.id, editingProduct, token || undefined);
-        setProducts((prev) => prev.map((p) => (p.id === editingProduct.id ? editingProduct : p)));
+        let res;
+        try {
+          res = await updateAdminProduct(editingProduct.id, editingProduct, authToken);
+        } catch (err: any) {
+          if (err.message?.includes('401')) {
+            authToken = await forceReLogin();
+            res = await updateAdminProduct(editingProduct.id, editingProduct, authToken);
+          } else {
+            throw err;
+          }
+        }
+        const updated = res?.data || editingProduct;
+        setProducts((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
         setRevalidateStatus(`✅ Đã cập nhật thiết bị "${editingProduct.name}" thành công!`);
       }
       setEditingProduct(null);
-    } catch {
-      setProducts((prev) =>
-        isNewProduct ? [editingProduct, ...prev] : prev.map((p) => (p.id === editingProduct.id ? editingProduct : p))
-      );
-      setEditingProduct(null);
-      setRevalidateStatus(`✅ Đã lưu thiết bị "${editingProduct.name}"!`);
+      notifyDockUpdated();
+      fetchProductsList(authToken);
+    } catch (err: any) {
+      setProducts(originalProducts);
+      setRevalidateStatus(`❌ Lỗi lưu thiết bị: ${err.message || 'Lỗi máy chủ'}`);
     } finally {
       setSavingProduct(false);
     }
@@ -1386,12 +1492,26 @@ export default function AdminPage() {
 
   const handleDeleteProject = async (id: string) => {
     if (!window.confirm('Bạn có chắc chắn muốn xóa công trình này khỏi danh sách dự án?')) return;
+    const originalProjects = [...projects];
     setProjects((prev) => prev.filter((p) => p.id !== id));
     try {
-      await deleteAdminProject(id, token || undefined);
-      setRevalidateStatus('✅ Đã xóa dự án thành công');
-    } catch {
-      setRevalidateStatus('✅ Đã xóa dự án (cục bộ)');
+      let authToken = await ensureValidToken();
+      try {
+        await deleteAdminProject(id, authToken);
+      } catch (err: any) {
+        if (err.message?.includes('401')) {
+          authToken = await forceReLogin();
+          await deleteAdminProject(id, authToken);
+        } else {
+          throw err;
+        }
+      }
+      setRevalidateStatus('✅ Đã xóa dự án thành công khỏi cơ sở dữ liệu');
+      notifyDockUpdated();
+      fetchProjectsList(authToken);
+    } catch (err: any) {
+      setProjects(originalProjects);
+      setRevalidateStatus(`❌ Lỗi xóa dự án: ${err.message || 'Lỗi máy chủ'}`);
     }
   };
 
@@ -1399,23 +1519,46 @@ export default function AdminPage() {
     e.preventDefault();
     if (!editingProject) return;
     setSavingProject(true);
+    const originalProjects = [...projects];
     try {
+      let authToken = await ensureValidToken();
       if (isNewProject) {
-        await createAdminProject(editingProject, token || undefined);
-        setProjects((prev) => [editingProject, ...prev]);
+        let res;
+        try {
+          res = await createAdminProject(editingProject, authToken);
+        } catch (err: any) {
+          if (err.message?.includes('401')) {
+            authToken = await forceReLogin();
+            res = await createAdminProject(editingProject, authToken);
+          } else {
+            throw err;
+          }
+        }
+        const created = res?.data || editingProject;
+        setProjects((prev) => [created, ...prev.filter((p) => p.id !== created.id)]);
         setRevalidateStatus(`✅ Đã thêm dự án mới "${editingProject.title}" thành công!`);
       } else {
-        await updateAdminProject(editingProject.id, editingProject, token || undefined);
-        setProjects((prev) => prev.map((p) => (p.id === editingProject.id ? editingProject : p)));
+        let res;
+        try {
+          res = await updateAdminProject(editingProject.id, editingProject, authToken);
+        } catch (err: any) {
+          if (err.message?.includes('401')) {
+            authToken = await forceReLogin();
+            res = await updateAdminProject(editingProject.id, editingProject, authToken);
+          } else {
+            throw err;
+          }
+        }
+        const updated = res?.data || editingProject;
+        setProjects((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
         setRevalidateStatus(`✅ Đã cập nhật dự án "${editingProject.title}" thành công!`);
       }
       setEditingProject(null);
-    } catch {
-      setProjects((prev) =>
-        isNewProject ? [editingProject, ...prev] : prev.map((p) => (p.id === editingProject.id ? editingProject : p))
-      );
-      setEditingProject(null);
-      setRevalidateStatus(`✅ Đã lưu dự án "${editingProject.title}"!`);
+      notifyDockUpdated();
+      fetchProjectsList(authToken);
+    } catch (err: any) {
+      setProjects(originalProjects);
+      setRevalidateStatus(`❌ Lỗi lưu dự án: ${err.message || 'Lỗi máy chủ'}`);
     } finally {
       setSavingProject(false);
     }
@@ -1443,12 +1586,26 @@ export default function AdminPage() {
 
   const handleDeleteArticle = async (id: string) => {
     if (!window.confirm('Bạn có chắc chắn muốn xóa bài viết này?')) return;
+    const originalArticles = [...articles];
     setArticles((prev) => prev.filter((a) => a.id !== id));
     try {
-      await deleteAdminArticle(id, token || undefined);
-      setRevalidateStatus('✅ Đã xóa bài viết thành công');
-    } catch {
-      setRevalidateStatus('✅ Đã xóa bài viết (cục bộ)');
+      let authToken = await ensureValidToken();
+      try {
+        await deleteAdminArticle(id, authToken);
+      } catch (err: any) {
+        if (err.message?.includes('401')) {
+          authToken = await forceReLogin();
+          await deleteAdminArticle(id, authToken);
+        } else {
+          throw err;
+        }
+      }
+      setRevalidateStatus('✅ Đã xóa bài viết thành công khỏi cơ sở dữ liệu');
+      notifyDockUpdated();
+      fetchArticlesList(authToken);
+    } catch (err: any) {
+      setArticles(originalArticles);
+      setRevalidateStatus(`❌ Lỗi xóa bài viết: ${err.message || 'Lỗi máy chủ'}`);
     }
   };
 
@@ -1456,23 +1613,46 @@ export default function AdminPage() {
     e.preventDefault();
     if (!editingArticle) return;
     setSavingArticle(true);
+    const originalArticles = [...articles];
     try {
+      let authToken = await ensureValidToken();
       if (isNewArticle) {
-        await createAdminArticle(editingArticle, token || undefined);
-        setArticles((prev) => [editingArticle, ...prev]);
+        let res;
+        try {
+          res = await createAdminArticle(editingArticle, authToken);
+        } catch (err: any) {
+          if (err.message?.includes('401')) {
+            authToken = await forceReLogin();
+            res = await createAdminArticle(editingArticle, authToken);
+          } else {
+            throw err;
+          }
+        }
+        const created = res?.data || editingArticle;
+        setArticles((prev) => [created, ...prev.filter((a) => a.id !== created.id)]);
         setRevalidateStatus(`✅ Đã thêm bài viết mới "${editingArticle.title}" thành công!`);
       } else {
-        await updateAdminArticle(editingArticle.id, editingArticle, token || undefined);
-        setArticles((prev) => prev.map((a) => (a.id === editingArticle.id ? editingArticle : a)));
+        let res;
+        try {
+          res = await updateAdminArticle(editingArticle.id, editingArticle, authToken);
+        } catch (err: any) {
+          if (err.message?.includes('401')) {
+            authToken = await forceReLogin();
+            res = await updateAdminArticle(editingArticle.id, editingArticle, authToken);
+          } else {
+            throw err;
+          }
+        }
+        const updated = res?.data || editingArticle;
+        setArticles((prev) => prev.map((a) => (a.id === updated.id ? updated : a)));
         setRevalidateStatus(`✅ Đã cập nhật bài viết "${editingArticle.title}" thành công!`);
       }
       setEditingArticle(null);
-    } catch {
-      setArticles((prev) =>
-        isNewArticle ? [editingArticle, ...prev] : prev.map((a) => (a.id === editingArticle.id ? editingArticle : a))
-      );
-      setEditingArticle(null);
-      setRevalidateStatus(`✅ Đã lưu bài viết "${editingArticle.title}"!`);
+      notifyDockUpdated();
+      fetchArticlesList(authToken);
+    } catch (err: any) {
+      setArticles(originalArticles);
+      setRevalidateStatus(`❌ Lỗi lưu bài viết: ${err.message || 'Lỗi máy chủ'}`);
     } finally {
       setSavingArticle(false);
     }

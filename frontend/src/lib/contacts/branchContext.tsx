@@ -30,7 +30,11 @@ export function BranchProvider({
   brand?:BrandConfig;
 }) {
   const [branches] = useState<BranchItem[]>(initialBranches);
-  const [activeBranchSlug, setActiveBranchSlugState] = useState<string>('quy-nhon');
+  const defaultSlug =
+    (initialBranches || []).find((b) => b.isHeadquarters)?.slug ||
+    (initialBranches || [])[0]?.slug ||
+    'quy-nhon';
+  const [activeBranchSlug, setActiveBranchSlugState] = useState<string>(defaultSlug);
   const [isConsultationModalOpen, setIsConsultationModalOpen] = useState(false);
   const [consultationNote, setConsultationNote] = useState('');
 

@@ -464,6 +464,7 @@ export async function createAdminSolution(data: any, token?: string) {
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error(`Failed to create solution: ${res.status}`);
+  invalidatePublicCache();
   return res.json();
 }
 
@@ -476,6 +477,7 @@ export async function updateAdminSolution(id: string, data: any, token?: string)
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error(`Failed to update solution: ${res.status}`);
+  invalidatePublicCache();
   return res.json();
 }
 
@@ -487,6 +489,7 @@ export async function deleteAdminSolution(id: string, token?: string) {
     headers,
   });
   if (!res.ok) throw new Error(`Failed to delete solution: ${res.status}`);
+  invalidatePublicCache();
   return res.json();
 }
 
@@ -502,24 +505,40 @@ export async function fetchAdminProducts(token?: string) {
 export async function createAdminProduct(data: any, token?: string) {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (token) headers['Authorization'] = `Bearer ${token}`;
+  const payload = {
+    ...data,
+    categoryId: data.categoryId || data.category?.id || '01M6RVG7W2G5C8TNNWWAEKY0BV',
+    brandId: data.brandId || data.brand?.id || undefined,
+    summary: data.summary || data.description || '',
+    description: data.description || data.summary || '',
+  };
   const res = await fetch(`${API_BASE_URL}/admin/products`, {
     method: 'POST',
     headers,
-    body: JSON.stringify(data),
+    body: JSON.stringify(payload),
   });
   if (!res.ok) throw new Error(`Failed to create product: ${res.status}`);
+  invalidatePublicCache();
   return res.json();
 }
 
 export async function updateAdminProduct(id: string, data: any, token?: string) {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (token) headers['Authorization'] = `Bearer ${token}`;
+  const payload = {
+    ...data,
+    categoryId: data.categoryId || data.category?.id || '01M6RVG7W2G5C8TNNWWAEKY0BV',
+    brandId: data.brandId || data.brand?.id || undefined,
+    summary: data.summary || data.description || '',
+    description: data.description || data.summary || '',
+  };
   const res = await fetch(`${API_BASE_URL}/admin/products/${id}`, {
     method: 'PUT',
     headers,
-    body: JSON.stringify(data),
+    body: JSON.stringify(payload),
   });
   if (!res.ok) throw new Error(`Failed to update product: ${res.status}`);
+  invalidatePublicCache();
   return res.json();
 }
 
@@ -531,6 +550,7 @@ export async function deleteAdminProduct(id: string, token?: string) {
     headers,
   });
   if (!res.ok) throw new Error(`Failed to delete product: ${res.status}`);
+  invalidatePublicCache();
   return res.json();
 }
 
@@ -543,6 +563,7 @@ export async function togglePublishAdminProduct(id: string, publish: boolean, to
     headers,
   });
   if (!res.ok) throw new Error(`Failed to ${action} product: ${res.status}`);
+  invalidatePublicCache();
   return res.json();
 }
 
@@ -558,24 +579,38 @@ export async function fetchAdminProjects(token?: string) {
 export async function createAdminProject(data: any, token?: string) {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (token) headers['Authorization'] = `Bearer ${token}`;
+  const payload = {
+    ...data,
+    projectTypeId: data.projectTypeId || data.projectType?.id || '01M6RVG7Y1QMXE5M0V1T14Y1PQ',
+    provinceId: data.provinceId || data.province?.id || '01M6RVG7XNEKEJDN02EKKC8255',
+    summary: data.summary || data.title || '',
+  };
   const res = await fetch(`${API_BASE_URL}/admin/projects`, {
     method: 'POST',
     headers,
-    body: JSON.stringify(data),
+    body: JSON.stringify(payload),
   });
   if (!res.ok) throw new Error(`Failed to create project: ${res.status}`);
+  invalidatePublicCache();
   return res.json();
 }
 
 export async function updateAdminProject(id: string, data: any, token?: string) {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (token) headers['Authorization'] = `Bearer ${token}`;
+  const payload = {
+    ...data,
+    projectTypeId: data.projectTypeId || data.projectType?.id || '01M6RVG7Y1QMXE5M0V1T14Y1PQ',
+    provinceId: data.provinceId || data.province?.id || '01M6RVG7XNEKEJDN02EKKC8255',
+    summary: data.summary || data.title || '',
+  };
   const res = await fetch(`${API_BASE_URL}/admin/projects/${id}`, {
     method: 'PUT',
     headers,
-    body: JSON.stringify(data),
+    body: JSON.stringify(payload),
   });
   if (!res.ok) throw new Error(`Failed to update project: ${res.status}`);
+  invalidatePublicCache();
   return res.json();
 }
 
@@ -587,6 +622,7 @@ export async function deleteAdminProject(id: string, token?: string) {
     headers,
   });
   if (!res.ok) throw new Error(`Failed to delete project: ${res.status}`);
+  invalidatePublicCache();
   return res.json();
 }
 
@@ -599,6 +635,7 @@ export async function togglePublishAdminProject(id: string, publish: boolean, to
     headers,
   });
   if (!res.ok) throw new Error(`Failed to ${action} project: ${res.status}`);
+  invalidatePublicCache();
   return res.json();
 }
 
@@ -614,24 +651,36 @@ export async function fetchAdminArticles(token?: string) {
 export async function createAdminArticle(data: any, token?: string) {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (token) headers['Authorization'] = `Bearer ${token}`;
+  const payload = {
+    ...data,
+    excerpt: data.excerpt || data.title || '',
+    bodyJson: data.bodyJson || JSON.stringify({ content: data.excerpt || data.title }),
+  };
   const res = await fetch(`${API_BASE_URL}/admin/articles`, {
     method: 'POST',
     headers,
-    body: JSON.stringify(data),
+    body: JSON.stringify(payload),
   });
   if (!res.ok) throw new Error(`Failed to create article: ${res.status}`);
+  invalidatePublicCache();
   return res.json();
 }
 
 export async function updateAdminArticle(id: string, data: any, token?: string) {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (token) headers['Authorization'] = `Bearer ${token}`;
+  const payload = {
+    ...data,
+    excerpt: data.excerpt || data.title || '',
+    bodyJson: data.bodyJson || JSON.stringify({ content: data.excerpt || data.title }),
+  };
   const res = await fetch(`${API_BASE_URL}/admin/articles/${id}`, {
     method: 'PUT',
     headers,
-    body: JSON.stringify(data),
+    body: JSON.stringify(payload),
   });
   if (!res.ok) throw new Error(`Failed to update article: ${res.status}`);
+  invalidatePublicCache();
   return res.json();
 }
 
@@ -643,6 +692,7 @@ export async function deleteAdminArticle(id: string, token?: string) {
     headers,
   });
   if (!res.ok) throw new Error(`Failed to delete article: ${res.status}`);
+  invalidatePublicCache();
   return res.json();
 }
 
