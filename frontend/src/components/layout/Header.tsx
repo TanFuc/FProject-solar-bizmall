@@ -131,17 +131,44 @@ export function Header({ navigation, brand }: HeaderProps) {
 
                   {/* Submenu Dropdown */}
                   {item.children && item.children.length > 0 && (
-                    <div className="absolute top-full left-0 pt-2 w-64 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50">
-                      <div className="bg-white rounded-xl shadow-xl border border-slate-100 p-2 space-y-0.5">
-                        {item.children.map((sub) => (
-                          <Link
-                            key={sub.id}
-                            href={resolveInternalRoute(sub.targetRef)}
-                            className="block px-3 py-2.5 text-xs md:text-sm font-medium text-ink hover:text-brand-primary hover:bg-surface rounded-lg transition-colors"
-                          >
-                            {sub.label}
-                          </Link>
-                        ))}
+                    <div className="absolute top-full left-0 pt-2 w-80 sm:w-96 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50">
+                      <div className="bg-white rounded-2xl shadow-xl border border-slate-100 p-2.5 space-y-1">
+                        {item.children.map((sub) => {
+                          const subHref = resolveInternalRoute(sub.targetRef);
+                          const isSubActive = pathname === subHref;
+
+                          return (
+                            <Link
+                              key={sub.id}
+                              href={subHref}
+                              className={`group/sub block px-3.5 py-2.5 rounded-xl transition-all ${
+                                isSubActive
+                                  ? 'bg-orange-50/70 border border-orange-200/60'
+                                  : 'hover:bg-slate-50'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <span
+                                  className={`text-xs sm:text-sm font-bold ${
+                                    isSubActive
+                                      ? 'text-[#FF6B19]'
+                                      : 'text-slate-900 group-hover/sub:text-brand-primary'
+                                  }`}
+                                >
+                                  {sub.label}
+                                </span>
+                                <span className="text-[11px] font-semibold text-[#FF6B19] opacity-0 group-hover/sub:opacity-100 transition-opacity">
+                                  â†’
+                                </span>
+                              </div>
+                              {sub.description && (
+                                <p className="text-[11px] text-slate-500 line-clamp-2 mt-0.5 leading-relaxed font-normal">
+                                  {sub.description}
+                                </p>
+                              )}
+                            </Link>
+                          );
+                        })}
                       </div>
                     </div>
                   )}

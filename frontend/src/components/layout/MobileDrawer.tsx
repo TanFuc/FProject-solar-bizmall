@@ -252,9 +252,17 @@ export function MobileDrawer({ isOpen, onClose, navigation }: MobileDrawerProps)
                       key={sub.id}
                       href={resolveInternalRoute(sub.targetRef)}
                       onClick={onClose}
-                      className="block py-2 px-3 text-sm text-ink-muted hover:text-brand-primary rounded-md transition-colors focus-visible:ring-2 focus-visible:ring-brand-primary"
+                      className="block py-2 px-3 rounded-lg hover:bg-slate-50 transition-colors focus-visible:ring-2 focus-visible:ring-brand-primary group"
                     >
-                      {sub.label}
+                      <div className="text-sm font-semibold text-slate-800 group-hover:text-brand-primary transition-colors flex items-center justify-between">
+                        <span>{sub.label}</span>
+                        <ChevronRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-brand-primary group-hover:translate-x-0.5 transition-all" />
+                      </div>
+                      {sub.description && (
+                        <p className="text-xs text-slate-500 mt-0.5 line-clamp-2 leading-relaxed">
+                          {sub.description}
+                        </p>
+                      )}
                     </Link>
                   ))}
                 </div>

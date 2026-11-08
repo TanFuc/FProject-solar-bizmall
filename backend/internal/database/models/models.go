@@ -90,6 +90,7 @@ type NavigationItem struct {
 	MenuID      string           `gorm:"size:26;not null;index" json:"menuId"`
 	ParentID    *string          `gorm:"size:26" json:"parentId"`
 	Label       string           `gorm:"size:100;not null" json:"label"`
+	Description *string          `gorm:"size:255" json:"description"`
 	TargetKind  string           `gorm:"size:30;not null" json:"targetKind"` // internalRoute, externalUrl, contactChannel, leadForm
 	TargetRef   *string          `gorm:"size:100" json:"targetRef"`
 	ExternalURL *string          `gorm:"size:500" json:"externalUrl"`
@@ -553,3 +554,30 @@ type OutboxEvent struct {
 }
 
 func (OutboxEvent) TableName() string { return "outbox_events" }
+
+// Solution renewable solar energy solution packages
+type Solution struct {
+	ID                      string    `gorm:"primaryKey;size:26" json:"id"`
+	Slug                    string    `gorm:"size:100;not null;uniqueIndex" json:"slug"`
+	Title                   string    `gorm:"size:200;not null" json:"title"`
+	Subtitle                string    `gorm:"type:text;not null" json:"subtitle"`
+	AudienceCode            string    `gorm:"size:50;not null;index" json:"audienceCode"` // household, business, industrial
+	CapacityRange           string    `gorm:"size:100;not null" json:"capacityRange"`
+	HeroImage               string    `gorm:"size:500;not null" json:"heroImage"`
+	MonthlySavings          string    `gorm:"size:100;not null" json:"monthlySavings"`
+	RoiYears                string    `gorm:"size:50;not null" json:"roiYears"`
+	WarrantyPeriod          string    `gorm:"size:100;not null" json:"warrantyPeriod"`
+	Overview                string    `gorm:"type:text;not null" json:"overview"`
+	BenefitsJSON            string    `gorm:"type:text;not null" json:"benefitsJson"`
+	EquipmentJSON           string    `gorm:"type:text;not null" json:"equipmentJson"`
+	ProcessJSON             string    `gorm:"type:text;not null" json:"processJson"`
+	RecommendedProductSlugs string    `gorm:"type:text" json:"recommendedProductSlugs"`
+	RelatedProjectSlugs     string    `gorm:"type:text" json:"relatedProjectSlugs"`
+	Status                  string    `gorm:"size:20;not null;default:'published';index" json:"status"`
+	SortOrder               int       `gorm:"not null;default:0" json:"sortOrder"`
+	CreatedAt               time.Time `json:"createdAt"`
+	UpdatedAt               time.Time `json:"updatedAt"`
+}
+
+func (Solution) TableName() string { return "solutions" }
+

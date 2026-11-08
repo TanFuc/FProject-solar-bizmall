@@ -35,12 +35,13 @@ func ValidateZaloTarget(target string) string {
 }
 
 type SiteShellDTO struct {
-	Brand         BrandDTO           `json:"brand"`
-	UtilityBar    UtilityBarDTO      `json:"utilityBar"`
+	Brand         BrandDTO            `json:"brand"`
+	UtilityBar    UtilityBarDTO       `json:"utilityBar"`
 	Navigation    []NavigationNodeDTO `json:"navigation"`
-	Footer        FooterDTO          `json:"footer"`
-	MobileActions []MobileActionDTO  `json:"mobileActions"`
-	Theme         ThemeDTO           `json:"theme"`
+	Footer        FooterDTO           `json:"footer"`
+	MobileActions []MobileActionDTO   `json:"mobileActions"`
+	Theme         ThemeDTO            `json:"theme"`
+	SocialDock    []ChannelDTO        `json:"socialDock"`
 }
 
 type BrandDTO struct {
@@ -87,6 +88,7 @@ type ChannelDTO struct {
 type NavigationNodeDTO struct {
 	ID          string              `json:"id"`
 	Label       string              `json:"label"`
+	Description *string             `json:"description,omitempty"`
 	TargetKind  string              `json:"targetKind"`
 	TargetRef   *string             `json:"targetRef,omitempty"`
 	ExternalURL *string             `json:"externalUrl,omitempty"`

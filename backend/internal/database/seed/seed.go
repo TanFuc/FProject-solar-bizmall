@@ -110,9 +110,10 @@ func SeedAll(db *gorm.DB, cfg *config.Config) error {
 		{ID: id.New(), BranchID: &branchQN.ID, Type: "email", Label: "Email Quy Nhơn", Target: "quynhon@bmsolar.vn", SortOrder: 3, Enabled: true},
 		// Global
 		{ID: id.New(), BranchID: nil, Type: "phone", Label: "Tổng đài toàn quốc", Target: "1900888666", SortOrder: 1, Enabled: true},
-		{ID: id.New(), BranchID: nil, Type: "email", Label: "Email hỗ trợ", Target: "info@bmsolar.vn", SortOrder: 2, Enabled: true},
+		{ID: id.New(), BranchID: nil, Type: "zalo", Label: "Chat Zalo tư vấn", Target: "0901234567", SortOrder: 2, Enabled: true},
 		{ID: id.New(), BranchID: nil, Type: "facebook", Label: "Facebook Fanpage", Target: "https://facebook.com/bmsolar.vn", SortOrder: 3, Enabled: true},
 		{ID: id.New(), BranchID: nil, Type: "youtube", Label: "YouTube Channel", Target: "https://youtube.com/@bmsolar", SortOrder: 4, Enabled: true},
+		{ID: id.New(), BranchID: nil, Type: "email", Label: "Email hỗ trợ", Target: "info@bmsolar.vn", SortOrder: 5, Enabled: true},
 	}
 	for _, c := range channels {
 		var cnt int64
@@ -204,10 +205,14 @@ func SeedAll(db *gorm.DB, cfg *config.Config) error {
 		db.Where("menu_id = ?", headerMenu.ID).Delete(&models.NavigationItem{})
 	}
 
+	solMenuID := id.New()
 	menuItems := []models.NavigationItem{
 		{ID: id.New(), MenuID: headerMenu.ID, Label: "Trang chủ", TargetKind: "internalRoute", TargetRef: strPtr("/"), SortOrder: 1, Visibility: "all"},
 		{ID: id.New(), MenuID: headerMenu.ID, Label: "Giới thiệu", TargetKind: "internalRoute", TargetRef: strPtr("/gioi-thieu"), SortOrder: 2, Visibility: "all"},
-		{ID: id.New(), MenuID: headerMenu.ID, Label: "Giải pháp", TargetKind: "internalRoute", TargetRef: strPtr("/giai-phap"), SortOrder: 3, Visibility: "all"},
+		{ID: solMenuID, MenuID: headerMenu.ID, Label: "Giải pháp", TargetKind: "internalRoute", TargetRef: strPtr("/giai-phap"), SortOrder: 3, Visibility: "all"},
+		{ID: id.New(), MenuID: headerMenu.ID, ParentID: &solMenuID, Label: "Hộ gia đình", Description: strPtr("Hệ thống điện mặt trời áp mái 3kW - 10kW tiết kiệm hóa đơn tiền điện"), TargetKind: "internalRoute", TargetRef: strPtr("/giai-phap/ho-gia-dinh"), SortOrder: 1, Visibility: "all"},
+		{ID: id.New(), MenuID: headerMenu.ID, ParentID: &solMenuID, Label: "Doanh nghiệp & Thương mại", Description: strPtr("Giải pháp tối ưu chi phí vận hành cho văn phòng, khách sạn, cửa hàng"), TargetKind: "internalRoute", TargetRef: strPtr("/giai-phap/doanh-nghiep"), SortOrder: 2, Visibility: "all"},
+		{ID: id.New(), MenuID: headerMenu.ID, ParentID: &solMenuID, Label: "Nhà xưởng & Công nghiệp", Description: strPtr("Quy mô công suất lớn 100kWp - 1MWp+, đạt chứng chỉ xanh ESG"), TargetKind: "internalRoute", TargetRef: strPtr("/giai-phap/nha-xuong-cong-nghiep"), SortOrder: 3, Visibility: "all"},
 		{ID: id.New(), MenuID: headerMenu.ID, Label: "Sản phẩm", TargetKind: "internalRoute", TargetRef: strPtr("/san-pham"), SortOrder: 4, Visibility: "all"},
 		{ID: id.New(), MenuID: headerMenu.ID, Label: "Dự án", TargetKind: "internalRoute", TargetRef: strPtr("/du-an"), SortOrder: 5, Visibility: "all"},
 		{ID: id.New(), MenuID: headerMenu.ID, Label: "Tin tức", TargetKind: "internalRoute", TargetRef: strPtr("/tin-tuc"), SortOrder: 6, Visibility: "all"},
@@ -527,6 +532,92 @@ func SeedAll(db *gorm.DB, cfg *config.Config) error {
 	if db.Where("page_key = 'home'").First(&existingHomePage).Error != nil {
 		db.Create(&homePage)
 		db.Create(&homeRevision)
+	}
+
+	// 12. Solutions
+	solutions := []models.Solution{
+		{
+			ID:                      id.New(),
+			Slug:                    "ho-gia-dinh",
+			Title:                   "Điện Mặt Trời Hộ Gia Đình & Biệt Thự",
+			Subtitle:                "Hệ thống điện mặt trời áp mái 3kW - 10kW tiết kiệm hóa đơn tiền điện",
+			AudienceCode:            "household",
+			CapacityRange:           "3kW - 10kW",
+			HeroImage:               "/images/designs/giai-phap-card-1.png",
+			MonthlySavings:          "Từ 1.5 - 6 triệu đồng/tháng",
+			RoiYears:                "4 - 5 năm",
+			WarrantyPeriod:          "25 năm hiệu suất tấm pin",
+			Overview:                "Hệ thống điện mặt trời mái nhà dành cho gia đình được BM SOLAR thiết kế chuẩn hóa thẩm mỹ cao, phù hợp với mọi kiến trúc mái ngói, mái tôn hoặc sân thượng bê tông. Hệ thống ưu tiên cấp điện trực tiếp cho thiết bị ban ngày, nạp đầy pin lưu trữ Lithium BESS, và tự động xả điện phục vụ nhu cầu ban đêm.",
+			BenefitsJSON:            `[{"title":"Giảm 80 - 90% Hóa Đơn Điện","desc":"Sử dụng điện mặt trời tự sản tự tiêu cho điều hòa, tủ lạnh, bếp từ vào các khung giờ nắng cao điểm."},{"title":"Cấp Điện Liên Tục Khi Mất Lưới","desc":"Hệ thống chuyển mạch UPS siêu tốc < 10ms, giữ các thiết bị quan trọng hoạt động bình thường."},{"title":"Làm Mát Mái Nhà 3 - 5°C","desc":"Các tấm pin quang điện hấp thụ bức xạ trực tiếp, hoạt động như một lớp cách nhiệt tự nhiên."},{"title":"Giám Sát Thông Minh Qua Ứng Dụng","desc":"Theo dõi sản lượng điện, lượng pin lưu trữ và tiền điện tiết kiệm mỗi ngày trên điện thoại."}]`,
+			EquipmentJSON:           `[{"name":"Tấm pin Canadian Solar 550W Mono Half-Cell","brand":"Canadian Solar (Tier 1)","warranty":"25 năm"},{"name":"Biến tần Inverter Deye Hybrid 1 Pha / 3 Pha","brand":"Deye Energy","warranty":"5 năm"},{"name":"Pin lưu trữ Lithium LiFePO4 Dyness 5.12kWh - 15kWh","brand":"Dyness","warranty":"10 năm"},{"name":"Tủ điện đóng cắt bảo vệ chuẩn IP65 (Schneider / Chint)","brand":"Châu Âu / Tier 1","warranty":"2 năm"},{"name":"Khung giàn nhôm anodize và kẹp pin chuyên dụng inox 304","brand":"BM SOLAR Standard","warranty":"10 năm"}]`,
+			ProcessJSON:             `[{"step":1,"title":"Tiếp nhận & Tư vấn sơ bộ","desc":"Đánh giá hóa đơn tiền điện hiện tại và nhu cầu sử dụng của gia đình."},{"step":2,"title":"Khảo sát 3D thực tế tận nơi","desc":"Kỹ sư đo đạc hướng nắng, góc nghiêng mái và kết cấu chịu lực miễn phí."},{"step":3,"title":"Thiết kế kỹ thuật & Dự toán chi phí","desc":"Xuất bản vẽ 3D mô phỏng vị trí lắp đặt và bảng tính toán thời gian thu hồi vốn."},{"step":4,"title":"Thi công & Nghiệm thu an toàn","desc":"Đội ngũ kỹ sư BM SOLAR thi công nhanh trong 2 - 3 ngày, đấu nối thẩm mỹ."},{"step":5,"title":"Hỗ trợ thủ tục EVN & Bảo trì trọn đời","desc":"Bàn giao tài khoản giám sát từ xa và bảo dưỡng định kỳ hàng năm."}]`,
+			RecommendedProductSlugs: `["inverter-hybrid-deye-5kw-1-pha","tam-pin-canadian-solar-550w-hiku6","pin-lithium-luu-tru-dyness-5-12kwh"]`,
+			RelatedProjectSlugs:     `["biet-thu-bien-quy-nhon-15kwp-hybrid"]`,
+			Status:                  "published",
+			SortOrder:               1,
+		},
+		{
+			ID:                      id.New(),
+			Slug:                    "doanh-nghiep",
+			Title:                   "Điện Mặt Trời Doanh Nghiệp & Thương Mại",
+			Subtitle:                "Giải pháp tối ưu chi phí vận hành cho văn phòng, khách sạn, cửa hàng",
+			AudienceCode:            "business",
+			CapacityRange:           "20kWp - 100kWp",
+			HeroImage:               "/images/designs/giai-phap-card-2.png",
+			MonthlySavings:          "Từ 15 - 80 triệu đồng/tháng",
+			RoiYears:                "3 - 4 năm",
+			WarrantyPeriod:          "25 năm hiệu suất tấm pin",
+			Overview:                "Giải pháp tối ưu hóa chi phí vận hành cho văn phòng, khách sạn, trung tâm thương mại và resort từ 20kWp đến 100kWp, cắt giảm mạnh biểu giá điện giờ cao điểm (lên tới 4.900đ/kWh), tăng tính cạnh tranh và nâng tầm thương hiệu xanh thân thiện môi trường.",
+			BenefitsJSON:            `[{"title":"Triệt Tiêu Giá Điện Giờ Cao Điểm","desc":"Giờ cao điểm thương mại có giá điện cao nhất trùng với khung giờ bức xạ mặt trời cực đại từ 9h30 - 11h30."},{"title":"Hoàn Vốn Nhanh Chóng 3 - 4 Năm","desc":"Tỷ suất sinh lời hấp dẫn (IRR > 25%), sau khi thu hồi vốn doanh nghiệp được dùng điện miễn phí suốt hơn 20 năm tiếp theo."},{"title":"Nâng Cao Uy Tín Thương Hiệu Xanh","desc":"Khách sạn, resort và tòa nhà đạt tiêu chuẩn công trình xanh, thu hút khách hàng và đối tác quốc tế."},{"title":"Vận Hành Bền Bỉ, Không Gián Đoạn Kinh Doanh","desc":"BM SOLAR ứng dụng giải pháp thi công cuốn chiếu an toàn, đấu nối vào hệ thống điện hiện hữu không gây gián đoạn."}]`,
+			EquipmentJSON:           `[{"name":"Tấm pin quang điện Canadian Solar / LONGi Tier 1 công suất 550W - 660W","brand":"Tier 1 Bloomberg","warranty":"25 năm"},{"name":"Biến tần hòa lưới Inverter 3 Pha công suất 25kW - 100kW","brand":"Huawei / Solis / Deye","warranty":"5 - 10 năm"},{"name":"Tủ điện phân phối đóng cắt ACB/MCCB, chống sét lan truyền Type 1+2","brand":"Schneider / ABB","warranty":"2 năm"},{"name":"Hệ thống giám sát điện năng từ xa Smart Logger & Cloud Portal","brand":"BM Smart Energy","warranty":"Trọn đời"},{"name":"Hệ thống giàn khung nhôm chuyên dụng và phụ kiện kẹp mái tôn/ngói","brand":"BM Heavy Solar Rack","warranty":"15 năm"}]`,
+			ProcessJSON:             `[{"step":1,"title":"Thu thập biểu đồ phụ tải điện","desc":"Phân tích hóa đơn điện 12 tháng gần nhất và đo đạc biểu đồ tiêu thụ điện thời gian thực."},{"step":2,"title":"Khảo sát kết cấu mái & Hệ thống điện","desc":"Kiểm tra khả năng chịu lực của khung kèo xà gồ, trạm biến áp và không gian lắp đặt."},{"step":3,"title":"Lập hồ sơ tài chính & Báo cáo khả thi","desc":"Cung cấp bảng phân tích dòng tiền NPV, IRR, thời gian hoàn vốn và các phương án tài chính."},{"step":4,"title":"Thi công đạt chuẩn EPC quốc tế","desc":"Đội ngũ kỹ sư cơ điện giàu kinh nghiệm lắp đặt đúng kỹ thuật, an toàn PCCC tuyệt đối."},{"step":5,"title":"Đấu nối hòa lưới & Bàn giao SCADA","desc":"Hỗ trợ thủ tục thỏa thuận đấu nối với Điện lực (EVN) và chuyển giao phần mềm giám sát."}]`,
+			RecommendedProductSlugs: `["tam-pin-canadian-solar-550w-hiku6","inverter-hybrid-deye-5kw-1-pha"]`,
+			RelatedProjectSlugs:     `["khach-san-seagull-quy-nhon-80kwp"]`,
+			Status:                  "published",
+			SortOrder:               2,
+		},
+		{
+			ID:                      id.New(),
+			Slug:                    "nha-xuong-cong-nghiep",
+			Title:                   "Điện Mặt Trời Nhà Xưởng & Công Nghiệp",
+			Subtitle:                "Quy mô công suất lớn 100kWp - 1MWp+, đạt chứng chỉ xanh ESG",
+			AudienceCode:            "industrial",
+			CapacityRange:           "100kWp - 1MWp+",
+			HeroImage:               "/images/designs/giai-phap-card-3.png",
+			MonthlySavings:          "Từ 80 - 500+ triệu đồng/tháng",
+			RoiYears:                "3.5 - 4.5 năm",
+			WarrantyPeriod:          "25 năm hiệu suất tấm pin",
+			Overview:                "Giải pháp điện mặt trời mái nhà quy mô công nghiệp từ 100kWp đến trên 1MWp dành cho nhà máy sản xuất, khu công nghiệp và kho logistics. Tích hợp giải pháp chống phát ngược Zero-Export thông minh, làm mát mái nhà xưởng 3-5°C và giúp doanh nghiệp đạt chứng chỉ năng lượng tái tạo I-REC, CBAM, đáp ứng tiêu chuẩn xanh ESG để xuất khẩu sang Mỹ và EU.",
+			BenefitsJSON:            `[{"title":"Tiết Kiệm Hàng Trăm Triệu Mỗi Tháng","desc":"Sản xuất hàng triệu kWh điện sạch mỗi năm tại chỗ, giảm tải trực tiếp cho trạm biến áp nội bộ."},{"title":"Đạt Chứng Chỉ Xanh Xuất Khẩu ESG & I-REC","desc":"Cung cấp dữ liệu báo cáo phát thải carbon minh bạch, giúp sản phẩm dễ dàng thông quan vào các thị trường EU, Mỹ."},{"title":"Làm Mát Mái Xưởng Giảm 3 - 5°C","desc":"Lớp pin che phủ mái tôn rộng hàng ngàn m2 giúp giảm bức xạ nhiệt trực tiếp, tạo môi trường mát mẻ."},{"title":"Bảo Vệ & Kéo Dài Tuổi Thọ Tôn Mái","desc":"Tấm pin che chắn mưa đá, axit và nắng gắt, giảm hiện tượng oxy hóa rỉ sét của tôn mái."}]`,
+			EquipmentJSON:           `[{"name":"Tấm pin công suất cao 600W - 670W N-type TOPCon","brand":"Canadian Solar / Jinko / LONGi","warranty":"25 năm hiệu suất 87.4%"},{"name":"Biến tần công nghiệp String Inverter 100kW - 125kW hiệu suất 99%","brand":"Huawei SUN2000 / Solis 110K","warranty":"5 - 10 năm"},{"name":"Bộ điều khiển phát ngược Zero-Export Controller","brand":"SmartLogger & CT chuyên dụng","warranty":"5 năm"},{"name":"Hệ thống PCCC & Chống sét lan truyền điện từ hiện đại","brand":"Schneider / Phoenix Contact","warranty":"2 năm"},{"name":"Khung ray kẹp Seamlock / Kliplok nhôm đúc không khoan thủng tôn","brand":"BM Industrial Clamp 6005-T6","warranty":"15 năm"}]`,
+			ProcessJSON:             `[{"step":1,"title":"Thẩm định pháp lý & Kết cấu xưởng","desc":"Kiểm tra hồ sơ thiết kế chịu lực của nhà xưởng và điều kiện PCCC hiện hữu."},{"step":2,"title":"Thiết kế 3D & Mô phỏng PVSyst","desc":"Tính toán chính xác góc nghiêng, khoảng cách bóng đổ và dự báo sản lượng theo dữ liệu NASA."},{"step":3,"title":"Hồ sơ thỏa thuận đấu nối & PCCC","desc":"Đại diện chủ đầu tư thực hiện trọn gói hồ sơ thỏa thuận kỹ thuật đấu nối với Công ty Điện lực."},{"step":4,"title":"Thi công theo tiêu chuẩn an toàn HSE","desc":"Trang bị bảo hộ an toàn leo cao, giàn giáo đạt chuẩn, thi công không làm gián đoạn sản xuất."},{"step":5,"title":"Đo kiểm chất lượng & Bàn giao nghiệm thu","desc":"Dùng camera nhiệt kiểm tra Hotspot, đo điện trở cách điện Megger và nghiệm thu đóng điện."}]`,
+			RecommendedProductSlugs: `["tam-pin-canadian-solar-550w-hiku6","inverter-hybrid-deye-5kw-1-pha"]`,
+			RelatedProjectSlugs:     `["nha-may-may-phu-tai-binh-dinh-500kwp"]`,
+			Status:                  "published",
+			SortOrder:               3,
+		},
+	}
+
+	for _, sol := range solutions {
+		var existing models.Solution
+		if db.Where("slug = ?", sol.Slug).First(&existing).Error != nil {
+			db.Create(&sol)
+		} else {
+			db.Model(&existing).Updates(map[string]any{
+				"title":           sol.Title,
+				"subtitle":        sol.Subtitle,
+				"capacity_range":  sol.CapacityRange,
+				"monthly_savings": sol.MonthlySavings,
+				"roi_years":       sol.RoiYears,
+				"warranty_period": sol.WarrantyPeriod,
+				"overview":        sol.Overview,
+				"benefits_json":   sol.BenefitsJSON,
+				"equipment_json":  sol.EquipmentJSON,
+				"process_json":    sol.ProcessJSON,
+				"status":          sol.Status,
+				"sort_order":      sol.SortOrder,
+			})
+		}
 	}
 
 	return nil

@@ -25,8 +25,30 @@ import {
   ChevronRight,
   Database,
   Lock,
+  Plus,
+  Trash2,
+  Edit3,
+  Save,
+  X,
+  Eye,
+  EyeOff,
+  Compass,
+  PhoneCall,
+  MessageCircle,
+  Check,
 } from 'lucide-react';
-import { fallbackProducts, fallbackProjects, fallbackArticles } from '@/lib/api/mockData';
+import { fallbackProducts, fallbackProjects, fallbackArticles, fallbackSolutions } from '@/lib/api/mockData';
+import { DetailedSolution, ContactChannelItem } from '@/types/bmsolar-api';
+import {
+  fetchAdminSolutions,
+  createAdminSolution,
+  updateAdminSolution,
+  deleteAdminSolution,
+  fetchAdminContactChannels,
+  createAdminContactChannel,
+  updateAdminContactChannel,
+  deleteAdminContactChannel,
+} from '@/lib/api/client';
 
 interface LeadItem {
   id: string;
@@ -110,6 +132,69 @@ const INITIAL_MOCK_LEADS: LeadItem[] = [
   },
 ];
 
+const INITIAL_FALLBACK_CHANNELS: ContactChannelItem[] = [
+  {
+    id: 'ch_phone',
+    type: 'phone',
+    label: 'Hotline 24/7',
+    target: '1900 036 089',
+    icon: 'phone',
+    accentColor: '#10B981',
+    sortOrder: 1,
+    enabled: true,
+  },
+  {
+    id: 'ch_zalo',
+    type: 'zalo',
+    label: 'Zalo Báo Giá',
+    target: '0905123456',
+    icon: 'zalo',
+    accentColor: '#0068FF',
+    sortOrder: 2,
+    enabled: true,
+  },
+  {
+    id: 'ch_facebook',
+    type: 'facebook',
+    label: 'Facebook Fanpage',
+    target: 'https://facebook.com/bmsolar.vietnam',
+    icon: 'facebook',
+    accentColor: '#1877F2',
+    sortOrder: 3,
+    enabled: true,
+  },
+  {
+    id: 'ch_youtube',
+    type: 'youtube',
+    label: 'YouTube BM SOLAR',
+    target: 'https://youtube.com/@bmsolar',
+    icon: 'youtube',
+    accentColor: '#FF0000',
+    sortOrder: 4,
+    enabled: true,
+  },
+  {
+    id: 'ch_messenger',
+    type: 'messenger',
+    label: 'Chat Messenger',
+    target: 'https://m.me/bmsolar.vietnam',
+    icon: 'messenger',
+    accentColor: '#00B2FF',
+    sortOrder: 5,
+    enabled: true,
+  },
+  {
+    id: 'ch_email',
+    type: 'email',
+    label: 'Email B2B & Dự Án',
+    target: 'info@bmsolar.vn',
+    icon: 'email',
+    accentColor: '#F59E0B',
+    sortOrder: 6,
+    enabled: true,
+  },
+];
+
 export default function AdminPage() {
   const [token, setToken] = useState<string | null>(null);
   const [email, setEmail] = useState('admin@bmsolar.vn');
@@ -117,12 +202,30 @@ export default function AdminPage() {
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState('');
 
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'leads' | 'products' | 'projects' | 'articles' | 'settings'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'leads' | 'solutions' | 'social' | 'products' | 'projects' | 'articles' | 'settings'>('dashboard');
   const [leads, setLeads] = useState<LeadItem[]>(INITIAL_MOCK_LEADS);
   const [searchLead, setSearchLead] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [branchFilter, setBranchFilter] = useState('all');
   const [revalidateStatus, setRevalidateStatus] = useState<string | null>(null);
+
+  // Solutions state
+  const [solutions, setSolutions] = useState<DetailedSolution[]>(fallbackSolutions);
+  const [loadingSolutions, setLoadingSolutions] = useState(false);
+  const [editingSolution, setEditingSolution] = useState<DetailedSolution | null>(null);
+  const [isNewSolution, setIsNewSolution] = useState(false);
+  const [solutionBenefitsText, setSolutionBenefitsText] = useState('');
+  const [solutionEquipmentText, setSolutionEquipmentText] = useState('');
+  const [solutionProcessText, setSolutionProcessText] = useState('');
+  const [savingSolution, setSavingSolution] = useState(false);
+
+  // Contact Channels state (Floating Dock)
+  const [channels, setChannels] = useState<ContactChannelItem[]>(INITIAL_FALLBACK_CHANNELS);
+  const [channelFilter, setChannelFilter] = useState<'global' | 'all'>('global');
+  const [loadingChannels, setLoadingChannels] = useState(false);
+  const [editingChannel, setEditingChannel] = useState<ContactChannelItem | null>(null);
+  const [isNewChannel, setIsNewChannel] = useState(false);
+  const [savingChannel, setSavingChannel] = useState(false);
 
   // Check stored auth on client load
   useEffect(() => {
@@ -130,8 +233,61 @@ export default function AdminPage() {
     if (savedToken) {
       setToken(savedToken);
       fetchLiveLeads(savedToken);
+      fetchSolutionsList(savedToken);
+      fetchChannelsList(savedToken);
+    } else {
+      fetchSolutionsList();
+      fetchChannelsList();
     }
   }, []);
+
+  const fetchSolutionsList = async (jwtToken?: string) => {
+    setLoadingSolutions(true);
+    try {
+      const res = await fetchAdminSolutions(jwtToken || token || undefined);
+      if (res && Array.isArray(res.data) && res.data.length > 0) {
+        setSolutions(res.data);
+      }
+    } catch {
+      try {
+        const pub = await fetch('http://localhost:3001/api/v1/public/solutions');
+        if (pub.ok) {
+          const json = await pub.json();
+          if (json && Array.isArray(json.data) && json.data.length > 0) {
+            setSolutions(json.data);
+          }
+        }
+      } catch {
+        // Fallback retained
+      }
+    } finally {
+      setLoadingSolutions(false);
+    }
+  };
+
+  const fetchChannelsList = async (jwtToken?: string) => {
+    setLoadingChannels(true);
+    try {
+      const res = await fetchAdminContactChannels(jwtToken || token || undefined);
+      if (res && Array.isArray(res.data) && res.data.length > 0) {
+        setChannels(res.data);
+      }
+    } catch {
+      try {
+        const pub = await fetch('http://localhost:3001/api/v1/public/contact-channels');
+        if (pub.ok) {
+          const json = await pub.json();
+          if (json && Array.isArray(json.data) && json.data.length > 0) {
+            setChannels(json.data);
+          }
+        }
+      } catch {
+        // Fallback retained
+      }
+    } finally {
+      setLoadingChannels(false);
+    }
+  };
 
   const fetchLiveLeads = async (jwtToken: string) => {
     try {
@@ -183,6 +339,8 @@ export default function AdminPage() {
         localStorage.setItem('bmsolar_admin_token', accessToken);
         setToken(accessToken);
         fetchLiveLeads(accessToken);
+        fetchSolutionsList(accessToken);
+        fetchChannelsList(accessToken);
       } else {
         // Fallback for offline or local dev check
         if (email === 'admin@bmsolar.vn' && password === 'Admin@123456') {
@@ -203,6 +361,207 @@ export default function AdminPage() {
       }
     } finally {
       setLoginLoading(false);
+    }
+  };
+
+  // ---------------- Handlers for Contact Channels ----------------
+  const handleToggleChannel = async (channel: ContactChannelItem) => {
+    const updated = { ...channel, enabled: !channel.enabled };
+    setChannels((prev) => prev.map((c) => (c.id === channel.id ? updated : c)));
+    try {
+      await updateAdminContactChannel(channel.id, updated, token || undefined);
+      setRevalidateStatus(`✅ Đã ${updated.enabled ? 'bật hiển thị' : 'tạm ẩn'} nút ${updated.label}`);
+    } catch (err) {
+      console.warn('Update channel offline fallback:', err);
+      setRevalidateStatus(`✅ Đã ${updated.enabled ? 'bật hiển thị' : 'tạm ẩn'} nút ${updated.label} (cục bộ)`);
+    }
+  };
+
+  const handleDeleteChannel = async (id: string) => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa nút liên hệ này khỏi thanh dock?')) return;
+    setChannels((prev) => prev.filter((c) => c.id !== id));
+    try {
+      await deleteAdminContactChannel(id, token || undefined);
+      setRevalidateStatus('✅ Đã xóa kênh liên hệ thành công');
+    } catch (err) {
+      console.warn('Delete channel fallback:', err);
+    }
+  };
+
+  const handleOpenAddChannel = () => {
+    setIsNewChannel(true);
+    setEditingChannel({
+      id: `ch_${Date.now()}`,
+      type: 'phone',
+      label: 'Nút Liên Hệ Mới',
+      target: '',
+      icon: 'phone',
+      accentColor: '#10B981',
+      sortOrder: channels.length + 1,
+      enabled: true,
+    });
+  };
+
+  const handleOpenEditChannel = (ch: ContactChannelItem) => {
+    setIsNewChannel(false);
+    setEditingChannel({ ...ch });
+  };
+
+  const handleSaveChannel = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingChannel) return;
+    setSavingChannel(true);
+    try {
+      if (isNewChannel) {
+        await createAdminContactChannel(editingChannel, token || undefined);
+        setChannels((prev) => [...prev, editingChannel]);
+        setRevalidateStatus('✅ Đã tạo kênh liên hệ mới thành công');
+      } else {
+        await updateAdminContactChannel(editingChannel.id, editingChannel, token || undefined);
+        setChannels((prev) => prev.map((c) => (c.id === editingChannel.id ? editingChannel : c)));
+        setRevalidateStatus('✅ Đã cập nhật kênh liên hệ thành công');
+      }
+      setEditingChannel(null);
+    } catch (err) {
+      console.warn('Save channel fallback:', err);
+      if (isNewChannel) {
+        setChannels((prev) => [...prev, editingChannel]);
+      } else {
+        setChannels((prev) => prev.map((c) => (c.id === editingChannel.id ? editingChannel : c)));
+      }
+      setEditingChannel(null);
+      setRevalidateStatus('✅ Đã lưu kênh liên hệ!');
+    } finally {
+      setSavingChannel(false);
+    }
+  };
+
+  // ---------------- Handlers for Solutions ----------------
+  const handleOpenAddSolution = () => {
+    setIsNewSolution(true);
+    setSolutionBenefitsText('');
+    setSolutionEquipmentText('');
+    setSolutionProcessText('');
+    setEditingSolution({
+      id: `sol_${Date.now()}`,
+      slug: 'giai-phap-moi',
+      title: 'Giải Pháp Năng Lượng Mới',
+      subtitle: 'Hệ thống điện mặt trời cao cấp đáp ứng nhu cầu sử dụng thực tế',
+      audienceCode: 'household',
+      capacityRange: '5kW - 20kW',
+      heroImage: '/images/designs/giai-phap-card-1.png',
+      monthlySavings: 'Từ 3 - 10 triệu/tháng',
+      roiYears: '4 năm',
+      warrantyPeriod: '25 năm hiệu suất',
+      overview: 'Mô tả chi tiết giải pháp kỹ thuật và hiệu quả kinh tế...',
+      benefits: [],
+      equipmentList: [],
+      processSteps: [],
+      recommendedProductSlugs: [],
+      relatedProjectSlugs: [],
+      status: 'published',
+      sortOrder: solutions.length + 1,
+    });
+  };
+
+  const handleOpenEditSolution = (sol: DetailedSolution) => {
+    setIsNewSolution(false);
+    setEditingSolution({ ...sol });
+    setSolutionBenefitsText(
+      (sol.benefits || []).map((b) => `${b.title} | ${b.desc}`).join('\n')
+    );
+    setSolutionEquipmentText(
+      (sol.equipmentList || []).map((e) => `${e.name} | ${e.brand} | ${e.warranty}`).join('\n')
+    );
+    setSolutionProcessText(
+      (sol.processSteps || []).map((p) => `${p.step} | ${p.title} | ${p.desc}`).join('\n')
+    );
+  };
+
+  const handleDeleteSolution = async (id?: string) => {
+    if (!id) return;
+    if (!window.confirm('Bạn có chắc chắn muốn xóa giải pháp này? Thao tác này sẽ ẩn URL khỏi website.')) return;
+    setSolutions((prev) => prev.filter((s) => s.id !== id && s.slug !== id));
+    try {
+      await deleteAdminSolution(id, token || undefined);
+      setRevalidateStatus('✅ Đã xóa giải pháp thành công');
+    } catch (err) {
+      console.warn('Delete solution fallback:', err);
+    }
+  };
+
+  const handleSaveSolution = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingSolution) return;
+    setSavingSolution(true);
+
+    const parsedBenefits = solutionBenefitsText
+      .split('\n')
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line) => {
+        const parts = line.split('|');
+        return {
+          title: (parts[0] || '').trim(),
+          desc: (parts[1] || '').trim(),
+        };
+      });
+
+    const parsedEquipment = solutionEquipmentText
+      .split('\n')
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line) => {
+        const parts = line.split('|');
+        return {
+          name: (parts[0] || '').trim(),
+          brand: (parts[1] || '').trim(),
+          warranty: (parts[2] || '').trim(),
+        };
+      });
+
+    const parsedProcess = solutionProcessText
+      .split('\n')
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line, idx) => {
+        const parts = line.split('|');
+        const stepNum = parseInt((parts[0] || '').trim(), 10) || idx + 1;
+        return {
+          step: stepNum,
+          title: (parts[1] || parts[0] || '').trim(),
+          desc: (parts[2] || parts[1] || '').trim(),
+        };
+      });
+
+    const payload: DetailedSolution = {
+      ...editingSolution,
+      benefits: parsedBenefits.length > 0 ? parsedBenefits : editingSolution.benefits,
+      equipmentList: parsedEquipment.length > 0 ? parsedEquipment : editingSolution.equipmentList,
+      processSteps: parsedProcess.length > 0 ? parsedProcess : editingSolution.processSteps,
+    };
+
+    try {
+      if (isNewSolution) {
+        await createAdminSolution(payload, token || undefined);
+        setSolutions((prev) => [...prev, payload]);
+        setRevalidateStatus(`✅ Đã tạo mới giải pháp "${payload.title}" thành công!`);
+      } else {
+        const targetId = payload.id || payload.slug;
+        await updateAdminSolution(targetId, payload, token || undefined);
+        setSolutions((prev) => prev.map((s) => (s.id === payload.id || s.slug === payload.slug ? payload : s)));
+        setRevalidateStatus(`✅ Đã cập nhật giải pháp "${payload.title}" thành công!`);
+      }
+      setEditingSolution(null);
+    } catch (err) {
+      console.warn('Save solution fallback:', err);
+      setSolutions((prev) =>
+        isNewSolution ? [...prev, payload] : prev.map((s) => (s.slug === payload.slug ? payload : s))
+      );
+      setEditingSolution(null);
+      setRevalidateStatus(`✅ Đã lưu giải pháp "${payload.title}"!`);
+    } finally {
+      setSavingSolution(false);
     }
   };
 
@@ -445,6 +804,40 @@ export default function AdminPage() {
             </button>
 
             <button
+              onClick={() => setActiveTab('solutions')}
+              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
+                activeTab === 'solutions'
+                  ? 'bg-brand-primary text-white shadow-sm'
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <Compass className="w-4 h-4" />
+                <span>Quản Lý Giải Pháp</span>
+              </div>
+              <span className="px-2 py-0.5 rounded-full text-[10px] bg-slate-200 text-slate-800">
+                {solutions.length}
+              </span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('social')}
+              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
+                activeTab === 'social'
+                  ? 'bg-brand-primary text-white shadow-sm'
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <PhoneCall className="w-4 h-4" />
+                <span>Dãy Social & Hotline</span>
+              </div>
+              <span className="px-2 py-0.5 rounded-full text-[10px] bg-emerald-100 text-emerald-800 font-bold">
+                {channels.filter((c) => c.enabled).length}/{channels.length}
+              </span>
+            </button>
+
+            <button
               onClick={() => setActiveTab('products')}
               className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left ${
                 activeTab === 'products'
@@ -561,6 +954,53 @@ export default function AdminPage() {
                   </div>
                   <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
                     <Layers className="w-6 h-6" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Navigation to Solutions & Social Dock */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div
+                  onClick={() => setActiveTab('solutions')}
+                  className="p-5 rounded-2xl bg-gradient-to-br from-white to-orange-50/50 border border-orange-100 hover:border-orange-300 transition-all cursor-pointer shadow-xs group"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-orange-100 text-brand-primary flex items-center justify-center">
+                        <Compass className="w-5 h-5 text-accent-orange" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-bold text-slate-900 group-hover:text-accent-orange transition-colors">
+                          Quản Lý 3 Giải Pháp Chuyên Biệt
+                        </h4>
+                        <p className="text-xs text-slate-500 mt-0.5">
+                          Hộ gia đình • Doanh nghiệp • Nhà xưởng (Trang & URL độc lập)
+                        </p>
+                      </div>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 transition-all" />
+                  </div>
+                </div>
+
+                <div
+                  onClick={() => setActiveTab('social')}
+                  className="p-5 rounded-2xl bg-gradient-to-br from-white to-blue-50/50 border border-blue-100 hover:border-blue-300 transition-all cursor-pointer shadow-xs group"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-blue-100 text-brand-primary flex items-center justify-center">
+                        <PhoneCall className="w-5 h-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
+                          Dãy Phím Tắt Social Dock Nổi ({channels.filter((c) => c.enabled).length}/{channels.length} đang bật)
+                        </h4>
+                        <p className="text-xs text-slate-500 mt-0.5">
+                          Hotline 24/7 • Zalo • Facebook • YouTube • Messenger
+                        </p>
+                      </div>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 transition-all" />
                   </div>
                 </div>
               </div>
@@ -784,6 +1224,404 @@ export default function AdminPage() {
             </div>
           )}
 
+          {/* TAB: QUẢN LÝ GIẢI PHÁP (DEDICATED PAGES & CRUD) */}
+          {activeTab === 'solutions' && (
+            <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-xl font-extrabold text-slate-900">Quản Lý Danh Mục Giải Pháp Năng Lượng</h2>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Mỗi giải pháp là một giao diện và đường dẫn chuyên biệt độc lập (/giai-phap/ho-gia-dinh, /giai-phap/doanh-nghiep, /giai-phap/nha-xuong-cong-nghiep). Admin toàn quyền CRUD thời gian thực.
+                  </p>
+                </div>
+                <button
+                  onClick={handleOpenAddSolution}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FF6B19] hover:bg-[#ea5d0f] text-white text-xs font-bold shadow-md shadow-orange-500/20 transition-all shrink-0"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Thêm Giải Pháp Mới</span>
+                </button>
+              </div>
+
+              {loadingSolutions ? (
+                <div className="py-12 text-center text-slate-400 flex items-center justify-center gap-2">
+                  <RefreshCw className="w-5 h-5 animate-spin text-brand-primary" />
+                  <span>Đang tải danh sách giải pháp từ Golang Backend...</span>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {solutions.map((sol) => (
+                    <div
+                      key={sol.id || sol.slug}
+                      className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col"
+                    >
+                      {/* Hero Image & Badges */}
+                      <div className="h-44 relative bg-slate-900">
+                        <Image
+                          src={sol.heroImage || '/images/designs/giai-phap-card-1.png'}
+                          alt={sol.title}
+                          fill
+                          className="object-cover opacity-90"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-black/20" />
+                        
+                        <div className="absolute top-3 left-3 flex items-center gap-1.5">
+                          <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wide text-white shadow-sm ${
+                            sol.audienceCode === 'household'
+                              ? 'bg-amber-500'
+                              : sol.audienceCode === 'business'
+                              ? 'bg-blue-600'
+                              : 'bg-emerald-600'
+                          }`}>
+                            {sol.audienceCode === 'household'
+                              ? 'Hộ gia đình'
+                              : sol.audienceCode === 'business'
+                              ? 'Doanh nghiệp'
+                              : 'Nhà xưởng'}
+                          </span>
+                        </div>
+
+                        <div className="absolute top-3 right-3">
+                          <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold shadow-sm ${
+                            sol.status === 'published'
+                              ? 'bg-emerald-500 text-white'
+                              : 'bg-slate-500 text-white'
+                          }`}>
+                            {sol.status === 'published' ? 'Đã xuất bản' : 'Bản nháp'}
+                          </span>
+                        </div>
+
+                        <div className="absolute bottom-3 left-3 right-3">
+                          <code className="text-[11px] font-mono text-emerald-300 bg-slate-900/80 backdrop-blur px-2 py-0.5 rounded border border-white/10 inline-block">
+                            /giai-phap/{sol.slug}
+                          </code>
+                        </div>
+                      </div>
+
+                      {/* Content */}
+                      <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                        <div className="space-y-2">
+                          <h3 className="text-base font-extrabold text-slate-900 line-clamp-1">
+                            {sol.title}
+                          </h3>
+                          <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
+                            {sol.subtitle}
+                          </p>
+                        </div>
+
+                        {/* Specs Grid */}
+                        <div className="grid grid-cols-2 gap-2 p-3 rounded-xl bg-slate-50 border border-slate-100 text-[11px]">
+                          <div>
+                            <span className="text-slate-400 block">Quy mô công suất:</span>
+                            <span className="font-bold text-slate-800">{sol.capacityRange || 'Chưa cập nhật'}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 block">Tiết kiệm/tháng:</span>
+                            <span className="font-bold text-emerald-600">{sol.monthlySavings || 'Theo khảo sát'}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 block">Hoàn vốn:</span>
+                            <span className="font-bold text-slate-800">{sol.roiYears || '4 - 5 năm'}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 block">Bảo hành:</span>
+                            <span className="font-bold text-slate-800">{sol.warrantyPeriod || '25 năm'}</span>
+                          </div>
+                        </div>
+
+                        {/* Data Counts */}
+                        <div className="flex items-center justify-between text-[11px] text-slate-400 border-t border-slate-100 pt-3">
+                          <span>{sol.benefits?.length || 0} Lợi ích</span>
+                          <span>•</span>
+                          <span>{sol.equipmentList?.length || 0} Thiết bị</span>
+                          <span>•</span>
+                          <span>{sol.processSteps?.length || 0} Bước quy trình</span>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="pt-2 flex items-center justify-between gap-2 border-t border-slate-100">
+                          <Link
+                            href={`/giai-phap/${sol.slug}`}
+                            target="_blank"
+                            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                            <span>Xem trang thực tế</span>
+                          </Link>
+
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => handleOpenEditSolution(sol)}
+                              className="p-2 rounded-lg text-brand-primary hover:bg-brand-light transition-colors"
+                              title="Chỉnh sửa nội dung giải pháp"
+                            >
+                              <Edit3 className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteSolution(sol.id || sol.slug)}
+                              className="p-2 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
+                              title="Xóa giải pháp"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB: QUẢN LÝ DÃY SOCIAL & HOTLINE NỔI */}
+          {activeTab === 'social' && (
+            <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-xl font-extrabold text-slate-900">Quản Lý Dãy Phím Tắt Social & Hotline Nổi</h2>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Thanh công cụ liên hệ nổi cố định mép phải website (Floating Social Dock). Admin toàn quyền cấu hình nút gọi, Zalo, Facebook, YouTube, bật/tắt tức thì.
+                  </p>
+                </div>
+                <button
+                  onClick={handleOpenAddChannel}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition-all shrink-0"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Thêm Nút Liên Hệ Mới</span>
+                </button>
+              </div>
+
+              {/* 2-Column Layout: Table + Live Preview */}
+              <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
+                {/* Left 2 Cols: Channels Table */}
+                <div className="xl:col-span-2 space-y-4">
+                  <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+                    <div className="p-4 border-b border-slate-100 flex items-center justify-between gap-3 bg-slate-50/50">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-slate-700">Phạm vi:</span>
+                        <select
+                          value={channelFilter}
+                          onChange={(e) => setChannelFilter(e.target.value as 'global' | 'all')}
+                          className="px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-brand-primary"
+                        >
+                          <option value="global">Thanh Dock Nổi Toàn Website (Global)</option>
+                          <option value="all">Tất cả kênh (bao gồm chi nhánh)</option>
+                        </select>
+                      </div>
+
+                      <div className="text-xs font-semibold text-slate-500">
+                        Đang bật:{' '}
+                        <span className="text-emerald-600 font-extrabold">
+                          {channels.filter((c) => c.enabled).length}
+                        </span>{' '}
+                        / {channels.length} nút
+                      </div>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left border-collapse text-xs">
+                        <thead>
+                          <tr className="border-b border-slate-200 bg-slate-50 text-slate-500 font-bold uppercase tracking-wider text-[11px]">
+                            <th className="py-3 px-4 w-12 text-center">STT</th>
+                            <th className="py-3 px-4">Tên Nút & Biểu Tượng</th>
+                            <th className="py-3 px-4">Đích Đến (Target URL / Số ĐT)</th>
+                            <th className="py-3 px-4 text-center">Trạng Thái Hiển Thị</th>
+                            <th className="py-3 px-4 text-right">Thao Tác</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 text-slate-700 font-medium">
+                          {(channelFilter === 'global'
+                            ? channels.filter((c) => !(c as any).branchId)
+                            : channels
+                          ).map((ch, idx) => (
+                            <tr key={ch.id} className="hover:bg-slate-50/70 transition-colors">
+                              <td className="py-3 px-4 text-center font-bold text-slate-400">
+                                {ch.sortOrder || idx + 1}
+                              </td>
+
+                              <td className="py-3 px-4">
+                                <div className="flex items-center gap-3">
+                                  <div
+                                    className="w-8 h-8 rounded-full flex items-center justify-center text-white shrink-0 shadow-xs"
+                                    style={{ backgroundColor: ch.accentColor || '#10B981' }}
+                                  >
+                                    {ch.type === 'phone' ? (
+                                      <Phone className="w-4 h-4" />
+                                    ) : ch.type === 'zalo' ? (
+                                      <span className="font-extrabold text-[10px]">Z</span>
+                                    ) : ch.type === 'facebook' ? (
+                                      <span className="font-extrabold text-xs">f</span>
+                                    ) : ch.type === 'youtube' ? (
+                                      <span className="text-xs">▶</span>
+                                    ) : ch.type === 'messenger' ? (
+                                      <MessageCircle className="w-4 h-4" />
+                                    ) : ch.type === 'email' ? (
+                                      <Mail className="w-4 h-4" />
+                                    ) : (
+                                      <Zap className="w-4 h-4" />
+                                    )}
+                                  </div>
+                                  <div>
+                                    <p className="font-bold text-slate-900">{ch.label}</p>
+                                    <span className="text-[10px] uppercase font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
+                                      {ch.type}
+                                    </span>
+                                  </div>
+                                </div>
+                              </td>
+
+                              <td className="py-3 px-4">
+                                <code className="text-slate-800 bg-slate-100 px-2 py-1 rounded text-[11px] font-mono break-all">
+                                  {ch.target}
+                                </code>
+                              </td>
+
+                              <td className="py-3 px-4 text-center">
+                                <button
+                                  type="button"
+                                  onClick={() => handleToggleChannel(ch)}
+                                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all shadow-xs ${
+                                    ch.enabled
+                                      ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border border-emerald-300'
+                                      : 'bg-slate-100 text-slate-500 hover:bg-slate-200 border border-slate-300'
+                                  }`}
+                                  title={ch.enabled ? 'Click để tạm ẩn nút này' : 'Click để hiển thị nút này'}
+                                >
+                                  {ch.enabled ? (
+                                    <>
+                                      <Eye className="w-3.5 h-3.5 text-emerald-600" />
+                                      <span>Hiển thị</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <EyeOff className="w-3.5 h-3.5 text-slate-400" />
+                                      <span>Đang ẩn</span>
+                                    </>
+                                  )}
+                                </button>
+                              </td>
+
+                              <td className="py-3 px-4 text-right">
+                                <div className="inline-flex items-center gap-1">
+                                  <button
+                                    onClick={() => handleOpenEditChannel(ch)}
+                                    className="p-1.5 rounded-lg text-brand-primary hover:bg-brand-light transition-colors"
+                                    title="Chỉnh sửa nút"
+                                  >
+                                    <Edit3 className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteChannel(ch.id)}
+                                    className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
+                                    title="Xóa nút này"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right 1 Col: Live Dock Preview */}
+                <div className="space-y-4">
+                  <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-5">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                        <Zap className="w-4 h-4 text-amber-500" />
+                        <span>Mô Phỏng Trực Tiếp (Live Dock)</span>
+                      </h3>
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    </div>
+                    <p className="text-xs text-slate-500 mb-4">
+                      Giao diện mép phải website hiển thị ngay theo các nút đang được bật dưới đây:
+                    </p>
+
+                    {/* Miniature Browser Viewport */}
+                    <div className="relative w-full h-[460px] bg-slate-900 rounded-xl overflow-hidden border border-slate-800 shadow-inner flex flex-col">
+                      {/* Browser mock address bar */}
+                      <div className="h-8 bg-slate-950 px-3 flex items-center gap-2 border-b border-slate-800 shrink-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="w-2.5 h-2.5 rounded-full bg-red-500/80 inline-block" />
+                          <span className="w-2.5 h-2.5 rounded-full bg-amber-500/80 inline-block" />
+                          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80 inline-block" />
+                        </div>
+                        <div className="flex-1 bg-slate-900 rounded px-2 py-0.5 text-[10px] text-slate-400 font-mono text-center">
+                          bmsolar.vn
+                        </div>
+                      </div>
+
+                      {/* Mock Website Page Content */}
+                      <div className="flex-1 p-4 relative overflow-hidden flex flex-col justify-between">
+                        {/* Mock header */}
+                        <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                          <span className="text-xs font-bold text-white tracking-wider">BM SOLAR</span>
+                          <span className="text-[10px] text-slate-400">Trang chủ • Giải pháp</span>
+                        </div>
+
+                        {/* Mock Hero content */}
+                        <div className="space-y-2 py-8">
+                          <span className="text-[10px] font-bold text-orange-400 uppercase tracking-wider block">
+                            Giải pháp năng lượng xanh
+                          </span>
+                          <div className="text-sm font-extrabold text-white leading-tight">
+                            Điện Mặt Trời Cho Mọi Nhu Cầu
+                          </div>
+                          <div className="w-24 h-6 rounded-full bg-[#FF6B19] text-[10px] font-bold text-white flex items-center justify-center">
+                            Nhận tư vấn
+                          </div>
+                        </div>
+
+                        {/* Floating Dock Mockup at Right Bottom */}
+                        <div className="absolute right-3 bottom-6 flex flex-col items-end gap-2.5 z-20">
+                          {channels
+                            .filter((c) => c.enabled)
+                            .sort((a, b) => a.sortOrder - b.sortOrder)
+                            .map((ch) => (
+                              <div key={ch.id} className="relative group flex items-center">
+                                {/* Tooltip label */}
+                                <span className="absolute right-12 px-2 py-1 rounded bg-slate-900/90 text-[10px] font-semibold text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity shadow-md pointer-events-none">
+                                  {ch.label}
+                                </span>
+
+                                <div
+                                  className="w-9 h-9 rounded-full flex items-center justify-center text-white shadow-lg cursor-pointer transform hover:scale-110 active:scale-95 transition-all"
+                                  style={{ backgroundColor: ch.accentColor || '#10B981' }}
+                                  title={ch.label}
+                                >
+                                  {ch.type === 'phone' ? (
+                                    <Phone className="w-4 h-4" />
+                                  ) : ch.type === 'zalo' ? (
+                                    <span className="font-extrabold text-[11px]">Z</span>
+                                  ) : ch.type === 'facebook' ? (
+                                    <span className="font-extrabold text-xs">f</span>
+                                  ) : ch.type === 'youtube' ? (
+                                    <span className="text-xs">▶</span>
+                                  ) : ch.type === 'messenger' ? (
+                                    <MessageCircle className="w-4 h-4" />
+                                  ) : ch.type === 'email' ? (
+                                    <Mail className="w-4 h-4" />
+                                  ) : (
+                                    <Zap className="w-4 h-4" />
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* TAB 3: PRODUCTS CATALOG */}
           {activeTab === 'products' && (
             <div className="space-y-4">
@@ -949,6 +1787,446 @@ export default function AdminPage() {
           )}
         </main>
       </div>
+
+      {/* MODAL: CHỈNH SỬA / THÊM MỚI GIẢI PHÁP */}
+      {editingSolution && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-4xl max-h-[90vh] bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col">
+            <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+              <div className="flex items-center gap-2">
+                <Compass className="w-5 h-5 text-accent-orange" />
+                <h3 className="text-base font-extrabold text-slate-900">
+                  {isNewSolution ? 'Thêm Giải Pháp Mới' : `Chỉnh Sửa Giải Pháp: ${editingSolution.title}`}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingSolution(null)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveSolution} className="p-6 space-y-4 overflow-y-auto flex-1 text-xs">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Tiêu Đề Giải Pháp *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editingSolution.title}
+                    onChange={(e) => setEditingSolution({ ...editingSolution, title: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                    placeholder="Điện Mặt Trời Hộ Gia Đình & Biệt Thự"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Đường Dẫn URL Slug * (duy nhất)
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editingSolution.slug}
+                    onChange={(e) => setEditingSolution({ ...editingSolution, slug: e.target.value.toLowerCase().replace(/\s+/g, '-') })}
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                    placeholder="ho-gia-dinh"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Phụ Đề / Tóm Tắt Ngắn Gọn *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editingSolution.subtitle}
+                    onChange={(e) => setEditingSolution({ ...editingSolution, subtitle: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                    placeholder="Hệ thống điện mặt trời áp mái 3kW - 10kW tiết kiệm hóa đơn tiền điện"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Nhóm Khách Hàng (Audience)
+                  </label>
+                  <select
+                    value={editingSolution.audienceCode}
+                    onChange={(e) => setEditingSolution({ ...editingSolution, audienceCode: e.target.value as 'household' | 'business' | 'industrial' })}
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                  >
+                    <option value="household">Hộ gia đình & Biệt thự (household)</option>
+                    <option value="business">Doanh nghiệp & Thương mại (business)</option>
+                    <option value="industrial">Nhà xưởng & Công nghiệp (industrial)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Dải Quy Mô Công Suất
+                  </label>
+                  <input
+                    type="text"
+                    value={editingSolution.capacityRange || ''}
+                    onChange={(e) => setEditingSolution({ ...editingSolution, capacityRange: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                    placeholder="3kW - 10kW"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Mức Tiết Kiệm Hàng Tháng Dự Kiến
+                  </label>
+                  <input
+                    type="text"
+                    value={editingSolution.monthlySavings || ''}
+                    onChange={(e) => setEditingSolution({ ...editingSolution, monthlySavings: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                    placeholder="Từ 1.5 - 6 triệu đồng/tháng"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Thời Gian Hoàn Vốn (ROI)
+                  </label>
+                  <input
+                    type="text"
+                    value={editingSolution.roiYears || ''}
+                    onChange={(e) => setEditingSolution({ ...editingSolution, roiYears: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                    placeholder="4 - 5 năm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Thời Gian Bảo Hành
+                  </label>
+                  <input
+                    type="text"
+                    value={editingSolution.warrantyPeriod || ''}
+                    onChange={(e) => setEditingSolution({ ...editingSolution, warrantyPeriod: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                    placeholder="25 năm hiệu suất tấm pin"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Đường Dẫn Ảnh Đại Diện (Hero Image)
+                  </label>
+                  <input
+                    type="text"
+                    value={editingSolution.heroImage || ''}
+                    onChange={(e) => setEditingSolution({ ...editingSolution, heroImage: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                    placeholder="/images/designs/giai-phap-card-1.png"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Trạng Thái Xuất Bản
+                  </label>
+                  <select
+                    value={editingSolution.status || 'published'}
+                    onChange={(e) => setEditingSolution({ ...editingSolution, status: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                  >
+                    <option value="published">Xuất bản (Hiển thị công khai)</option>
+                    <option value="draft">Bản nháp (Ẩn tạm thời)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Thứ Tự Sắp Xếp
+                  </label>
+                  <input
+                    type="number"
+                    value={editingSolution.sortOrder || 1}
+                    onChange={(e) => setEditingSolution({ ...editingSolution, sortOrder: parseInt(e.target.value, 10) || 1 })}
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Mô Tả Tổng Quan Giải Pháp (Overview)
+                </label>
+                <textarea
+                  rows={3}
+                  value={editingSolution.overview || ''}
+                  onChange={(e) => setEditingSolution({ ...editingSolution, overview: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                  placeholder="Hệ thống điện mặt trời áp mái dành cho gia đình được BM SOLAR thiết kế..."
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="font-bold text-slate-700 uppercase tracking-wider">
+                    Lợi Ích Cốt Lõi (Benefits)
+                  </label>
+                  <span className="text-slate-400 text-[11px]">Định dạng: Tiêu đề | Mô tả (mỗi dòng một mục)</span>
+                </div>
+                <textarea
+                  rows={4}
+                  value={solutionBenefitsText}
+                  onChange={(e) => setSolutionBenefitsText(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                  placeholder="Giảm 80 - 90% Hóa Đơn Điện | Sử dụng điện mặt trời tự sản tự tiêu cho điều hòa, tủ lạnh...&#10;Cấp Điện Liên Tục Khi Mất Lưới | Hệ thống chuyển mạch UPS siêu tốc < 10ms..."
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="font-bold text-slate-700 uppercase tracking-wider">
+                    Danh Mục Thiết Bị Chính (Equipment)
+                  </label>
+                  <span className="text-slate-400 text-[11px]">Định dạng: Tên thiết bị | Thương hiệu | Thời gian bảo hành</span>
+                </div>
+                <textarea
+                  rows={4}
+                  value={solutionEquipmentText}
+                  onChange={(e) => setSolutionEquipmentText(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                  placeholder="Tấm pin Canadian Solar 550W | Canadian Solar | 25 năm&#10;Biến tần Inverter Deye Hybrid | Deye Energy | 5 năm"
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="font-bold text-slate-700 uppercase tracking-wider">
+                    Quy Trình Triển Khai (Process Steps)
+                  </label>
+                  <span className="text-slate-400 text-[11px]">Định dạng: Số thứ tự | Tên bước | Mô tả chi tiết</span>
+                </div>
+                <textarea
+                  rows={4}
+                  value={solutionProcessText}
+                  onChange={(e) => setSolutionProcessText(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                  placeholder="1 | Tiếp nhận & Tư vấn sơ bộ | Đánh giá hóa đơn tiền điện hiện tại&#10;2 | Khảo sát 3D thực tế | Kỹ sư đo đạc hướng nắng miễn phí"
+                />
+              </div>
+
+              <div className="pt-4 border-t border-slate-200 flex items-center justify-end gap-3 sticky bottom-0 bg-white">
+                <button
+                  type="button"
+                  onClick={() => setEditingSolution(null)}
+                  className="px-4 py-2.5 rounded-lg border border-slate-300 text-slate-700 font-bold hover:bg-slate-50 transition-colors"
+                >
+                  Hủy Bỏ
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingSolution}
+                  className="px-6 py-2.5 rounded-lg bg-[#FF6B19] hover:bg-[#ea5d0f] text-white font-bold shadow-md shadow-orange-500/20 transition-all flex items-center gap-2"
+                >
+                  {savingSolution ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      <span>Đang lưu...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      <span>Lưu Thay Đổi Giải Pháp</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: CHỈNH SỬA / THÊM MỚI NÚT DÃY SOCIAL NỔI */}
+      {editingChannel && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col">
+            <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+              <div className="flex items-center gap-2">
+                <PhoneCall className="w-5 h-5 text-emerald-600" />
+                <h3 className="text-base font-extrabold text-slate-900">
+                  {isNewChannel ? 'Thêm Nút Liên Hệ Mới' : `Chỉnh Sửa Nút: ${editingChannel.label}`}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingChannel(null)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveChannel} className="p-6 space-y-4 text-xs">
+              <div>
+                <label className="block font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Loại Kênh Liên Hệ *
+                </label>
+                <select
+                  value={editingChannel.type}
+                  onChange={(e) => {
+                    const type = e.target.value;
+                    let defaultColor = '#10B981';
+                    if (type === 'phone') defaultColor = '#10B981';
+                    else if (type === 'zalo') defaultColor = '#0068FF';
+                    else if (type === 'facebook') defaultColor = '#1877F2';
+                    else if (type === 'youtube') defaultColor = '#FF0000';
+                    else if (type === 'messenger') defaultColor = '#00B2FF';
+                    else if (type === 'email') defaultColor = '#F59E0B';
+                    setEditingChannel({ ...editingChannel, type, accentColor: defaultColor });
+                  }}
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                >
+                  <option value="phone">Điện thoại / Hotline (tel:)</option>
+                  <option value="zalo">Zalo Chat / Zalo OA</option>
+                  <option value="facebook">Facebook Fanpage</option>
+                  <option value="youtube">Kênh YouTube</option>
+                  <option value="messenger">Messenger Chat</option>
+                  <option value="email">Email liên hệ</option>
+                  <option value="custom">Tùy biến (Custom Link)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Tên Nhãn Hiển Thị (Tooltip Label) *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editingChannel.label}
+                  onChange={(e) => setEditingChannel({ ...editingChannel, label: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                  placeholder="Hotline 24/7 hoặc Chat Zalo"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Giá Trị Đích (Số Hotline hoặc URL Web) *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editingChannel.target}
+                  onChange={(e) => setEditingChannel({ ...editingChannel, target: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                  placeholder="1900 036 089 hoặc https://zalo.me/..."
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Màu Sắc Nhận Diện (Hex Color)
+                </label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="color"
+                    value={editingChannel.accentColor || '#10B981'}
+                    onChange={(e) => setEditingChannel({ ...editingChannel, accentColor: e.target.value })}
+                    className="w-10 h-10 rounded cursor-pointer border border-slate-300 p-0.5"
+                  />
+                  <input
+                    type="text"
+                    value={editingChannel.accentColor || '#10B981'}
+                    onChange={(e) => setEditingChannel({ ...editingChannel, accentColor: e.target.value })}
+                    className="flex-1 px-3.5 py-2 rounded-lg border border-slate-300 text-xs font-mono uppercase"
+                  />
+                </div>
+                {/* Presets */}
+                <div className="flex items-center gap-1.5 mt-2">
+                  <span className="text-[11px] text-slate-400">Gợi ý màu:</span>
+                  {[
+                    { c: '#10B981', name: 'Xanh Lá' },
+                    { c: '#0068FF', name: 'Zalo' },
+                    { c: '#1877F2', name: 'Facebook' },
+                    { c: '#FF0000', name: 'YouTube' },
+                    { c: '#00B2FF', name: 'Messenger' },
+                    { c: '#FF6B19', name: 'Cam' },
+                  ].map((p) => (
+                    <button
+                      key={p.c}
+                      type="button"
+                      onClick={() => setEditingChannel({ ...editingChannel, accentColor: p.c })}
+                      className="w-5 h-5 rounded-full border border-white shadow-xs hover:scale-110 transition-transform"
+                      style={{ backgroundColor: p.c }}
+                      title={p.name}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Thứ Tự Sắp Xếp
+                </label>
+                <input
+                  type="number"
+                  value={editingChannel.sortOrder || 1}
+                  onChange={(e) => setEditingChannel({ ...editingChannel, sortOrder: parseInt(e.target.value, 10) || 1 })}
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                />
+              </div>
+
+              <div className="pt-2">
+                <label className="flex items-center gap-2 cursor-pointer p-3 rounded-lg bg-slate-50 border border-slate-200">
+                  <input
+                    type="checkbox"
+                    checked={editingChannel.enabled}
+                    onChange={(e) => setEditingChannel({ ...editingChannel, enabled: e.target.checked })}
+                    className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500 border-slate-300"
+                  />
+                  <div>
+                    <span className="font-bold text-slate-800 block text-xs">Hiển thị nút này trên website</span>
+                    <span className="text-slate-500 text-[11px]">Bỏ chọn nếu muốn tạm ẩn mà không cần xóa</span>
+                  </div>
+                </label>
+              </div>
+
+              <div className="pt-4 border-t border-slate-200 flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setEditingChannel(null)}
+                  className="px-4 py-2.5 rounded-lg border border-slate-300 text-slate-700 font-bold hover:bg-slate-50 transition-colors"
+                >
+                  Hủy Bỏ
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingChannel}
+                  className="px-6 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-md shadow-emerald-600/20 transition-all flex items-center gap-2"
+                >
+                  {savingChannel ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      <span>Đang lưu...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      <span>Lưu Nút Liên Hệ</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

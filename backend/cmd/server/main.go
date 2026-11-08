@@ -15,6 +15,7 @@ import (
 	"bmsolar-backend/internal/common/middleware"
 	"bmsolar-backend/internal/config"
 	"bmsolar-backend/internal/database"
+	"bmsolar-backend/internal/database/seed"
 	"bmsolar-backend/internal/modules/catalog"
 	"bmsolar-backend/internal/modules/cms"
 	"bmsolar-backend/internal/modules/editorial"
@@ -88,6 +89,11 @@ func main() {
 	if err != nil {
 		logger.Error("failed_to_initialize_database", slog.Any("error", err))
 		os.Exit(1)
+	}
+
+	// Baseline seeding for solutions, contact channels & navigation submenus
+	if err := seed.SeedAll(db, cfg); err != nil {
+		logger.Warn("seed_baseline_warning", slog.Any("error", err))
 	}
 
 	// 4. Redis Client & Caching Store

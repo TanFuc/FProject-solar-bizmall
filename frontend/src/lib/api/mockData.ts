@@ -668,24 +668,8 @@ export const fallbackHomePage: CMSPageData = {
   ],
 };
 
-// ==================== SOLUTION DETAILS ====================
-export interface DetailedSolution {
-  slug: string;
-  title: string;
-  subtitle: string;
-  audienceCode: 'household' | 'business' | 'industrial';
-  capacityRange: string;
-  heroImage: string;
-  monthlySavings: string;
-  roiYears: string;
-  warrantyPeriod: string;
-  overview: string;
-  benefits: Array<{ title: string; desc: string }>;
-  equipmentList: Array<{ name: string; brand: string; warranty: string }>;
-  processSteps: Array<{ step: number; title: string; desc: string }>;
-  recommendedProductSlugs: string[];
-  relatedProjectSlugs: string[];
-}
+import { DetailedSolution } from '@/types/bmsolar-api';
+export type { DetailedSolution };
 
 export const fallbackSolutions: DetailedSolution[] = [
   {

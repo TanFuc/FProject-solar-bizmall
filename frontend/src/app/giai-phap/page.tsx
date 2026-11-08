@@ -70,8 +70,8 @@ export default async function SolutionsPage() {
           {/* 3 Wide Cards matching BM_SOLAR_giai-phap_desktop.png */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6 pt-2">
             {/* Card 1: Hộ gia đình */}
-            <a
-              href="#household"
+            <Link
+              href="/giai-phap/ho-gia-dinh"
               className="group relative rounded-2xl overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 block bg-slate-900 aspect-[408/270]"
             >
               <Image
@@ -82,11 +82,11 @@ export default async function SolutionsPage() {
                 className="object-cover group-hover:scale-105 transition-transform duration-500"
               />
               <span className="sr-only">{copy.content013}</span>
-            </a>
+            </Link>
 
             {/* Card 2: Doanh nghiệp */}
-            <a
-              href="#business"
+            <Link
+              href="/giai-phap/doanh-nghiep"
               className="group relative rounded-2xl overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 block bg-slate-900 aspect-[408/270]"
             >
               <Image
@@ -97,11 +97,11 @@ export default async function SolutionsPage() {
                 className="object-cover group-hover:scale-105 transition-transform duration-500"
               />
               <span className="sr-only">{copy.content014}</span>
-            </a>
+            </Link>
 
             {/* Card 3: Nhà xưởng */}
-            <a
-              href="#industrial"
+            <Link
+              href="/giai-phap/nha-xuong-cong-nghiep"
               className="group relative rounded-2xl overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 block bg-slate-900 aspect-[408/270]"
             >
               <Image
@@ -112,7 +112,7 @@ export default async function SolutionsPage() {
                 className="object-cover group-hover:scale-105 transition-transform duration-500"
               />
               <span className="sr-only">{copy.content015}</span>
-            </a>
+            </Link>
           </div>
         </div>
       </section>
@@ -171,7 +171,7 @@ export default async function SolutionsPage() {
               </ul>
               <div className="pt-2">
                 <Link
-                  href="/lien-he"
+                  href="/giai-phap/ho-gia-dinh"
                   className="px-6 py-2.5 rounded-full bg-[#FF6B19] hover:bg-[#ea5d0f] text-white text-xs font-bold inline-flex items-center gap-2 transition-all shadow-md shadow-[#FF6B19]/20"
                 >
                   <span>{copy.content026}</span>
@@ -209,7 +209,7 @@ export default async function SolutionsPage() {
               </ul>
               <div className="pt-2">
                 <Link
-                  href="/lien-he"
+                  href="/giai-phap/doanh-nghiep"
                   className="px-6 py-2.5 rounded-full bg-[#FF6B19] hover:bg-[#ea5d0f] text-white text-xs font-bold inline-flex items-center gap-2 transition-all shadow-md shadow-[#FF6B19]/20"
                 >
                   <span>{copy.content034}</span>
@@ -265,7 +265,7 @@ export default async function SolutionsPage() {
               </ul>
               <div className="pt-2">
                 <Link
-                  href="/lien-he"
+                  href="/giai-phap/nha-xuong-cong-nghiep"
                   className="px-6 py-2.5 rounded-full bg-[#FF6B19] hover:bg-[#ea5d0f] text-white text-xs font-bold inline-flex items-center gap-2 transition-all shadow-md shadow-[#FF6B19]/20"
                 >
                   <span>{copy.content042}</span>

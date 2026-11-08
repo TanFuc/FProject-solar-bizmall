@@ -5,8 +5,8 @@ import {
   ProjectItem,
   BranchItem,
   SiteShellData,
+  DetailedSolution,
 } from '@/types/bmsolar-api';
-import { DetailedSolution } from '@/lib/api/mockData';
 
 function getSiteUrl(): string {
   if (process.env.NEXT_PUBLIC_SITE_URL) {

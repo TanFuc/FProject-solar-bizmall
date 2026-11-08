@@ -34,12 +34,17 @@ export interface BrandConfig {
 
 export interface ContactChannelItem {
   id: string;
-  type: 'phone' | 'zalo' | 'email' | 'facebook' | 'youtube';
+  type: 'phone' | 'zalo' | 'email' | 'facebook' | 'youtube' | 'messenger' | 'hotline' | string;
   label: string;
   target: string;
   actionUrl?: string; // e.g. "tel:+84932456789" or "https://zalo.me/..."
   formatted?: string;
   sortOrder: number;
+  enabled?: boolean;
+  icon?: string;
+  accentColor?: string;
+  branchId?: string | null;
+  metadata?: Record<string, unknown>;
 }
 
 export interface BranchItem {
@@ -56,6 +61,7 @@ export interface BranchItem {
 export interface NavigationItemTree {
   id: string;
   label: string;
+  description?: string;
   targetKind: 'internalRoute' | 'externalUrl' | 'contactChannel' | 'leadForm';
   targetRef?: string;
   externalUrl?: string;
@@ -105,8 +111,31 @@ export interface SiteShellData {
   globalChannels: {
     channels: ContactChannelItem[];
   };
+  socialDock?: ContactChannelItem[];
   mobileActions: MobileActionBarItem[];
   theme: ThemeTokens;
+}
+
+// ==================== SOLUTIONS ====================
+export interface DetailedSolution {
+  id?: string;
+  slug: string;
+  title: string;
+  subtitle: string;
+  audienceCode: 'household' | 'business' | 'industrial';
+  capacityRange: string;
+  heroImage: string;
+  monthlySavings: string;
+  roiYears: string;
+  warrantyPeriod: string;
+  overview: string;
+  benefits: Array<{ title: string; desc: string }>;
+  equipmentList: Array<{ name: string; brand: string; warranty: string }>;
+  processSteps: Array<{ step: number; title: string; desc: string }>;
+  recommendedProductSlugs?: string[];
+  relatedProjectSlugs?: string[];
+  status?: string;
+  sortOrder?: number;
 }
 
 // ==================== CATALOG & PRODUCTS ====================

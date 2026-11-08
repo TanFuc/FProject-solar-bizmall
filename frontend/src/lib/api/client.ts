@@ -12,6 +12,8 @@ import {
   CreateLeadPayload,
   ProductCategoryItem,
   AudienceItem,
+  DetailedSolution,
+  ContactChannelItem,
 } from '@/types/bmsolar-api';
 
 export interface BrandSummary {
@@ -338,14 +340,151 @@ export async function submitLeadRequest(payload: CreateLeadPayload): Promise<{ s
   }
 }
 
-export async function getSolutions() {
+export async function getSolutions(): Promise<DetailedSolution[]> {
+  try {
+    const res = await publicFetch(`${API_BASE_URL}/public/solutions`, {
+      next: { revalidate: process.env.NODE_ENV === 'development' ? 0 : 60 },
+    });
+    if (res.ok) {
+      const json = await res.json();
+      if (json && json.data && Array.isArray(json.data) && json.data.length > 0) {
+        return json.data;
+      }
+    }
+  } catch (err) {
+    console.warn('Backend solutions unavailable, using fallback:', err);
+  }
   const { fallbackSolutions } = await import('./mockData');
   return fallbackSolutions;
 }
 
-export async function getSolutionBySlug(slug: string) {
+export async function getSolutionBySlug(slug: string): Promise<DetailedSolution | null> {
+  try {
+    const res = await publicFetch(`${API_BASE_URL}/public/solutions/${encodeURIComponent(slug)}`, {
+      next: { revalidate: process.env.NODE_ENV === 'development' ? 0 : 60 },
+    });
+    if (res.ok) {
+      const json = await res.json();
+      if (json && json.data) {
+        return json.data;
+      }
+    }
+  } catch (err) {
+    console.warn('Backend solution by slug unavailable, using fallback:', err);
+  }
   const { fallbackSolutions } = await import('./mockData');
-  return fallbackSolutions.find((s) => s.slug === slug) || null;
+  return (
+    fallbackSolutions.find(
+      (s) =>
+        s.slug === slug ||
+        (slug === 'household' && s.slug === 'ho-gia-dinh') ||
+        (slug === 'business' && s.slug === 'doanh-nghiep') ||
+        (slug === 'industrial' && s.slug === 'nha-xuong-cong-nghiep')
+    ) || null
+  );
+}
+
+export async function getPublicContactChannels(): Promise<ContactChannelItem[]> {
+  try {
+    const res = await publicFetch(`${API_BASE_URL}/public/contact-channels`, {
+      next: { revalidate: process.env.NODE_ENV === 'development' ? 0 : 30 },
+    });
+    if (res.ok) {
+      const json = await res.json();
+      if (json && json.data && Array.isArray(json.data)) {
+        return json.data;
+      }
+    }
+  } catch (err) {
+    console.warn('Backend contact channels unavailable:', err);
+  }
+  return [];
+}
+
+export async function fetchAdminContactChannels(token?: string) {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE_URL}/admin/contact-channels`, { headers, cache: 'no-store' });
+  if (!res.ok) throw new Error(`Failed to fetch contact channels: ${res.status}`);
+  return res.json();
+}
+
+export async function createAdminContactChannel(data: any, token?: string) {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE_URL}/admin/contact-channels`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error(`Failed to create contact channel: ${res.status}`);
+  return res.json();
+}
+
+export async function updateAdminContactChannel(id: string, data: any, token?: string) {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE_URL}/admin/contact-channels/${id}`, {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error(`Failed to update contact channel: ${res.status}`);
+  return res.json();
+}
+
+export async function deleteAdminContactChannel(id: string, token?: string) {
+  const headers: Record<string, string> = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE_URL}/admin/contact-channels/${id}`, {
+    method: 'DELETE',
+    headers,
+  });
+  if (!res.ok) throw new Error(`Failed to delete contact channel: ${res.status}`);
+  return res.json();
+}
+
+export async function fetchAdminSolutions(token?: string) {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE_URL}/admin/solutions`, { headers, cache: 'no-store' });
+  if (!res.ok) throw new Error(`Failed to fetch solutions: ${res.status}`);
+  return res.json();
+}
+
+export async function createAdminSolution(data: any, token?: string) {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE_URL}/admin/solutions`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error(`Failed to create solution: ${res.status}`);
+  return res.json();
+}
+
+export async function updateAdminSolution(id: string, data: any, token?: string) {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE_URL}/admin/solutions/${id}`, {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error(`Failed to update solution: ${res.status}`);
+  return res.json();
+}
+
+export async function deleteAdminSolution(id: string, token?: string) {
+  const headers: Record<string, string> = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const res = await fetch(`${API_BASE_URL}/admin/solutions/${id}`, {
+    method: 'DELETE',
+    headers,
+  });
+  if (!res.ok) throw new Error(`Failed to delete solution: ${res.status}`);
+  return res.json();
 }
 
 export async function getFaqs() {

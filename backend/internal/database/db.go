@@ -124,6 +124,7 @@ func AutoMigrate(db *gorm.DB) error {
 		&models.UserRole{},
 		&models.AuditLog{},
 		&models.OutboxEvent{},
+		&models.Solution{},
 	)
 }
 

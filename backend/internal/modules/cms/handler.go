@@ -38,6 +38,9 @@ func (h *Handler) RegisterRoutes(r chi.Router) {
 	r.Get("/public/branches", h.GetPublicBranches)
 	r.Get("/public/branches/{id}/channels", h.GetBranchChannels)
 	r.Get("/public/pages/{pageKey}", h.GetPublicPage)
+	r.Get("/public/solutions", h.ListPublicSolutions)
+	r.Get("/public/solutions/{slug}", h.GetPublicSolutionBySlug)
+	r.Get("/public/contact-channels", h.GetPublicContactChannels)
 
 	// Admin protected routes
 	r.Group(func(pr chi.Router) {
@@ -60,6 +63,13 @@ func (h *Handler) RegisterRoutes(r chi.Router) {
 		pr.Post("/admin/contact-channels", h.CreateContactChannel)
 		pr.Put("/admin/contact-channels/{id}", h.UpdateContactChannel)
 		pr.Delete("/admin/contact-channels/{id}", h.DeleteContactChannel)
+
+		// Solutions
+		pr.Get("/admin/solutions", h.ListAdminSolutions)
+		pr.Post("/admin/solutions", h.CreateSolution)
+		pr.Get("/admin/solutions/{id}", h.GetAdminSolution)
+		pr.Put("/admin/solutions/{id}", h.UpdateSolution)
+		pr.Delete("/admin/solutions/{id}", h.DeleteSolution)
 
 		// Navigation
 		pr.Get("/admin/navigation", h.GetNavigation)
@@ -230,6 +240,7 @@ func (h *Handler) GetPublicSiteShell(w http.ResponseWriter, r *http.Request) {
 			Fonts:   theme.FontsToken,
 			Radius:  theme.RadiusToken,
 		},
+		SocialDock: globalChanDTOs,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -1052,6 +1063,7 @@ func buildNavigationTree(items []models.NavigationItem, parentID *string) []Navi
 			nodes = append(nodes, NavigationNodeDTO{
 				ID:          it.ID,
 				Label:       it.Label,
+				Description: it.Description,
 				TargetKind:  it.TargetKind,
 				TargetRef:   it.TargetRef,
 				ExternalURL: it.ExternalURL,

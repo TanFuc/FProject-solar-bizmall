@@ -10,6 +10,7 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
 import { ConsultationModal } from '@/components/layout/ConsultationModal';
+import { FloatingSocialDock } from '@/components/layout/FloatingSocialDock';
 import { StartupLoader } from '@/components/ui/StartupLoader';
 import { constructMetadata } from '@/lib/seo/metadata';
 import {
@@ -127,6 +128,9 @@ export default async function RootLayout({
               footerData={siteShell.footer}
               branches={siteShell.utilityBar.branches}
             />
+
+            {/* Floating Social Actions Dock on the Right Side (Admin CRUD manageable) */}
+            <FloatingSocialDock initialChannels={siteShell.socialDock || siteShell.footer.socialLinks} />
 
             {/* Mobile Persistent 5-Action Bottom Bar */}
             <MobileBottomNav navigation={siteShell.navigation} />
