@@ -132,3 +132,4 @@ const fs = require('fs');
   await browser.close();
   console.log('Successfully generated transparent header and footer logos!');
 })();
+

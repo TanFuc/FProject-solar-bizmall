@@ -63,11 +63,13 @@ export function constructMetadata({
     keywords,
     icons: {
       icon: [
-        { url: '/images/logo.png', sizes: 'any', type: 'image/png' },
+        { url: '/favicon.ico', sizes: 'any' },
+        { url: '/images/favicon-32.png', sizes: '32x32', type: 'image/png' },
+        { url: '/images/favicon-64.png', sizes: '64x64', type: 'image/png' },
       ],
-      shortcut: '/images/logo.png',
+      shortcut: '/favicon.ico',
       apple: [
-        { url: '/images/logo.png', sizes: '180x180', type: 'image/png' },
+        { url: '/images/favicon-180.png', sizes: '180x180', type: 'image/png' },
       ],
     },
     alternates: {

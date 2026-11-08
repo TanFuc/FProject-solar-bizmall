@@ -65,8 +65,9 @@ export default async function RootLayout({
       <html lang="vi" className={inter.variable}>
         <head>
           <meta name="robots" content="noindex, nofollow" />
-          <link rel="icon" href="/images/logo.png" type="image/png" sizes="any" />
-          <link rel="apple-touch-icon" href="/images/logo.png" />
+          <link rel="icon" href="/favicon.ico" sizes="any" />
+          <link rel="icon" href="/images/favicon-32.png" type="image/png" sizes="32x32" />
+          <link rel="apple-touch-icon" href="/images/favicon-180.png" sizes="180x180" />
           <JsonLd data={[orgSchema, webSiteSchema]} />
         </head>
         <body id="top" className="solar-site min-h-screen flex flex-col bg-surface-white text-ink antialiased">
@@ -106,8 +107,9 @@ export default async function RootLayout({
   return (
     <html lang="vi" className={inter.variable}>
       <head>
-        <link rel="icon" href="/images/logo.png" type="image/png" sizes="any" />
-        <link rel="apple-touch-icon" href="/images/logo.png" />
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/images/favicon-32.png" type="image/png" sizes="32x32" />
+        <link rel="apple-touch-icon" href="/images/favicon-180.png" sizes="180x180" />
         <JsonLd data={[orgSchema, webSiteSchema]} />
       </head>
       <body id="top" className="solar-site min-h-screen flex flex-col bg-surface-white text-ink antialiased">

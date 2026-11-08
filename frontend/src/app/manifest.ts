@@ -12,13 +12,18 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: '#0D4EA6',
     icons: [
       {
-        src: '/images/logo.png',
-        sizes: 'any',
+        src: '/images/favicon-512.png',
+        sizes: '512x512',
         type: 'image/png',
       },
       {
-        src: '/images/BM_SOLAR_loading_icon.png',
-        sizes: '512x512',
+        src: '/images/favicon-180.png',
+        sizes: '180x180',
+        type: 'image/png',
+      },
+      {
+        src: '/images/favicon-32.png',
+        sizes: '32x32',
         type: 'image/png',
       },
     ],

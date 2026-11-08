@@ -207,8 +207,8 @@ assert.strictEqual(titleObj.template, '%s | BM SOLAR Việt Nam');
 // Favicon / App Icon check
 const icons = standardMeta.icons as { icon: Array<{ url: string }>; apple: Array<{ url: string }> };
 assert.ok(icons && Array.isArray(icons.icon), 'Icons must contain icon array');
-assert.strictEqual(icons.icon[0]?.url, '/images/logo.png', 'Must point to genuine brand logo');
-assert.strictEqual(icons.apple[0]?.url, '/images/logo.png', 'Must point to genuine apple-touch-icon');
+assert.strictEqual(icons.icon[0]?.url, '/favicon.ico', 'Must point to genuine brand favicon');
+assert.strictEqual(icons.apple[0]?.url, '/images/favicon-180.png', 'Must point to genuine apple-touch-icon');
 
 // Language alternates check
 const alternates = standardMeta.alternates as { canonical: string; languages: Record<string, string> };

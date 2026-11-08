@@ -75,3 +75,4 @@ const pages = [
   await browser.close();
   console.log('Finished capturing all pages!');
 })();
+
