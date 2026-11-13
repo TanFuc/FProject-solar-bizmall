@@ -3,14 +3,13 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { ContentTrack } from '@/components/ui/ContentTrack';
 import { ArrowRight } from 'lucide-react';
 import { ProductCard } from '@/types/bmsolar-api';
 import { useTranslation } from '@/lib/i18n';
-import { useDraggableScroll } from '@/lib/hooks/useDraggableScroll';
 
 export function FeaturedProducts({ products, title }: { products?: ProductCard[]; title?: string }) {
   const { t } = useTranslation();
-  const { dragProps, isDragging } = useDraggableScroll<HTMLDivElement>();
 
   if (!products?.length) return null;
 
@@ -27,12 +26,7 @@ export function FeaturedProducts({ products, title }: { products?: ProductCard[]
         </Link>
       </div>
 
-      <div
-        {...dragProps}
-        className={`solar-product-grid ${
-          isDragging ? 'cursor-grabbing select-none' : 'cursor-grab'
-        }`}
-      >
+      <ContentTrack className="solar-product-grid" label={title || t('products.title')}>
         {products.map((product) => (
           <Link
             key={product.id}
@@ -46,7 +40,7 @@ export function FeaturedProducts({ products, title }: { products?: ProductCard[]
                   src={product.coverMediaUrl}
                   alt={product.name}
                   fill
-                  sizes="(max-width:640px) 150px, (max-width:1024px) 180px, 20vw"
+                  sizes="(max-width:767px) 184px, (max-width:1023px) 33vw, 25vw"
                   className="object-contain transition-transform duration-200 group-hover:scale-105"
                   draggable={false}
                 />
@@ -57,7 +51,7 @@ export function FeaturedProducts({ products, title }: { products?: ProductCard[]
             <ArrowRight size={17} aria-hidden="true" className="transition-transform group-hover:translate-x-0.5" />
           </Link>
         ))}
-      </div>
+      </ContentTrack>
     </section>
   );
 }

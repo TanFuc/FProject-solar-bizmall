@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { Phone, Mail, MapPin, ArrowUpRight } from 'lucide-react';
 import { SiteShellData } from '@/types/bmsolar-api';
 import { useBranch } from '@/lib/contacts/branchContext';
+import { useTranslation } from '@/lib/i18n';
 import { channelUrl } from '@/lib/contacts/channelUrl';
 
 interface Props {
@@ -15,6 +16,7 @@ interface Props {
 }
 
 export function Footer({ brand, footerData, branches }: Props) {
+  const { t } = useTranslation();
   const { activeHotline, activeZalo, activeBranch } = useBranch();
   const email = activeBranch?.channels.find((channel) => channel.type === 'email');
   const logoUrl = '/images/logo-footer.png';
@@ -23,7 +25,7 @@ export function Footer({ brand, footerData, branches }: Props) {
   return (
     <footer className="text-white border-t border-white/10 bg-[#082b52]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 pb-12 border-b border-white/10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 pb-8">
           {/* Brand Info & Genuine Logo */}
           <div className="space-y-4">
             <Link
@@ -84,7 +86,7 @@ export function Footer({ brand, footerData, branches }: Props) {
 
           {/* Branches & Direct Contact */}
           <div className="space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-white">Liên hệ</h4>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-white">{t("nav.contact")}</h4>
             {activeHotline && (
               <a
                 href={channelUrl(activeHotline)}
@@ -132,13 +134,6 @@ export function Footer({ brand, footerData, branches }: Props) {
           </div>
         </div>
 
-        {/* Legal & Sitemap */}
-        <div className="pt-5 pb-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-white/60 text-xs">
-          <p>{footerData.legalText}</p>
-          <Link href="/sitemap.xml" className="hover:text-white transition-colors">
-            Sitemap
-          </Link>
-        </div>
       </div>
     </footer>
   );

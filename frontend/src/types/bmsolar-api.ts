@@ -1,3 +1,19 @@
+export type ContentLocale = "vi-VN" | "en-US";
+
+export interface EnglishContent {
+  benefitsText?: string;
+  equipmentText?: string;
+  processText?: string;
+  title?: string;
+  summary?: string;
+  body?: string;
+  subtitle?: string;
+  capacity?: string;
+  savings?: string;
+  roi?: string;
+  warranty?: string;
+}
+
 // ==================== COMMON ====================
 export interface ApiResponse<T> {
   data: T;
@@ -100,6 +116,7 @@ export interface ThemeTokens {
 }
 
 export interface SiteShellData {
+  englishLabels?: Record<string, string>;
   brand: BrandConfig;
   utilityBar: {
     visible: boolean;
@@ -129,6 +146,9 @@ export interface SiteShellData {
 
 // ==================== SOLUTIONS ====================
 export interface DetailedSolution {
+  documentJson?: string;
+  english?: EnglishContent | null;
+  hasEnglish?: boolean;
   id?: string;
   slug: string;
   title: string;
@@ -178,6 +198,11 @@ export interface AudienceItem {
 }
 
 export interface ProductCard {
+  specificationJson?: string;
+  description?: string;
+  english?: EnglishContent | null;
+  hasEnglish?: boolean;
+  coverMediaId?: string | null;
   brandName?: string;
   id: string;
   sku: string;
@@ -203,8 +228,8 @@ export interface ProductCard {
 }
 
 export interface ProductDetail extends ProductCard {
+  documentJson?: string;
   description: string;
-  specificationJson?: string;
   specsParsed?: Record<string, string>;
   media: Array<{
     id: string;
@@ -220,6 +245,10 @@ export interface ProductDetail extends ProductCard {
 
 // ==================== PROJECTS ====================
 export interface ProjectItem {
+  bodyJson?: string;
+  english?: EnglishContent | null;
+  hasEnglish?: boolean;
+  coverMediaId?: string | null;
   id: string;
   slug: string;
   title: string;
@@ -241,6 +270,9 @@ export interface ProjectItem {
 
 // ==================== EDITORIAL ====================
 export interface ArticleItem {
+  english?: EnglishContent | null;
+  hasEnglish?: boolean;
+  coverMediaId?: string | null;
   id: string;
   slug: string;
   title: string;
@@ -299,6 +331,7 @@ export interface CMSBlock<T = Record<string, unknown>> {
 }
 
 export interface CMSPageData {
+  locale: "vi-VN" | "en-US";
   id: string;
   slug: string;
   title: string;

@@ -1,3 +1,6 @@
+import { ContentSuggestions } from '@/components/blocks/ContentSuggestions';
+import { RichDocument } from '@/components/ui/RichDocument';
+import { getCurrentContentLocale } from '@/lib/api/localized-page';
 import React from 'react';
 import { Metadata } from 'next';
 import Image from 'next/image';
@@ -34,7 +37,8 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: ProductDetailPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const product = await getProductBySlug(slug);
+  const locale = await getCurrentContentLocale();
+  const product = await getProductBySlug(slug, locale);
   if (!product) {
     return constructMetadata({ title: 'Không Tìm Thấy Sản Phẩm', noIndex: true, canonicalPath: `/san-pham/${slug}` });
   }
@@ -43,6 +47,8 @@ export async function generateMetadata({ params }: ProductDetailPageProps): Prom
     title: `${product.name} | BM SOLAR`,
     description: product.summary,
     canonicalPath: `/san-pham/${product.slug}`,
+    contentLocale: locale,
+    englishAvailable: product.hasEnglish,
     ogImage: product.coverMediaUrl,
     keywords: [
       product.name,
@@ -55,30 +61,32 @@ export async function generateMetadata({ params }: ProductDetailPageProps): Prom
 
 export default async function ProductDetailPage({ params }: ProductDetailPageProps) {
   const { slug } = await params;
-  const product = await getProductBySlug(slug);
+  const locale = await getCurrentContentLocale();
+  const ui = (vi: string, en: string) => locale === "en-US" ? en : vi;
+  const product = await getProductBySlug(slug, locale);
 
   if (!product) {
     notFound();
   }
 
-  // Specifications definition
+  const labels: Record<string, string> = {
+    capacityAh: ui("Dung lượng (Ah)", "Capacity (Ah)"), capacityKWh: ui("Năng lượng (kWh)", "Energy (kWh)"),
+    cycleLife: ui("Chu kỳ sạc/xả", "Cycle life"), dod: ui("Độ sâu xả (DoD)", "Depth of discharge (DoD)"),
+    nominalVoltage: ui("Điện áp danh định", "Nominal voltage"),
+    powerKW: ui("Công suất (kW)", "Rated power (kW)"), batteryVoltage: ui("Điện áp pin", "Battery voltage"), ipRating: ui("Cấp bảo vệ", "IP rating"),
+    maxEfficiency: ui("Hiệu suất tối đa", "Maximum efficiency"), phase: ui("Số pha", "Phases"), warrantyYears: ui("Bảo hành (năm)", "Warranty (years)"),
+  };
   const specs = [
-    { label: 'Thương hiệu / Hãng', value: product.brand?.name || 'Tier 1 Quốc Tế' },
-    { label: 'Mã hiệu (SKU / Model)', value: product.sku },
-    { label: 'Phân loại thiết bị', value: product.category?.name || 'Thiết bị quang điện' },
-    { label: 'Công suất danh định', value: product.capacityW ? `${product.capacityW} W` : 'Theo cấu hình' },
-    { label: 'Thời gian bảo hành', value: product.warrantyYears ? `${product.warrantyYears} Năm chính hãng` : 'Tiêu chuẩn NSX' },
-    { label: 'Phân hạng chất lượng', value: product.tier || 'Tier 1 Bloomberg' },
-    { label: 'Hiệu suất chuyển đổi', value: 'Lên tới 21.5% - 98.8%' },
-    { label: 'Cấp bảo vệ chống bụi nước', value: 'IP65 / IP68 ngoài trời' },
-    { label: 'Chứng chỉ chất lượng', value: 'CO/CQ, TUV Rheinland, CE, ISO' },
-    { label: 'Tình trạng kho hàng', value: 'Sẵn hàng tại kho Quy Nhơn & TP.HCM' },
+    { label: "Model / SKU", value: product.sku },
+    ...Object.entries(product.specsParsed || {}).map(([key, value]) => ({
+      label: labels[key] || key.replace(/([a-z])([A-Z])/g, "$1 $2"), value,
+    })),
   ];
 
   const productSchema = getProductSchema(product);
   const breadcrumbSchema = getBreadcrumbSchema([
-    { name: 'Trang chủ', url: '/' },
-    { name: 'Sản phẩm', url: '/san-pham' },
+    { name: ui("Trang chủ", "Home"), url: '/' },
+    { name: ui("Sản phẩm", "Products"), url: '/san-pham' },
     { name: product.name, url: `/san-pham/${product.slug}` },
   ]);
 
@@ -90,11 +98,11 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <nav className="flex items-center gap-2 text-xs text-ink-muted">
             <Link href="/" className="hover:text-brand-primary transition-colors">
-              Trang chủ
+              {ui("Trang chủ", "Home")}
             </Link>
             <span>/</span>
             <Link href="/san-pham" className="hover:text-brand-primary transition-colors">
-              Sản phẩm
+              {ui("Sản phẩm", "Products")}
             </Link>
             <span>/</span>
             <span className="text-ink font-semibold truncate max-w-xs sm:max-w-md">
@@ -128,9 +136,9 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
             <div className="p-4 rounded-xl bg-surface border border-slate-200/80 flex items-center justify-between text-xs">
               <span className="text-ink font-semibold flex items-center gap-1.5">
                 <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                Cam kết hàng chính hãng 100%
+                {ui("Cam kết hàng chính hãng 100%", "Genuine equipment")}
               </span>
-              <span className="text-slate-500">Bảo hành {product.warrantyYears || 5} năm</span>
+              <span className="text-slate-500">{ui("Bảo hành", "Warranty")} {product.warrantyYears || 5} {ui("năm", "years")}</span>
             </div>
           </div>
 
@@ -154,12 +162,12 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
             </p>
 
             <div className="p-4 rounded-xl bg-accent-light/50 border border-accent-orange/20 space-y-1">
-              <span className="text-xs text-ink-muted">Báo giá tham khảo:</span>
+              <span className="text-xs text-ink-muted">{ui("Báo giá tham khảo:", "Indicative pricing:")}</span>
               <p className="text-xl font-black text-accent-orange">
-                {product.priceEstimate || 'Liên hệ nhận báo giá chiết khấu tốt nhất'}
+                {product.priceEstimate || ui("Liên hệ nhận báo giá chiết khấu tốt nhất", "Contact us for a quote")}
               </p>
               <p className="text-[11px] text-ink-muted">
-                * Áp dụng chiết khấu đặc biệt cho đại lý và đơn hàng số lượng lớn theo dự án.
+                {ui("* Áp dụng chiết khấu đặc biệt cho đại lý và đơn hàng số lượng lớn theo dự án.", "Special pricing may apply to dealers and bulk project orders.")}
               </p>
             </div>
 
@@ -171,7 +179,7 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
                 href="#tu-van"
                 icon={<Sparkles className="w-4 h-4" />}
               >
-                Yêu Cầu Báo Giá Ngay
+                {ui("Yêu Cầu Báo Giá Ngay", "Request a quote")}
               </Button>
               <Button
                 variant="ghost"
@@ -179,7 +187,7 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
                 className="border border-slate-200"
                 icon={<Download className="w-4 h-4" />}
               >
-                Tải Datasheet PDF
+                {ui("Tải Datasheet PDF", "Download datasheet")}
               </Button>
             </div>
 
@@ -187,29 +195,31 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
             <div className="pt-4 border-t border-slate-100 grid grid-cols-2 gap-3 text-xs text-ink">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                <span>CO/CQ chính hãng</span>
+                <span>{ui("CO/CQ chính hãng", "Certificates of origin and quality")}</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                <span>Giao hàng toàn quốc</span>
+                <span>{ui("Giao hàng toàn quốc", "Nationwide delivery")}</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                <span>Hỗ trợ kỹ thuật 24/7</span>
+                <span>{ui("Hỗ trợ kỹ thuật 24/7", "24/7 technical support")}</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                <span>Đổi mới lỗi kỹ thuật</span>
+                <span>{ui("Đổi mới lỗi kỹ thuật", "Replacement for technical defects")}</span>
               </div>
             </div>
           </div>
         </div>
 
+        <div className="solar-long-content"><RichDocument value={product.documentJson || product.description} className="solar-document-column" /></div>
+
         {/* 3. Detailed Specifications Table */}
         <div className="mt-16 pt-12 border-t border-slate-200">
           <div className="max-w-3xl space-y-6">
             <h2 className="text-xl sm:text-2xl font-bold text-ink tracking-tight">
-              Thông Số Kỹ Thuật Chi Tiết
+              {ui("Thông Số Kỹ Thuật Chi Tiết", "Technical specifications")}
             </h2>
 
             <div className="rounded-xl border border-slate-200 overflow-hidden shadow-sm">
@@ -237,9 +247,10 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
 
       {/* 4. Consultation Form */}
       <ConsultationFormBlock
-        headline={`Nhận Báo Giá Thiết Bị ${product.name}`}
-        subheading="Để lại thông tin để nhân viên kinh doanh BM SOLAR gửi bảng báo giá chi tiết và hỗ trợ kỹ thuật."
+        headline={ui("Nhận báo giá cho", "Request a quote for") + " " + product.name}
+        subheading={ui("Để lại thông tin để nhân viên kinh doanh BM SOLAR gửi bảng báo giá chi tiết và hỗ trợ kỹ thuật.", "Leave your details so BM SOLAR can send a quote and provide technical advice.")}
       />
+      <ContentSuggestions kind="products" slug={slug} group={product.category?.slug} />
     </div>
   );
 }

@@ -139,7 +139,7 @@ export function FloatingSocialDock({ initialChannels = [] }: FloatingSocialDockP
   return (
     <aside
       aria-label="Kênh liên hệ nhanh và mạng xã hội"
-      className="fixed right-3 sm:right-5 bottom-24 sm:bottom-28 z-40 flex flex-col items-end gap-2.5 sm:gap-3 pointer-events-auto select-none print:hidden"
+      className="fixed right-3 sm:right-5 bottom-24 sm:bottom-28 z-40 flex flex-col items-center gap-2.5 sm:gap-3 pointer-events-auto select-none print:hidden"
     >
       {activeChannels.map((c) => {
         const isPhone = c.type === 'phone' || (c.type as string) === 'hotline';

@@ -1,3 +1,5 @@
+import { ContentSuggestions } from '@/components/blocks/ContentSuggestions';
+import { labelsForLocale } from '@/lib/api/localized-page';
 import { CmsJourney, CmsProcess } from '@/components/blocks/CmsSections';
 import Link from 'next/link';
 import type { Metadata } from 'next';
@@ -27,23 +29,25 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
 export default async function NewsPage({ searchParams }: Props) {
   const resolvedSearchParams = (await searchParams) || {};
   const page = Math.max(1, Number(resolvedSearchParams.page) || 1);
-  const [visuals, listing, tags] = await Promise.all([
-    getPageVisuals('news'),
-    getArticles({ page, pageSize: 9, tag: resolvedSearchParams.tag }),
+  const visuals = await getPageVisuals('news');
+  const [listing, tags, translate] = await Promise.all([
+    getArticles({ locale: visuals.page.locale, page, pageSize: 9, tag: resolvedSearchParams.tag }),
     getArticleTags(),
+    labelsForLocale(visuals.page.locale),
   ]);
   const copy = visuals.copy;
+  const english = visuals.page.locale === "en-US";
   const [featured, ...side] = listing.data;
-  const date = (value?: string) => (value ? new Date(value).toLocaleDateString('vi-VN') : '');
+  const date = (value?: string) => (value ? new Date(value).toLocaleDateString(visuals.page.locale) : '');
 
   return (
     <div className="solar-page solar-page-tin-tuc">
       <PageHero visuals={visuals} />
       <section className="solar-container solar-page-section">
         <SectionHeading eyebrow={copy.sectionEyebrow} title={copy.sectionTitle} />
-        <nav aria-label="Chủ đề tin tức" className="solar-filter-tabs">
+        <nav aria-label={english ? "News topics" : "Chủ đề tin tức"} className="solar-filter-tabs">
           <Link href="/tin-tuc" aria-current={!resolvedSearchParams.tag ? 'page' : undefined}>
-            Tất cả
+            {english ? "All" : "Tất cả"}
           </Link>
           {tags.map((tag) => (
             <Link
@@ -51,7 +55,7 @@ export default async function NewsPage({ searchParams }: Props) {
               href={`/tin-tuc?tag=${encodeURIComponent(tag.value)}`}
               aria-current={resolvedSearchParams.tag === tag.value ? 'page' : undefined}
             >
-              {tag.label}
+              {translate(tag.label)}
             </Link>
           ))}
         </nav>
@@ -75,7 +79,7 @@ export default async function NewsPage({ searchParams }: Props) {
                 <h2>{featured.title}</h2>
                 <p>{featured.excerpt}</p>
                 <span>
-                  Xem bài viết <ArrowRight size={15} />
+                  {english ? "Read article" : "Xem bài viết"} <ArrowRight size={15} />
                 </span>
               </div>
             </Link>
@@ -87,7 +91,7 @@ export default async function NewsPage({ searchParams }: Props) {
                       src={article.coverMediaUrl}
                       alt={article.title}
                       fill
-                      sizes="(max-width:767px) 45vw,20vw"
+                      sizes="(max-width:479px) 100vw, (max-width:767px) 42vw, 17vw"
                       className="object-cover"
                     />
                   </div>
@@ -101,7 +105,7 @@ export default async function NewsPage({ searchParams }: Props) {
             </div>
           </div>
         ) : (
-          <p className="solar-empty">Chưa có bài viết đã xuất bản cho chủ đề này.</p>
+          <p className="solar-empty">{english ? "No articles have been published for this topic." : "Chưa có bài viết đã xuất bản cho chủ đề này."}</p>
         )}
       </section>
       {side.length > 3 && (
@@ -142,6 +146,7 @@ export default async function NewsPage({ searchParams }: Props) {
         message={copy.newsletterMessage}
       />
       <CmsJourney copy={copy} mediaUrl={visuals.media.factory} />
+      <ContentSuggestions kind="news" />
     </div>
   );
 }

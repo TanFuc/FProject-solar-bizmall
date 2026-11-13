@@ -1,3 +1,5 @@
+import { ContentSuggestions } from '@/components/blocks/ContentSuggestions';
+import { documentText } from '@/lib/api/content-body';
 import { CmsJourney, CmsProcess } from '@/components/blocks/CmsSections';
 import { getPageVisuals } from '@/lib/api/visuals';
 import { getSolutions } from '@/lib/api/client';
@@ -17,8 +19,10 @@ export async function generateMetadata() {
 }
 
 export default async function SolutionsPage() {
-  const [visuals, solutions] = await Promise.all([getPageVisuals('solutions'), getSolutions()]);
+  const visuals = await getPageVisuals('solutions');
+  const solutions = await getSolutions(visuals.page.locale);
   const copy = visuals.copy;
+  const english = visuals.page.locale === "en-US";
   const principleSteps = [
     {
       num: '01',
@@ -146,7 +150,7 @@ export default async function SolutionsPage() {
                   <div className={`space-y-4 ${!isEven ? 'order-2 lg:order-1' : ''}`}>
                     <div className="flex items-center gap-2">
                       <span className="text-[11px] font-bold text-[#FF6B19] uppercase tracking-wider">
-                        0{index + 1} / GÓI GIẢI PHÁP
+                        0{index + 1} / {english ? "SOLUTION PACKAGE" : "GÓI GIẢI PHÁP"}
                       </span>
                       {sol.roiYears && (
                         <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
@@ -156,7 +160,7 @@ export default async function SolutionsPage() {
                     </div>
                     <h3 className="text-xl sm:text-2xl font-extrabold text-slate-900">{sol.title}</h3>
                     <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                      {sol.overview || sol.subtitle}
+                      {documentText(sol.overview) || sol.subtitle}
                     </p>
 
                     {sol.benefits && sol.benefits.length > 0 && (
@@ -180,14 +184,14 @@ export default async function SolutionsPage() {
                         href={`/giai-phap/${sol.slug}`}
                         className="px-6 py-2.5 rounded-full bg-[#FF6B19] hover:bg-[#ea5d0f] text-white text-xs font-bold inline-flex items-center gap-2 transition-all shadow-md shadow-[#FF6B19]/20"
                       >
-                        <span>Xem chi tiết giải pháp</span>
+                        <span>{english ? "View solution details" : "Xem chi tiết giải pháp"}</span>
                         <ArrowRight className="w-3.5 h-3.5" />
                       </Link>
                       <Link
                         href="/lien-he"
                         className="px-5 py-2.5 rounded-full bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold inline-flex items-center gap-1.5 transition-all shadow-xs"
                       >
-                        <span>Nhận báo giá dự toán</span>
+                        <span>{english ? "Request an estimate" : "Nhận báo giá dự toán"}</span>
                       </Link>
                     </div>
                   </div>
@@ -239,6 +243,7 @@ export default async function SolutionsPage() {
 
       {/* 7. Section 05: Bottom CTA Banner */}
       <CmsJourney copy={copy} mediaUrl={visuals.media.factory}/>
+      <ContentSuggestions kind="solutions" />
     </div>
   );
 }

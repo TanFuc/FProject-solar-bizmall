@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import { ContentTrack } from '@/components/ui/ContentTrack';
 import { ArrowRight, ShieldCheck } from 'lucide-react';
 import { VisualImage } from '@/components/ui/VisualImage';
 
@@ -10,33 +11,34 @@ export interface PublicBrand {
   logoUrl?: string;
 }
 
-export function BrandStrip({ brands, headline }: { brands: PublicBrand[]; headline?: string }) {
+export function BrandStrip({ brands, headline, english = false }: { brands: PublicBrand[]; headline?: string; english?: boolean }) {
+  const ui = (vi: string, en: string) => english ? en : vi;
   if (!brands.length) return null;
 
   return (
-    <section className="solar-brand-strip w-full my-6 sm:my-8" aria-label="Thương hiệu đối tác">
+    <section className="solar-brand-strip w-full my-6 sm:my-8" aria-label={ui("Thương hiệu đối tác", "Equipment brands")}>
       {/* Section Header */}
       <div className="solar-brand-header flex flex-col sm:flex-row sm:items-end justify-between gap-2.5 mb-4 sm:mb-6">
         <div>
           <div className="flex items-center gap-1.5 text-[11px] sm:text-xs font-bold uppercase tracking-wider text-[#FF6B19] mb-1">
             <ShieldCheck className="w-3.5 h-3.5 text-[#FF6B19]" />
-            <span>Đối Tác Tier 1 Bloomberg</span>
+            <span>{ui("Đối Tác Tier 1 Bloomberg", "Equipment partners")}</span>
           </div>
           <h2 className="text-lg sm:text-2xl font-black text-[#0B1E36] tracking-tight">
-            {headline || 'Thương Hiệu Thiết Bị Đồng Hành'}
+            {headline || ui("Thương Hiệu Thiết Bị Đồng Hành", "Equipment brands")}
           </h2>
         </div>
         <Link
           href="/san-pham"
           className="group inline-flex items-center gap-1 text-xs sm:text-sm font-bold text-[#0D4EA6] hover:text-[#FF6B19] transition-colors self-start sm:self-auto"
         >
-          <span>Xem tất cả thiết bị</span>
+          <span>{ui("Xem tất cả thiết bị", "Browse all equipment")}</span>
           <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
         </Link>
       </div>
 
       {/* Fully Responsive Grid across Mobile (2 cols), Tablet (3 cols), Desktop (6 cols) */}
-      <div className="solar-brand-track grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3.5 w-full">
+      <ContentTrack className="solar-brand-track" label={headline || ui('Thương hiệu thiết bị', 'Equipment brands')}>
         {brands.map((brand) => (
           <Link
             key={brand.id}
@@ -58,11 +60,11 @@ export function BrandStrip({ brands, headline }: { brands: PublicBrand[]; headli
               </span>
             )}
             <span className="text-[10px] font-semibold text-slate-400 group-hover:text-[#FF6B19] uppercase tracking-wider mt-0.5 transition-colors">
-              Chính Hãng
+              {ui("Chính Hãng", "Genuine")}
             </span>
           </Link>
         ))}
-      </div>
+      </ContentTrack>
     </section>
   );
 }

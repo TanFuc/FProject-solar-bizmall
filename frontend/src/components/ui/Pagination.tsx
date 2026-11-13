@@ -1,5 +1,8 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
+import { useTranslation } from '@/lib/i18n';
 
 interface PaginationProps {
   path: string;
@@ -14,10 +17,11 @@ export function Pagination({
   totalPages,
   params = {},
 }: PaginationProps) {
+  const { isEnglish } = useTranslation();
   if (totalPages < 2) return null;
 
   return (
-    <nav className="solar-pagination" aria-label="Phân trang sản phẩm">
+    <nav className="solar-pagination" aria-label={isEnglish ? "Pagination" : "Phân trang"}>
       {Array.from({ length: totalPages }, (_, index) => index + 1).map((number) => {
         const query = new URLSearchParams();
         for (const [key, value] of Object.entries(params)) {
@@ -35,7 +39,7 @@ export function Pagination({
             href={`${path}?${query.toString()}`}
             scroll={false}
             aria-current={isCurrent ? 'page' : undefined}
-            aria-label={`Trang ${number}`}
+            aria-label={`${isEnglish ? "Page" : "Trang"} ${number}`}
             className={`transition-colors duration-150 ${
               isCurrent ? 'font-bold' : ''
             }`}

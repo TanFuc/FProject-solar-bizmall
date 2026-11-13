@@ -19,6 +19,8 @@ interface SEOProps {
   title?: string;
   description?: string;
   canonicalPath?: string;
+  contentLocale?: "vi-VN" | "en-US";
+  englishAvailable?: boolean;
   ogImage?: string;
   keywords?: string[];
   noIndex?: boolean;
@@ -33,6 +35,8 @@ export function constructMetadata({
   title = 'BM SOLAR — Tổng Thầu EPC Điện Mặt Trời & Lưu Trữ Năng Lượng',
   description = 'BM SOLAR chuyên tư vấn, thiết kế và thi công trọn gói điện mặt trời mái nhà hòa lưới, pin lưu trữ BESS và trạm sạc EV tại Quy Nhơn, TP.HCM.',
   canonicalPath = '/',
+  contentLocale = 'vi-VN',
+  englishAvailable = false,
   ogImage = '/images/logo.png',
   keywords = [
     'điện mặt trời BM Solar',
@@ -46,7 +50,9 @@ export function constructMetadata({
   noIndex = false,
 }: SEOProps = {}): Metadata {
   const cleanPath = canonicalPath.startsWith('/') ? canonicalPath : `/${canonicalPath}`;
-  const canonicalUrl = `${SITE_URL}${cleanPath === '/' ? '' : cleanPath.replace(/\/$/, '')}`;
+  const vietnameseUrl = `${SITE_URL}${cleanPath === '/' ? '' : cleanPath.replace(/\/$/, '')}`;
+  const englishUrl = cleanPath === "/" ? vietnameseUrl + "/en" : vietnameseUrl + "?lang=en";
+  const canonicalUrl = contentLocale === "en-US" && englishAvailable ? englishUrl : vietnameseUrl;
   const imageUrl = ogImage.startsWith('http') ? ogImage : `${SITE_URL}${ogImage.startsWith('/') ? '' : '/'}${ogImage}`;
 
   // Prevent title/template duplication: remove trailing ' | BM SOLAR...' from child page titles
@@ -75,8 +81,9 @@ export function constructMetadata({
     alternates: {
       canonical: canonicalUrl,
       languages: {
-        'vi-VN': canonicalUrl,
-        'x-default': canonicalUrl,
+        'vi-VN': vietnameseUrl,
+        ...(englishAvailable ? { 'en-US': englishUrl } : {}),
+        'x-default': vietnameseUrl,
       },
     },
     openGraph: {
@@ -92,7 +99,7 @@ export function constructMetadata({
           alt: effectiveTitle,
         },
       ],
-      locale: 'vi_VN',
+      locale: contentLocale === 'en-US' ? 'en_US' : 'vi_VN',
       type: 'website',
     },
     twitter: {

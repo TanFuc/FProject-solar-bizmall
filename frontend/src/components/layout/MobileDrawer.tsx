@@ -131,19 +131,6 @@ export function MobileDrawer({ isOpen, onClose, navigation }: MobileDrawerProps)
 
   if (!isRendered) return null;
 
-  // Helper to resolve localized navigation label
-  const getNavLabel = (item: NavigationItemTree) => {
-    if (!isEnglish) return item.label;
-    const ref = item.targetRef || '';
-    if (ref === '/' || ref === 'home') return t('nav.home');
-    if (ref.includes('gioi-thieu') || ref === 'about') return t('nav.about');
-    if (ref.includes('giai-phap') || ref === 'solutions') return t('nav.solutions');
-    if (ref.includes('san-pham') || ref === 'products') return t('nav.products');
-    if (ref.includes('du-an') || ref === 'projects') return t('nav.projects');
-    if (ref.includes('tin-tuc') || ref === 'news') return t('nav.news');
-    if (ref.includes('lien-he') || ref === 'contact') return t('nav.contact');
-    return item.label;
-  };
 
   return (
     <div
@@ -238,7 +225,7 @@ export function MobileDrawer({ isOpen, onClose, navigation }: MobileDrawerProps)
                 onClick={onClose}
                 className="flex items-center justify-between py-3 px-2 text-base font-medium text-ink hover:text-brand-primary hover:bg-slate-50 rounded-lg transition-colors focus-visible:ring-2 focus-visible:ring-brand-primary"
               >
-                <span>{getNavLabel(item)}</span>
+                <span>{item.label}</span>
                 {item.children && item.children.length > 0 ? (
                   <ChevronRight className="w-4 h-4 text-slate-400" />
                 ) : null}

@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useTranslation } from '@/lib/i18n';
 import { Loader2 } from 'lucide-react';
 import { useNavigationPending } from './navigationState';
 
@@ -11,6 +12,7 @@ import { useNavigationPending } from './navigationState';
  * cause layout shift when transitioning between idle and pending states.
  */
 export function CatalogPendingIndicator({ className = '' }: { className?: string }) {
+  const { isEnglish } = useTranslation();
   const isPending = useNavigationPending();
 
   return (
@@ -28,7 +30,7 @@ export function CatalogPendingIndicator({ className = '' }: { className?: string
           <span>Đang cập nhật kết quả...</span>
         </div>
       ) : (
-        <span className="sr-only">Kết quả đã được cập nhật</span>
+        <span className="sr-only">{isEnglish ? "Results updated" : "Kết quả đã được cập nhật"}</span>
       )}
     </div>
   );

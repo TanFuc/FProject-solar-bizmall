@@ -1,7 +1,10 @@
 import React from 'react';
+import { cookies, headers } from 'next/headers';
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
+import '@fontsource-variable/inter/wght.css';
 import '@/styles/globals.css';
+import { getCurrentContentLocale } from '@/lib/api/localized-page';
+import { localizeSiteShell } from '@/lib/i18n/site-shell';
 import { getSiteShell } from '@/lib/api/client';
 import { BranchProvider } from '@/lib/contacts/branchContext';
 import { I18nProvider } from '@/lib/i18n';
@@ -24,11 +27,6 @@ import type { SiteShellData } from '@/types/bmsolar-api';
 // Root layout handles failure states with noindex protection. If a root-level navigation
 // loading progress bar is needed, inject it immediately inside the <body> tag below.
 
-const inter = Inter({
-  subsets: ['latin', 'vietnamese'],
-  display: 'swap',
-  variable: '--font-inter',
-});
 
 export const metadata: Metadata = constructMetadata();
 
@@ -46,11 +44,18 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  if ((await headers()).get("x-bmsolar-admin") === "1") {
+    return <html lang="vi"><body className="solar-site min-h-screen bg-slate-50 antialiased">{children}</body></html>;
+  }
+  const isLanguageTransition = (await cookies()).has("BM_LOCALE_TRANSITION");
+  const locale = await getCurrentContentLocale();
+  const language = locale === "en-US" ? "en" : "vi";
   let siteShell: SiteShellData | null = null;
   let shellUnavailable = false;
 
   try {
-    siteShell = await getSiteShell();
+    siteShell = await getSiteShell(locale);
+    if (language === "en") siteShell = localizeSiteShell(siteShell);
   } catch {
     shellUnavailable = true;
   }
@@ -64,7 +69,7 @@ export default async function RootLayout({
   // to prevent indexing broken or partial state.
   if (shellUnavailable || !siteShell) {
     return (
-      <html lang="vi" className={inter.variable}>
+      <html lang={language}>
         <head>
           <meta name="robots" content="noindex, nofollow" />
           <JsonLd data={[orgSchema, webSiteSchema]} />
@@ -104,14 +109,14 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang="vi" className={inter.variable}>
+    <html lang={language}>
       <head>
         <JsonLd data={[orgSchema, webSiteSchema]} />
       </head>
       <body id="top" className="solar-site min-h-screen flex flex-col bg-surface-white text-ink antialiased">
         {/* Branded Startup Loader on Hard Refresh/F5 until Document Load/Hydration */}
-        <StartupLoader />
-        <I18nProvider>
+        {!isLanguageTransition && <StartupLoader english={language === "en"} />}
+        <I18nProvider initialLocale={language}>
           <BranchProvider initialBranches={siteShell.utilityBar.branches} globalChannels={siteShell.footer.socialLinks} brand={siteShell.brand}>
             {/* Desktop Topbar */}
             <TopBar />

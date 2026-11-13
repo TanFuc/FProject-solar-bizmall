@@ -1,3 +1,5 @@
+import { ContentSuggestions } from '@/components/blocks/ContentSuggestions';
+import { labelsForLocale } from '@/lib/api/localized-page';
 import { CmsJourney, CmsProcess } from '@/components/blocks/CmsSections';
 import Link from 'next/link';
 import { ArrowRight, MapPin, Search, RotateCcw } from 'lucide-react';
@@ -35,9 +37,9 @@ interface Props {
 export default async function ProjectsPage({ searchParams }: Props) {
   const resolvedSearchParams = (await searchParams) || {};
   const page = Math.max(1, Number(resolvedSearchParams.page) || 1);
-  const [visuals, listing, types, provinces] = await Promise.all([
-    getPageVisuals('projects'),
-    getProjects({
+  const visuals = await getPageVisuals('projects');
+  const [listing, sourceTypes, sourceProvinces, translate] = await Promise.all([
+    getProjects({ locale: visuals.page.locale,
       page,
       pageSize: 9,
       type: resolvedSearchParams.type,
@@ -46,9 +48,14 @@ export default async function ProjectsPage({ searchParams }: Props) {
     }),
     getProjectTypes(),
     getProvinces(),
+    labelsForLocale(visuals.page.locale),
   ]);
 
+  const types = sourceTypes.map(item => ({ ...item, label: translate(item.label) }));
+  const provinces = sourceProvinces.map(item => ({ ...item, label: translate(item.label) }));
   const copy = visuals.copy;
+  const ui = (vi: string, en: string) => visuals.page.locale === "en-US" ? en : vi;
+
 
   const typeHref = (type?: string) => {
     const query = new URLSearchParams();
@@ -81,7 +88,7 @@ export default async function ProjectsPage({ searchParams }: Props) {
             aria-current={!resolvedSearchParams.type ? 'page' : undefined}
             className="transition-colors"
           >
-            Tất cả
+            {ui("Tất cả", "All")}
           </Link>
           {types.map((type) => (
             <Link
@@ -102,24 +109,24 @@ export default async function ProjectsPage({ searchParams }: Props) {
             <AutoSubmitSelect
               name="type"
               value={resolvedSearchParams.type || ''}
-              label="Loại dự án"
-              options={[{ value: '', label: 'Loại dự án: Tất cả' }, ...types]}
+              label={ui("Loại dự án", "Project type")}
+              options={[{ value: '', label: ui("Loại dự án: Tất cả", "Project type: All") }, ...types]}
             />
             <AutoSubmitSelect
               name="region"
               value={resolvedSearchParams.region || ''}
-              label="Khu vực"
-              options={[{ value: '', label: 'Khu vực: Tất cả' }, ...provinces]}
+              label={ui("Khu vực", "Region")}
+              options={[{ value: '', label: ui("Khu vực: Tất cả", "Region: All") }, ...provinces]}
             />
             <div>
               <input
                 type="search"
                 name="q"
                 defaultValue={resolvedSearchParams.q}
-                placeholder="Tìm dự án theo tên…"
-                aria-label="Tìm dự án theo tên"
+                placeholder={ui("Tìm dự án theo tên…", "Search projects by name…")}
+                aria-label={ui("Tìm dự án theo tên", "Search projects by name")}
               />
-              <button aria-label="Tìm dự án" type="submit">
+              <button aria-label={ui("Tìm dự án", "Search projects")} type="submit">
                 <Search size={17} />
               </button>
             </div>
@@ -134,7 +141,7 @@ export default async function ProjectsPage({ searchParams }: Props) {
                 className="inline-flex items-center gap-1.5 text-xs text-ink-muted hover:text-accent-orange font-medium transition-colors"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
-                Xóa tất cả bộ lọc
+                {ui("Xóa tất cả bộ lọc", "Clear all filters")}
               </Link>
             )}
           </div>
@@ -158,11 +165,11 @@ export default async function ProjectsPage({ searchParams }: Props) {
                 className="object-cover transition-transform duration-300 group-hover:scale-105"
               />
               <div>
-                <p>{project.projectType?.name}</p>
+                <p>{project.projectType?.name && translate(project.projectType.name)}</p>
                 <h3>{project.title}</h3>
                 <span>
                   <MapPin size={13} />
-                  {project.province?.name}
+                  {project.province?.name && translate(project.province.name)}
                 </span>
               </div>
               <ArrowRight
@@ -177,10 +184,10 @@ export default async function ProjectsPage({ searchParams }: Props) {
         {!listing.data.length && (
           <div className="solar-empty flex flex-col items-center justify-center py-12 px-4 rounded-xl bg-surface border border-slate-200 text-center my-6" role="status">
             <p className="text-base font-semibold text-ink mb-1">
-              Chưa có dự án phù hợp với bộ lọc đã chọn.
+              {ui("Chưa có dự án phù hợp với bộ lọc đã chọn.", "No projects match the selected filters.")}
             </p>
             <p className="text-xs text-ink-muted mb-4 max-w-sm">
-              Quý khách vui lòng thử tìm kiếm với điều kiện khác hoặc xóa bộ lọc để xem các dự án tiêu biểu khác của BM SOLAR.
+              {ui("Quý khách vui lòng thử tìm kiếm với điều kiện khác hoặc xóa bộ lọc để xem các dự án tiêu biểu khác của BM SOLAR.", "Try another search or clear the filters to see more BM SOLAR projects.")}
             </p>
             <Link
               href="/du-an"
@@ -188,7 +195,7 @@ export default async function ProjectsPage({ searchParams }: Props) {
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-primary hover:bg-brand-dark text-white text-xs font-semibold shadow-sm transition-colors"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              Xem tất cả dự án
+              {ui("Xem tất cả dự án", "View all projects")}
             </Link>
           </div>
         )}
@@ -203,6 +210,7 @@ export default async function ProjectsPage({ searchParams }: Props) {
 
       <CmsProcess copy={copy} />
       <CmsJourney copy={copy} mediaUrl={visuals.media.factory} />
+      <ContentSuggestions kind="projects" />
     </div>
   );
 }

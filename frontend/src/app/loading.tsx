@@ -1,17 +1,13 @@
-import React from 'react';
-import { FullscreenLoader } from '@/components/ui/FullscreenLoader';
+'use client';
 
-/**
- * Root Next.js route loading segment fallback for BM SOLAR.
- * Displays the 100% faithful branded fullscreen loading screen matching design specification.
- */
+import { FullscreenLoader } from '@/components/ui/FullscreenLoader';
+import { useLoadingLanguage } from '@/lib/i18n/i18nContext';
+
 export default function Loading() {
-  return (
-    <FullscreenLoader
-      id="bm-page-loading"
-      portal={true}
-      label="Đang tải trải nghiệm năng lượng xanh..."
-      sublabel="BM SOLAR  •  Xin vui lòng chờ trong giây lát"
-    />
-  );
+  const language = useLoadingLanguage();
+  if (!language) return null;
+
+  return <FullscreenLoader id="bm-page-loading"
+    label={language === 'en' ? 'Loading BM SOLAR…' : 'Đang tải BM SOLAR…'}
+    sublabel={language === 'en' ? 'Please wait a moment' : 'Xin vui lòng chờ trong giây lát'} />;
 }

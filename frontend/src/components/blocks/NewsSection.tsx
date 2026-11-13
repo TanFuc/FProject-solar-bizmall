@@ -2,18 +2,22 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { ContentTrack } from '@/components/ui/ContentTrack';
 import Image from 'next/image';
+import { useTranslation } from '@/lib/i18n';
 import { ArticleItem } from '@/types/bmsolar-api';
 import { Calendar, Clock, ArrowUpRight } from 'lucide-react';
-import { useDraggableScroll } from '@/lib/hooks/useDraggableScroll';
 
 interface NewsSectionProps {
   title?: string;
+  eyebrow?: string;
+  description?: string;
+  linkLabel?: string;
   articles?: ArticleItem[];
 }
 
-export function NewsSection({ articles, title }: NewsSectionProps) {
-  const { dragProps, isDragging } = useDraggableScroll<HTMLDivElement>();
+export function NewsSection({ articles, title, eyebrow, description, linkLabel }: NewsSectionProps) {
+  const { t, isEnglish } = useTranslation();
 
   if (!articles || articles.length === 0) return null;
 
@@ -24,47 +28,41 @@ export function NewsSection({ articles, title }: NewsSectionProps) {
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 lg:mb-12 gap-4">
           <div className="max-w-2xl space-y-1.5 sm:space-y-2">
             <span className="text-xs font-bold text-accent-orange uppercase tracking-wider">
-              Kiến Thức & Thị Trường
+              {eyebrow || t('home.news.eyebrow')}
             </span>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-ink tracking-tight">
-              {title || 'Cẩm Nang Năng Lượng & Chính Sách Mới Nhất'}
+              {title || t('news.title')}
             </h2>
             <p className="text-xs sm:text-sm text-ink-muted leading-relaxed">
-              Cập nhật thông tư, quy định giá điện và cẩm nang lựa chọn thiết bị điện mặt trời từ chuyên gia BM SOLAR.
+              {description || t('home.news.description')}
             </p>
           </div>
           <Link
             href="/tin-tuc"
             className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-brand-primary hover:text-brand-dark transition-colors group"
           >
-            <span>Xem tất cả bài viết</span>
+            <span>{linkLabel || t('news.viewAll')}</span>
             <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
           </Link>
         </div>
 
-        {/* Articles Horizontal Drag Track on Non-Desktop / Grid on Desktop */}
-        <div
-          {...dragProps}
-          className={`grid ${
-            isDragging ? 'cursor-grabbing select-none' : 'cursor-grab'
-          }`}
-        >
+        <ContentTrack className="solar-home-card-grid" label={title || t('news.title')}>
           {articles.map((art) => (
             <Link
               key={art.id}
               href={`/tin-tuc/${art.slug}`}
-              className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-card hover:shadow-card-hover transition-all duration-300 flex flex-col justify-between group"
+              className="bg-white min-w-0 rounded-2xl border border-slate-200/80 overflow-hidden shadow-card hover:shadow-card-hover transition-all duration-300 flex flex-col justify-between group"
               draggable={false}
             >
               <div>
                 {/* Cover Image */}
-                <div className="relative h-36 sm:h-42 lg:h-48 w-full overflow-hidden bg-slate-100">
+                <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-100">
                   {art.coverMediaUrl && (
                     <Image
                       src={art.coverMediaUrl}
                       alt={art.title}
                       fill
-                      sizes="(max-width: 640px) 240px, (max-width: 1024px) 280px, 33vw"
+                      sizes="(max-width: 599px) 100vw, (max-width: 899px) 50vw, 360px"
                       className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
                       draggable={false}
                     />
@@ -88,21 +86,21 @@ export function NewsSection({ articles, title }: NewsSectionProps) {
               </div>
 
               {/* Meta */}
-              <div className="p-4 sm:p-5 lg:p-6 pt-0 border-t border-slate-100 flex items-center justify-between text-[11px] sm:text-xs text-slate-400">
+              <div className="p-4 sm:p-5 lg:p-6 pt-0 border-t border-slate-100 flex items-center justify-between flex-wrap gap-2 text-[11px] sm:text-xs text-slate-400">
                 <span className="flex items-center gap-1.5">
                   <Calendar className="w-3.5 h-3.5" />
                   {art.publishedAt
-                    ? new Date(art.publishedAt).toLocaleDateString('vi-VN')
-                    : 'Mới cập nhật'}
+                    ? new Date(art.publishedAt).toLocaleDateString(isEnglish ? 'en-US' : 'vi-VN')
+                    : t('home.news.recent')}
                 </span>
                 <span className="flex items-center gap-1.5">
                   <Clock className="w-3.5 h-3.5" />
-                  {art.readTimeMinutes || 5} phút đọc
+                  {t('home.news.readTime', { minutes: art.readTimeMinutes || 5 })}
                 </span>
               </div>
             </Link>
           ))}
-        </div>
+        </ContentTrack>
       </div>
     </section>
   );

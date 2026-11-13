@@ -3,8 +3,9 @@ import {
   getProducts,
   getProjects,
   getArticles,
+  getSolutions,
 } from '@/lib/api/client';
-import { ProductCard, ProjectItem, ArticleItem } from '@/types/bmsolar-api';
+import { PaginatedResponse } from '@/types/bmsolar-api';
 
 function getSiteUrl(): string {
   if (process.env.NEXT_PUBLIC_SITE_URL) {
@@ -20,6 +21,16 @@ function getSiteUrl(): string {
 }
 
 const SITE_URL = getSiteUrl();
+
+async function listForSitemap<T extends { slug: string }>(load: (params: { page: number; pageSize: number }) => Promise<PaginatedResponse<T>>) {
+  const records = new Map<string, T>();
+  for (let page = 1; page <= 1000; page++) {
+    const result = await load({ page, pageSize: 50 });
+    for (const row of result.data) records.set(row.slug, row);
+    if (page >= result.meta.totalPages || !result.data.length) break;
+  }
+  return [...records.values()];
+}
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Seven main primary public routes
@@ -68,36 +79,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  // Retrieve published records safely without demo/fallback fabricated URLs
-  let productsList: ProductCard[] = [];
-  try {
-    const res = await getProducts({ pageSize: 100 });
-    if (res?.data?.length) {
-      productsList = res.data;
-    }
-  } catch {
-    // Return empty list on failure - do not fabricate fake records
-  }
-
-  let projectsList: ProjectItem[] = [];
-  try {
-    const res = await getProjects({ pageSize: 100 });
-    if (res?.data?.length) {
-      projectsList = res.data;
-    }
-  } catch {
-    // Return empty list on failure - do not fabricate fake records
-  }
-
-  let articlesList: ArticleItem[] = [];
-  try {
-    const res = await getArticles({ pageSize: 100 });
-    if (res?.data?.length) {
-      articlesList = res.data;
-    }
-  } catch {
-    // Return empty list on failure - do not fabricate fake records
-  }
+  const [productsList, projectsList, articlesList, solutions] = await Promise.all([
+    listForSitemap(getProducts), listForSitemap(getProjects), listForSitemap(getArticles), getSolutions("vi-VN", true),
+  ]);
 
   // Dynamic Product URLs
   const productRoutes: MetadataRoute.Sitemap = productsList.map((p) => ({
@@ -124,5 +108,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
-  return [...staticRoutes, ...productRoutes, ...projectRoutes, ...articleRoutes];
+  const solutionRoutes: MetadataRoute.Sitemap = solutions.map(solution => ({
+    url: `${SITE_URL}/giai-phap/${solution.slug}`, changeFrequency: "monthly", priority: 0.7,
+  }));
+  return [...staticRoutes, ...productRoutes, ...projectRoutes, ...articleRoutes, ...solutionRoutes];
 }

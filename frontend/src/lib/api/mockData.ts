@@ -534,6 +534,7 @@ export const fallbackArticles: ArticleItem[] = [
 ];
 
 export const fallbackHomePage: CMSPageData = {
+  locale: "vi-VN",
   id: 'page_home',
   slug: 'home',
   title: 'Trang Chủ BM SOLAR',

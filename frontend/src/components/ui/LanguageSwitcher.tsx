@@ -16,12 +16,13 @@ export function LanguageSwitcher({
 }: LanguageSwitcherProps) {
   const { locale, setLocale, toggleLocale, isEnglish } = useTranslation();
 
+
   if (variant === 'topbar') {
     return (
       <div
         className={`flex items-center gap-1.5 bg-white/10 hover:bg-white/15 px-2 py-0.5 rounded transition-colors ${className}`}
         role="group"
-        aria-label="Chọn ngôn ngữ hiển thị"
+        aria-label={isEnglish ? "Choose display language" : "Chọn ngôn ngữ hiển thị"}
       >
         <Globe className="w-3.5 h-3.5 text-accent-orange shrink-0" />
         <div className="flex items-center gap-1 text-[11px] font-semibold">
@@ -33,7 +34,7 @@ export function LanguageSwitcher({
                 : 'text-white/70 hover:text-white'
             }`}
             aria-pressed={locale === 'vi'}
-            title="Tiếng Việt"
+            title="Tiếng Việt" aria-label="Tiếng Việt"
           >
             🇻🇳 VN
           </button>
@@ -46,7 +47,7 @@ export function LanguageSwitcher({
                 : 'text-white/70 hover:text-white'
             }`}
             aria-pressed={locale === 'en'}
-            title="English"
+            title="English" aria-label="English"
           >
             🇬🇧 EN
           </button>

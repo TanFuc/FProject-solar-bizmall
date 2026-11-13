@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
@@ -8,7 +8,8 @@ import { NavigationItemTree } from '@/types/bmsolar-api';
 import { useBranch } from '@/lib/contacts/branchContext';
 import { useTranslation } from '@/lib/i18n';
 import { resolveInternalRoute } from '@/lib/utils/routes';
-import { Menu, ChevronDown, Search, ArrowRight } from 'lucide-react';
+import { Menu, ChevronDown, Search, ArrowRight, X } from 'lucide-react';
+import { ProductSearchForm } from '@/components/ui/ProductSearchForm';
 import { MobileDrawer } from './MobileDrawer';
 import { useMobileDrawerState } from './mobileDrawerState';
 import { RouteProgressBar } from '@/components/ui/RouteProgressBar';
@@ -20,69 +21,38 @@ interface HeaderProps {
 
 export function Header({ navigation, brand }: HeaderProps) {
   const { isOpen: isDrawerOpen, open: openDrawer, close: closeDrawer } = useMobileDrawerState();
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const searchDialog = useRef<HTMLDialogElement>(null);
+  const searchTrigger = useRef<HTMLButtonElement>(null);
   const { openConsultationModal } = useBranch();
-  const { t, isEnglish } = useTranslation();
+  const { isEnglish } = useTranslation();
   const pathname = usePathname();
 
-  // Helper to resolve localized navigation label
-  const getNavLabel = (item: NavigationItemTree) => {
-    if (!isEnglish) return item.label;
-    const ref = item.targetRef || '';
-    if (ref === '/' || ref === 'home' || ref === 'trang-chu') return t('nav.home');
-    if (ref.includes('gioi-thieu') || ref === 'about') return t('nav.about');
-    if (ref.includes('giai-phap') || ref === 'solutions') return t('nav.solutions');
-    if (ref.includes('san-pham') || ref === 'products') return t('nav.products');
-    if (ref.includes('du-an') || ref === 'projects') return t('nav.projects');
-    if (ref.includes('tin-tuc') || ref === 'news') return t('nav.news');
-    if (ref.includes('lien-he') || ref === 'contact') return t('nav.contact');
-    return item.label;
-  };
 
   const isLinkActive = (item: NavigationItemTree) => {
     const route = resolveInternalRoute(item.targetRef);
-    if (route === '/' && pathname === '/') return true;
+    if (route === '/' && (pathname === '/' || pathname === '/en')) return true;
     if (route !== '/' && pathname.startsWith(route)) return true;
     return false;
   };
 
   return (
     <>
-      {isSearchOpen && (
-        <div
-          className="solar-search-overlay"
-          onKeyDown={(event) => {
-            if (event.key === 'Escape') setIsSearchOpen(false);
-          }}
-        >
-          <div role="dialog" aria-modal="true" aria-labelledby="solar-search-heading">
-            <div>
-              <h2 id="solar-search-heading">Tìm kiếm sản phẩm</h2>
-              <button
-                type="button"
-                aria-label="Đóng tìm kiếm"
-                onClick={() => setIsSearchOpen(false)}
-              >
-                ×
-              </button>
-            </div>
-            <form action="/san-pham">
-              <label htmlFor="solar-search-query">Tên sản phẩm hoặc mã thiết bị</label>
-              <div>
-                <input
-                  id="solar-search-query"
-                  type="search"
-                  name="q"
-                  required
-                  autoFocus
-                  maxLength={120}
-                />
-                <button type="submit">Tìm kiếm</button>
-              </div>
-            </form>
+      <dialog ref={searchDialog} className="product-search-dialog" aria-labelledby="solar-search-heading"
+        onClose={() => searchTrigger.current?.focus()}
+        onClick={event => { if (event.target === event.currentTarget) {
+          const box = event.currentTarget.getBoundingClientRect();
+          if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) event.currentTarget.close();
+        } }}>
+        <div className="mb-5 flex items-start justify-between gap-3">
+          <div>
+            <h2 id="solar-search-heading" className="text-xl font-extrabold sm:text-2xl">{isEnglish ? 'Search products' : 'Tìm kiếm sản phẩm'}</h2>
+            <p className="mt-1 text-sm text-slate-600">{isEnglish ? 'Search by product name or model number.' : 'Tra cứu theo tên sản phẩm hoặc mã model.'}</p>
           </div>
+          <button type="button" className="grid size-10 shrink-0 place-items-center rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 focus-visible:ring-2 focus-visible:ring-brand-primary"
+            aria-label={isEnglish ? 'Close search' : 'Đóng tìm kiếm'} onClick={() => searchDialog.current?.close()}><X size={19} aria-hidden="true" /></button>
         </div>
-      )}
+        <ProductSearchForm english={isEnglish} id="solar-search-query" />
+      </dialog>
 
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-xs transition-all relative">
         {/* Global Route Navigation Progress Indicator */}
@@ -122,7 +92,7 @@ export function Header({ navigation, brand }: HeaderProps) {
                       : 'text-ink hover:text-brand-primary'
                       }`}
                   >
-                    <span>{getNavLabel(item)}</span>
+                    <span>{item.label}</span>
                     {item.children && item.children.length > 0 && (
                       <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-brand-primary transition-transform group-hover:rotate-180" />
                     )}
@@ -179,9 +149,14 @@ export function Header({ navigation, brand }: HeaderProps) {
             {/* Search Button */}
             <button
               type="button"
-              onClick={() => setIsSearchOpen(true)}
+              ref={searchTrigger}
+              aria-haspopup="dialog"
+              onClick={() => {
+                searchDialog.current?.showModal();
+                searchDialog.current?.querySelector<HTMLInputElement>("input[type=search]")?.focus();
+              }}
               className="p-2.5 rounded-full text-slate-600 hover:text-brand-primary hover:bg-slate-100 transition-colors focus-visible:ring-2 focus-visible:ring-brand-primary"
-              aria-label="Tìm kiếm"
+              aria-label={isEnglish ? "Search products" : "Tìm kiếm sản phẩm"}
             >
               <Search className="w-4 h-4" />
             </button>

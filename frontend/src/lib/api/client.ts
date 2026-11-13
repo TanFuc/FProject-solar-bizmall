@@ -5,6 +5,7 @@ import {
   PaginatedResponse,
   SiteShellData,
   CMSPageData,
+  ContentLocale,
   ProductCard,
   ProductDetail,
   ProjectItem,
@@ -23,8 +24,9 @@ export interface BrandSummary {
   logoUrl?: string;
 }
 
-const apiOrigin = (process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001').replace(/\/$/, '');
-const API_BASE_URL = apiOrigin.endsWith('/api/v1') ? apiOrigin : `${apiOrigin}/api/v1`;
+const browserApi = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3001";
+const apiOrigin = (typeof window === "undefined" ? process.env.BMSOLAR_BACKEND_URL || browserApi : browserApi).replace(/\/$/, "");
+export const API_BASE_URL = apiOrigin.endsWith("/api/v1") ? apiOrigin : apiOrigin + "/api/v1";
 
 // Bounded in-memory cache for truly shared stable public catalog metadata (TTL: 30 seconds)
 // CMS pages and SiteShell rely strictly on in-flight de-duplication per render and are not cached here.
@@ -128,7 +130,7 @@ async function safeFetch<T>(endpoint: string, options?: RequestInit, fallback?: 
         'Content-Type': 'application/json',
         ...(options?.headers || {}),
       },
-      next: { revalidate: process.env.NODE_ENV === 'development' ? 0 : 60 },
+      ...(options?.cache === 'no-store' ? {} : { next: { revalidate: process.env.NODE_ENV === 'development' ? 0 : 60 } }),
     });
 
     if (!res.ok) {
@@ -146,15 +148,16 @@ async function safeFetch<T>(endpoint: string, options?: RequestInit, fallback?: 
   }
 }
 
-export async function getSiteShell(): Promise<SiteShellData> {
-  return safeFetch<SiteShellData>('/public/site-shell');
+export async function getSiteShell(locale: ContentLocale = "vi-VN"): Promise<SiteShellData> {
+  return safeFetch<SiteShellData>(locale === "en-US" ? "/public/site-shell?locale=en-US" : "/public/site-shell", { cache: "no-store" });
 }
 
-export async function getPageBySlug(slug: string): Promise<CMSPageData> {
-  return safeFetch<CMSPageData>(`/public/pages/${slug}`);
+export async function getPageBySlug(slug: string, locale: "vi-VN" | "en-US" = "vi-VN"): Promise<CMSPageData> {
+  return safeFetch<CMSPageData>("/public/pages/" + encodeURIComponent(slug) + "?locale=" + locale, { cache: "no-store" });
 }
 
 export async function getProducts(params?: {
+  locale?: ContentLocale;
   page?: number;
   pageSize?: number;
   category?: string;
@@ -164,6 +167,7 @@ export async function getProducts(params?: {
   search?: string;
 }): Promise<PaginatedResponse<ProductCard>> {
   const query = new URLSearchParams();
+  if (params?.locale === "en-US") query.set("locale", params.locale);
   if (params?.page) query.set('page', params.page.toString());
   if (params?.pageSize) query.set('pageSize', params.pageSize.toString());
   if (params?.category) query.set('category', params.category);
@@ -193,25 +197,26 @@ export async function getProducts(params?: {
   }
 }
 
-export async function getProductBySlug(slug: string): Promise<ProductDetail | null> {
+export async function getProductBySlug(slug: string, locale: ContentLocale = "vi-VN"): Promise<ProductDetail | null> {
   const fallback: ProductDetail | null = null;
 
   try {
-    const res = await publicFetch(`${API_BASE_URL}/public/products/${slug}`, {
-      next: { revalidate: process.env.NODE_ENV === 'development' ? 0 : 60 },
+    const res = await publicFetch(`${API_BASE_URL}/public/products/${encodeURIComponent(slug)}?locale=${locale}`, {
+      cache: 'no-store',
     });
     if (!res.ok) return fallback;
     const json:unknown=await res.json();if(!object(json)||!object(json.data))return null;
     const raw=json.data;const card=productFromApi(raw);if(!card)return null;
     const gallery=Array.isArray(raw.gallery)?raw.gallery.filter((url):url is string=>typeof url==='string'):[];
     const specifications:Record<string,string>={};if(object(raw.specifications))for(const [key,value]of Object.entries(raw.specifications)){if(typeof value==='string'||typeof value==='number')specifications[key]=String(value);}
-    return {...card,description:typeof raw.description==='string'?raw.description:'',media:gallery.map((url,index)=>({id:url,mediaUrl:url,sortOrder:index})),audiences:[],specsParsed:specifications};
+    return {...card,documentJson:typeof raw.documentJson==='string'?raw.documentJson:undefined,description:typeof raw.description==='string'?raw.description:'',media:gallery.map((url,index)=>({id:url,mediaUrl:url,sortOrder:index})),audiences:[],specsParsed:specifications};
   } catch {
     return fallback;
   }
 }
 
 export async function getProjects(params?: {
+  locale?: ContentLocale;
   page?: number;
   pageSize?: number;
   type?: string;
@@ -219,6 +224,7 @@ export async function getProjects(params?: {
   search?:string;
 }): Promise<PaginatedResponse<ProjectItem>> {
   const query = new URLSearchParams();
+  if (params?.locale === "en-US") query.set("locale", params.locale);
   if (params?.page) query.set('page', params.page.toString());
   if (params?.pageSize) query.set('pageSize', params.pageSize.toString());
   if (params?.type) query.set('projectType', params.type);
@@ -246,28 +252,31 @@ export async function getProjects(params?: {
   }
 }
 
-export async function getProjectBySlug(slug: string): Promise<ProjectItem | null> {
+export async function getProjectBySlug(slug: string, locale: ContentLocale = "vi-VN"): Promise<ProjectItem | null> {
   const found = null;
   try {
-    const res = await publicFetch(`${API_BASE_URL}/public/projects/${slug}`, {
-      next: { revalidate: process.env.NODE_ENV === 'development' ? 0 : 60 },
+    const res = await publicFetch(`${API_BASE_URL}/public/projects/${encodeURIComponent(slug)}?locale=${locale}`, {
+      cache: 'no-store',
     });
     if (!res.ok) return found;
     const json:unknown=await res.json();if(!object(json)||!object(json.data))return null;
     const raw=json.data;const item=projectFromApi(raw);if(!item)return null;
     if(object(raw.projectType)&&typeof raw.projectType.name==='string'&&typeof raw.projectType.slug==='string')item.projectType={name:raw.projectType.name,slug:raw.projectType.slug};
-    if(object(raw.province)&&typeof raw.province.name==='string'&&typeof raw.province.code==='string')item.province={name:raw.province.name,code:raw.province.code};return item;
+    if(object(raw.province)&&typeof raw.province.name==='string'&&typeof raw.province.code==='string')item.province={name:raw.province.name,code:raw.province.code};
+    return {...item,bodyJson:typeof raw.bodyJson==="string"?raw.bodyJson:undefined};
   } catch {
     return found;
   }
 }
 
 export async function getArticles(params?: {
+  locale?: ContentLocale;
   page?: number;
   pageSize?: number;
   tag?: string;
 }): Promise<PaginatedResponse<ArticleItem>> {
   const query = new URLSearchParams();
+  if (params?.locale === "en-US") query.set("locale", params.locale);
   if (params?.page) query.set('page', params.page.toString());
   if (params?.pageSize) query.set('pageSize', params.pageSize.toString());
   if (params?.tag) query.set('tag', params.tag);
@@ -293,11 +302,11 @@ export async function getArticles(params?: {
   }
 }
 
-export async function getArticleBySlug(slug: string): Promise<ArticleItem | null> {
+export async function getArticleBySlug(slug: string, locale: ContentLocale = "vi-VN"): Promise<ArticleItem | null> {
   const found = null;
   try {
-    const res = await publicFetch(`${API_BASE_URL}/public/articles/${slug}`, {
-      next: { revalidate: process.env.NODE_ENV === 'development' ? 0 : 60 },
+    const res = await publicFetch(`${API_BASE_URL}/public/articles/${encodeURIComponent(slug)}?locale=${locale}`, {
+      cache: 'no-store',
     });
     if (!res.ok) return found;
     const json:unknown=await res.json();if(!object(json)||!object(json.data))return null;
@@ -340,9 +349,9 @@ export async function submitLeadRequest(payload: CreateLeadPayload): Promise<{ s
   }
 }
 
-export async function getSolutions(): Promise<DetailedSolution[]> {
+export async function getSolutions(locale: ContentLocale = "vi-VN", strict = false): Promise<DetailedSolution[]> {
   try {
-    const res = await publicFetch(`${API_BASE_URL}/public/solutions`, {
+    const res = await publicFetch(`${API_BASE_URL}/public/solutions?locale=${locale}`, {
       next: { revalidate: process.env.NODE_ENV === 'development' ? 0 : 60 },
     });
     if (res.ok) {
@@ -354,15 +363,17 @@ export async function getSolutions(): Promise<DetailedSolution[]> {
   } catch (err) {
     console.warn('Backend solutions unavailable, using fallback:', err);
   }
+  if (strict || process.env.NODE_ENV === 'production') return [];
   const { fallbackSolutions } = await import('./mockData');
   return fallbackSolutions;
 }
 
-export async function getSolutionBySlug(slug: string): Promise<DetailedSolution | null> {
+export async function getSolutionBySlug(slug: string, locale: ContentLocale = "vi-VN"): Promise<DetailedSolution | null> {
   try {
-    const res = await publicFetch(`${API_BASE_URL}/public/solutions/${encodeURIComponent(slug)}`, {
-      next: { revalidate: process.env.NODE_ENV === 'development' ? 0 : 60 },
+    const res = await publicFetch(`${API_BASE_URL}/public/solutions/${encodeURIComponent(slug)}?locale=${locale}`, {
+      cache: 'no-store',
     });
+    if (res.status === 404) return null;
     if (res.ok) {
       const json = await res.json();
       if (json && json.data) {
@@ -372,6 +383,7 @@ export async function getSolutionBySlug(slug: string): Promise<DetailedSolution 
   } catch (err) {
     console.warn('Backend solution by slug unavailable, using fallback:', err);
   }
+  if (process.env.NODE_ENV === 'production') return null;
   const { fallbackSolutions } = await import('./mockData');
   return (
     fallbackSolutions.find(

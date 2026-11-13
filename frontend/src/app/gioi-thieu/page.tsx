@@ -1,3 +1,7 @@
+import { aboutImages, aboutImageKey } from '@/lib/api/about-images';
+import { safeLink } from '@/lib/api/content-body';
+import { ContentSuggestions } from '@/components/blocks/ContentSuggestions';
+import { RichDocument } from '@/components/ui/RichDocument';
 import {CmsJourney,CmsProcess} from '@/components/blocks/CmsSections';
 import {getPageVisuals} from '@/lib/api/visuals';
 import {visualMetadata} from '@/lib/api/visual-metadata';
@@ -15,6 +19,11 @@ export async function generateMetadata(){return visualMetadata('about','/gioi-th
 
 export default async function AboutPage() {
  const visuals=await getPageVisuals('about');const copy=visuals.copy;
+ const image = (slot: keyof typeof aboutImages, alt: string = "") => {
+   const key = aboutImageKey(slot);
+   return { src: visuals.media[key] ?? visuals.media[aboutImages[slot].fallback], alt: visuals.mediaAlt[key] ?? visuals.mediaAlt[aboutImages[slot].fallback] ?? alt };
+ };
+ const target = (key: string, fallback: string) => safeLink(copy[key]) || fallback;
   return (
     <div className="solar-page solar-page-gioi-thieu w-full flex flex-col bg-white">
       {/* 1. Hero Section matching BM_SOLAR_gioi-thieu_desktop.png */}
@@ -32,7 +41,7 @@ export default async function AboutPage() {
               <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{copy.content002}</h2>
             </div>
             <Link
-              href="/du-an"
+              href={target("storyTopLink", "/du-an")}
               className="text-xs font-bold text-[#FF6B19] hover:underline flex items-center gap-1 shrink-0"
             >
               <span>{copy.content003}</span>
@@ -44,8 +53,10 @@ export default async function AboutPage() {
             <div className="space-y-4">
               <span className="text-[11px] font-bold text-[#FF6B19] uppercase tracking-wider">{copy.content005}</span>
               <h3 className="text-lg sm:text-xl font-bold text-slate-900 leading-snug">{copy.content006}</h3>
-              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">{copy.content007}</p>
-              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">{copy.content008}</p>
+              {copy.brandStoryDocument ? <RichDocument value={copy.brandStoryDocument} /> : <>
+                <p className="text-sm leading-relaxed text-slate-600">{copy.content007}</p>
+                <p className="text-sm leading-relaxed text-slate-600">{copy.content008}</p>
+              </>}
 
               <ul className="space-y-2.5 pt-1 text-xs sm:text-sm text-slate-700 font-medium">
                 <li className="flex items-center gap-2.5">
@@ -70,7 +81,7 @@ export default async function AboutPage() {
 
               <div className="pt-2">
                 <Link
-                  href="/lien-he"
+                  href={target("storyBottomLink", "/lien-he")}
                   className="px-6 py-2.5 rounded-full bg-[#FF6B19] hover:bg-[#ea5d0f] text-white text-xs font-bold inline-flex items-center gap-2 shadow-md shadow-[#FF6B19]/20 transition-all"
                 >
                   <span>{copy.content012}</span>
@@ -81,8 +92,7 @@ export default async function AboutPage() {
 
             <div className="relative rounded-3xl overflow-hidden aspect-[600/400] bg-slate-100 shadow-md">
               <Image
-                src={visuals.media.home}
-                alt="Ảnh minh họa giải pháp năng lượng xanh"
+                {...image("story", copy.content014)}
                 fill
                 sizes="(max-width: 1024px) 100vw, 50vw"
                 className="object-cover"
@@ -108,7 +118,7 @@ export default async function AboutPage() {
               <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{copy.content018}</h2>
             </div>
             <a
-              href="#tam-nhin"
+              href={target("valuesLink", "#tam-nhin")}
               className="text-xs font-bold text-[#FF6B19] hover:underline flex items-center gap-1 shrink-0"
             >
               <span>{copy.content019}</span>
@@ -156,7 +166,7 @@ export default async function AboutPage() {
               <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{copy.content031}</h2>
             </div>
             <Link
-              href="/giai-phap"
+              href={target("benefitsLink", "/giai-phap")}
               className="text-xs font-bold text-[#FF6B19] hover:underline flex items-center gap-1 shrink-0"
             >
               <span>{copy.content032}</span>
@@ -166,12 +176,11 @@ export default async function AboutPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6">
             <Link
-              href="/giai-phap"
+              href={target("benefitHomeLink", "/giai-phap")}
               className="group relative rounded-2xl overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 block bg-slate-900 aspect-[408/260]"
             >
               <Image
-                src={visuals.media.home}
-                alt="Tiết kiệm chi phí điện"
+                {...image("benefitHome", copy.content034)}
                 fill
                 sizes="(max-width: 768px) 100vw, 33vw"
                 className="object-cover group-hover:scale-105 transition-transform duration-500"
@@ -180,12 +189,11 @@ export default async function AboutPage() {
             </Link>
 
             <Link
-              href="/giai-phap"
+              href={target("benefitFactoryLink", "/giai-phap")}
               className="group relative rounded-2xl overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 block bg-slate-900 aspect-[408/260]"
             >
               <Image
-                src={visuals.media.factory}
-                alt="Bền vững & Thân thiện môi trường"
+                {...image("benefitFactory", copy.content035)}
                 fill
                 sizes="(max-width: 768px) 100vw, 33vw"
                 className="object-cover group-hover:scale-105 transition-transform duration-500"
@@ -194,12 +202,11 @@ export default async function AboutPage() {
             </Link>
 
             <Link
-              href="/giai-phap"
+              href={target("benefitEvLink", "/giai-phap")}
               className="group relative rounded-2xl overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 block bg-slate-900 aspect-[408/260]"
             >
               <Image
-                src={visuals.media.ev}
-                alt="Tự chủ nguồn năng lượng"
+                {...image("benefitEv", copy.content036)}
                 fill
                 sizes="(max-width: 768px) 100vw, 33vw"
                 className="object-cover group-hover:scale-105 transition-transform duration-500"
@@ -211,7 +218,7 @@ export default async function AboutPage() {
       </section>
 
       {/* 6. Section 04: Trải nghiệm rõ ràng. Quy trình minh bạch. */}
-      <CmsProcess copy={copy} count={4}/>
+      <CmsProcess copy={copy} count={4} link={target("processTarget", "/giai-phap")} />
 
       {/* 7. Section 05: Khám phá BM SOLAR qua hình ảnh */}
       <section className="py-10 lg:py-14 bg-white">
@@ -222,7 +229,7 @@ export default async function AboutPage() {
               <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{copy.content038}</h2>
             </div>
             <Link
-              href="/du-an"
+              href={target("galleryLink", "/du-an")}
               className="text-xs font-bold text-[#FF6B19] hover:underline flex items-center gap-1 shrink-0"
             >
               <span>{copy.content039}</span>
@@ -230,12 +237,13 @@ export default async function AboutPage() {
             </Link>
           </div>
 
-          <div className="solar-about-gallery"><div><Image src={visuals.media.ev} alt="Ảnh minh họa trạm sạc" fill sizes="(max-width:767px) 100vw,40vw" className="object-cover"/></div><div><Image src={visuals.media.home} alt="Ảnh minh họa nhà ở năng lượng xanh" fill sizes="(max-width:767px) 50vw,30vw" className="object-cover"/></div><div><Image src={visuals.media.factory} alt="Ảnh minh họa nhà xưởng" fill sizes="(max-width:767px) 50vw,30vw" className="object-cover"/></div></div>
+          <div className="solar-about-gallery"><div><Image {...image("galleryEv", "")} fill sizes="(max-width:767px) 100vw,40vw" className="object-cover"/></div><div><Image {...image("galleryHome", "")} fill sizes="(max-width:767px) 50vw,30vw" className="object-cover"/></div><div><Image {...image("galleryFactory", "")} fill sizes="(max-width:767px) 50vw,30vw" className="object-cover"/></div></div>
         </div>
       </section>
 
       {/* 8. Bottom CTA Banner */}
-      <CmsJourney copy={copy} mediaUrl={visuals.media.factory}/>
+      <CmsJourney copy={copy} mediaUrl={image("journey").src} primaryHref={target("journeyPrimaryTarget", "/lien-he#tu-van")} secondaryHref={target("journeySecondaryTarget", "/du-an")} />
+      <ContentSuggestions  />
     </div>
   );
 }

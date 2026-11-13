@@ -1,3 +1,4 @@
+import { documentText } from '@/lib/api/content-body';
 import {
   ProductDetail,
   ProductCard,
@@ -316,7 +317,7 @@ export function getSolutionSchema(solution: DetailedSolution) {
     '@type': 'Service',
     name: solution.title,
     serviceType: 'Tổng Thầu EPC Điện Mặt Trời & Lưu Trữ BESS',
-    description: solution.subtitle || solution.overview,
+    description: solution.subtitle || documentText(solution.overview),
     provider: {
       '@id': `${SITE_URL}/#organization`,
     },

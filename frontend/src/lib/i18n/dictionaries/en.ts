@@ -1,6 +1,15 @@
 import { TranslationKey } from './vi';
 
 export const en: Record<TranslationKey, string> = {
+  'home.projects.eyebrow': "Project Delivery",
+  'home.projects.description': "BM SOLAR engineers design, supply and deliver turnkey EPC projects across central and southern Vietnam.",
+  'home.projects.solar': "Solar power",
+  'home.projects.country': "Vietnam",
+  'home.news.eyebrow': "Insights & Markets",
+  'home.news.description': "Follow the latest electricity regulations and get practical advice on choosing solar equipment.",
+  'home.news.recent': "Recently updated",
+  'home.news.readTime': "{minutes} min read",
+
   // Navigation
   'nav.home': 'Home',
   'nav.about': 'About Us',

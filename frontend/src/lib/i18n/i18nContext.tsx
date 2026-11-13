@@ -1,14 +1,17 @@
 'use client';
 
+import { flushSync } from "react-dom";
 import React, {
   createContext,
   useContext,
-  useState,
   useEffect,
+  useState,
+
   useCallback,
   useMemo,
 } from 'react';
-import { Locale, DEFAULT_LOCALE, LOCALES, LOCALE_CONFIGS } from './locales';
+import { FullscreenLoader } from '@/components/ui/FullscreenLoader';
+import { Locale, DEFAULT_LOCALE, LOCALES } from './locales';
 import { vi, TranslationKey } from './dictionaries/vi';
 import { en } from './dictionaries/en';
 
@@ -25,6 +28,7 @@ interface I18nContextValue {
   isEnglish: boolean;
 }
 
+
 const I18nContext = createContext<I18nContextValue | undefined>(undefined);
 
 export function I18nProvider({
@@ -34,49 +38,26 @@ export function I18nProvider({
   children: React.ReactNode;
   initialLocale?: Locale;
 }) {
-  const [locale, setLocaleState] = useState<Locale>(initialLocale);
-
-  // Initialize from cookie or localStorage on client mount
   useEffect(() => {
-    try {
-      // 1. Check document.cookie
-      const match = document.cookie.match(/(?:^|;\s*)NEXT_LOCALE=([^;]*)/);
-      const cookieLocale = match ? (match[1] as Locale) : null;
-
-      if (cookieLocale && LOCALES.includes(cookieLocale)) {
-        setLocaleState(cookieLocale);
-        return;
-      }
-
-      // 2. Check localStorage
-      const savedLocale = localStorage.getItem('bm_solar_locale') as Locale | null;
-      if (savedLocale && LOCALES.includes(savedLocale)) {
-        setLocaleState(savedLocale);
-      }
-    } catch {
-      // Ignore storage errors in restricted contexts
-    }
-  }, []);
-
+    document.cookie = "BM_LOCALE_TRANSITION=;path=/;max-age=0;SameSite=Lax";
+    document.cookie = "NEXT_LOCALE=" + initialLocale + ";path=/;max-age=31536000;SameSite=Lax";
+  }, [initialLocale]);
+  const locale = initialLocale;
+  const [pendingLocale, setPendingLocale] = useState<Locale>();
   const setLocale = useCallback((newLocale: Locale) => {
-    if (!LOCALES.includes(newLocale)) return;
-    setLocaleState(newLocale);
+    if (!LOCALES.includes(newLocale) || newLocale === locale || pendingLocale) return;
+    flushSync(() => setPendingLocale(newLocale));
 
-    try {
-      // Persist in localStorage
-      localStorage.setItem('bm_solar_locale', newLocale);
-
-      // Persist in cookie (1 year expiry)
-      document.cookie = `NEXT_LOCALE=${newLocale};path=/;max-age=31536000;SameSite=Lax`;
-
-      // Update html lang attribute dynamically
-      if (typeof document !== 'undefined') {
-        document.documentElement.lang = newLocale;
-      }
-    } catch {
-      // Ignore storage errors
-    }
-  }, []);
+    document.cookie = "BM_LOCALE_TRANSITION=1;path=/;max-age=20;SameSite=Lax";
+    document.cookie = "NEXT_LOCALE=" + newLocale + ";path=/;max-age=31536000;SameSite=Lax";
+    const url = new URL(window.location.href);
+    if (url.pathname === "/" || url.pathname === "/en") {
+      url.pathname = newLocale === "en" ? "/en" : "/";
+      url.searchParams.delete("lang");
+    } else if (newLocale === "en") url.searchParams.set("lang", "en");
+    else url.searchParams.delete("lang");
+    requestAnimationFrame(() => requestAnimationFrame(() => window.location.assign(url)));
+  }, [locale, pendingLocale]);
 
   const toggleLocale = useCallback(() => {
     setLocale(locale === 'vi' ? 'en' : 'vi');
@@ -109,7 +90,17 @@ export function I18nProvider({
     [locale, setLocale, toggleLocale, t]
   );
 
-  return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
+  return <I18nContext.Provider value={value}>
+    {children}
+    {pendingLocale && <FullscreenLoader id="bm-language-loader"
+      label={pendingLocale === "en" ? "Loading BM SOLAR…" : "Đang tải BM SOLAR…"}
+      sublabel={pendingLocale === "en" ? "Changing language" : "Đang chuyển ngôn ngữ"}
+      onDismiss={() => setPendingLocale(undefined)} />}
+  </I18nContext.Provider>;
+}
+
+export function useLoadingLanguage() {
+  return useContext(I18nContext)?.locale;
 }
 
 export function useTranslation() {

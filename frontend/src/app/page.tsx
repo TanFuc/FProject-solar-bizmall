@@ -1,8 +1,11 @@
+import { ContentSuggestions } from '@/components/blocks/ContentSuggestions';
+import { CmsLongContent } from '@/components/blocks/CmsLongContent';
+import { getLocalizedPage, labelsForLocale, pageHasPublishedEnglish } from '@/lib/api/localized-page';
 import { pageCopy } from '@/lib/api/visuals';
 import { BrandStrip } from '@/components/blocks/BrandStrip';
 import React from 'react';
 import { Metadata } from 'next';
-import { getBrands, getPageBySlug, getProductCategories, getAudiences, getProducts, getProjects, getArticles } from '@/lib/api/client';
+import { getBrands, getProductCategories, getAudiences, getProducts, getProjects, getArticles } from '@/lib/api/client';
 import { constructMetadata } from '@/lib/seo/metadata';
 import { HeroCarousel } from '@/components/blocks/HeroCarousel';
 import { CategoryStrip } from '@/components/blocks/CategoryStrip';
@@ -17,20 +20,40 @@ import { items, category, audience, product, project, article, heroSlides, featu
 
 
 export async function generateMetadata(): Promise<Metadata> {
-  const page = await getPageBySlug('home');
+  const page = await getLocalizedPage('home');
   return constructMetadata({
-    title: page.seo.metaTitle || 'BM SOLAR — Tổng Thầu EPC Điện Mặt Trời & Lưu Trữ Năng Lượng',
+    title: page.seo?.metaTitle || 'BM SOLAR — Tổng Thầu EPC Điện Mặt Trời & Lưu Trữ Năng Lượng',
     description:
-      page.seo.metaDescription ||
+      page.seo?.metaDescription ||
       'BM SOLAR cung cấp giải pháp điện mặt trời mái nhà hòa lưới & lưu trữ pin BESS cho hộ gia đình, doanh nghiệp, nhà xưởng tại Quy Nhơn, TP.HCM.',
     canonicalPath: '/',
-    ogImage: page.seo.ogImageUrl || '/images/logo.png',
-    keywords: page.seo.keywords,
+    contentLocale: page.locale,
+    englishAvailable: page.hasEnglish ?? await pageHasPublishedEnglish('home'),
+    ogImage: page.seo?.ogImageUrl || '/images/logo.png',
+    keywords: page.seo?.keywords,
   });
 }
 
+async function allPublished<T>(fetchPage: (page: number) => Promise<{ data: T[]; meta: { totalPages: number } }>) {
+  const results: T[] = [];
+  for (let page = 1; ; page++) {
+    const result = await fetchPage(page);
+    results.push(...result.data);
+    if (page >= result.meta.totalPages || !result.data.length) return results;
+  }
+}
+
+function curatedFirst<T extends { id: string }>(curated: T[] | undefined, published: T[]) {
+  const byId = new Map(published.map(item => [item.id, item]));
+  return [...new Map([...(curated || []).flatMap(item => byId.has(item.id) ? [[item.id, byId.get(item.id)!] as const] : []), ...byId]).values()];
+}
+
 export default async function HomePage() {
-  const [page, categories, audienceRows, products, projects, articles, brands] = await Promise.all([getPageBySlug('home'),getProductCategories(),getAudiences(),getProducts({pageSize:5}),getProjects({pageSize:4}),getArticles({pageSize:3}),getBrands()]);
+  const page = await getLocalizedPage("home");
+  const [categories, audienceRows, products, projects, articles, brands, translate] = await Promise.all([
+    getProductCategories(), getAudiences(), allPublished(p => getProducts({ page: p, pageSize: 50, locale: page.locale })),
+    allPublished(p => getProjects({ page: p, pageSize: 50, locale: page.locale })), allPublished(p => getArticles({ page: p, pageSize: 50, locale: page.locale })), getBrands(), labelsForLocale(page.locale),
+  ]);
 
   // Find blocks or use rich structured fallback blocks
   const heroBlock = page.blocks.find((b) => b.type === 'heroCarousel');
@@ -50,19 +73,24 @@ export default async function HomePage() {
   return (
     <div className="solar-home">
       <HeroCarousel slides={slides} />
-      <CategoryStrip categories={items(catBlock?.data.categories, category) || categoryRows} />
-      <SolutionShowcase audiences={audiences} title={copy.solutions} />
-      <FeaturedProducts title={copy.products} products={items(prodBlock?.data.products, product) || products.data} />
-      <ProjectShowcase title={copy.projects} projects={items(projBlock?.data.projects, project) || projects.data} />
+      <CmsLongContent blocks={page.blocks} />
+      <CategoryStrip english={page.locale === "en-US"} categories={(items(catBlock?.data.categories, category) || categoryRows).map(item => ({ ...item, name: translate(item.name) }))} />
+      <SolutionShowcase audiences={audiences.map(item => ({ ...item, label: translate(item.label), description: item.description && translate(item.description) }))} title={copy.solutions} />
+      <FeaturedProducts title={copy.products} products={curatedFirst(items(prodBlock?.data.products, product), products)} />
+      <ProjectShowcase title={copy.projects} eyebrow={copy.projectsEyebrow} description={copy.projectsDescription} linkLabel={copy.projectsLink} projects={(curatedFirst(items(projBlock?.data.projects, project), projects)).map(item => ({ ...item,
+        projectType: item.projectType && { ...item.projectType, name: translate(item.projectType.name) },
+        province: item.province && { ...item.province, name: translate(item.province.name) },
+      }))} />
       <FeatureHighlights items={highlights} headline={copy.features} />
-      <NewsSection title={copy.news} articles={items(newsBlock?.data.articles, article) || articles.data} />
-      <BrandStrip brands={brands} headline={typeof page.blocks.find(b=>b.type==='socialGrid')?.data.headline==='string' ? String(page.blocks.find(b=>b.type==='socialGrid')?.data.headline) : undefined} />
+      <NewsSection title={copy.news} eyebrow={copy.newsEyebrow} description={copy.newsDescription} linkLabel={copy.newsLink} articles={curatedFirst(items(newsBlock?.data.articles, article), articles)} />
+      <BrandStrip english={page.locale === "en-US"} brands={brands} headline={typeof page.blocks.find(b=>b.type==='socialGrid')?.data.headline==='string' ? String(page.blocks.find(b=>b.type==='socialGrid')?.data.headline) : undefined} />
       <ConsultationFormBlock
         mediaUrl={slides[0]?.desktopMediaUrl}
         benefits={highlights.map(item=>item.label).filter((title):title is string=>Boolean(title))}
         headline={copy.consultation || (typeof leadBlock?.data.headline === 'string' ? leadBlock.data.headline : undefined)}
         subheading={copy.consultationSubtitle || (typeof leadBlock?.data.subheading === 'string' ? leadBlock.data.subheading : undefined)}
       />
+      <ContentSuggestions  />
     </div>
   );
 }

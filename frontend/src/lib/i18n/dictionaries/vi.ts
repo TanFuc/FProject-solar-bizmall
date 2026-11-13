@@ -1,4 +1,13 @@
 export const vi = {
+  'home.projects.eyebrow': "Năng Lực Thi Công Thực Tế",
+  'home.projects.description': "Trực tiếp thiết kế, cung ứng thiết bị và tổng thầu EPC bởi đội ngũ kỹ sư BM SOLAR tại miền Trung & Nam Bộ.",
+  'home.projects.solar': "Điện mặt trời",
+  'home.projects.country': "Việt Nam",
+  'home.news.eyebrow': "Kiến Thức & Thị Trường",
+  'home.news.description': "Cập nhật thông tư, quy định giá điện và cẩm nang lựa chọn thiết bị điện mặt trời từ chuyên gia BM SOLAR.",
+  'home.news.recent': "Mới cập nhật",
+  'home.news.readTime': "{minutes} phút đọc",
+
   // Navigation
   'nav.home': 'Trang chủ',
   'nav.about': 'Giới thiệu',

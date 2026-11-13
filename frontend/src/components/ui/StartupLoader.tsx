@@ -16,7 +16,7 @@ const STARTUP_LOADER_ID = 'bm-startup-loader';
  * - Bounded release path (max 2.5s) ensures visitors are never trapped by stalled resources.
  * - Supports no-JS visitors cleanly via noscript CSS override.
  */
-export function StartupLoader() {
+export function StartupLoader({ english = false }: { english?: boolean }) {
   const [visible, setVisible] = useState(true);
   const [fading, setFading] = useState(false);
   const dismissedRef = useRef(false);
@@ -83,8 +83,8 @@ export function StartupLoader() {
         className={`transition-opacity duration-300 ease-out ${
           fading ? 'opacity-0 pointer-events-none' : 'opacity-100'
         }`}
-        label="Đang tải trải nghiệm năng lượng xanh..."
-        sublabel="BM SOLAR  •  Xin vui lòng chờ trong giây lát"
+        label={english ? "Loading BM SOLAR…" : "Đang tải trải nghiệm năng lượng xanh..."}
+        sublabel={english ? "Please wait a moment" : "BM SOLAR  •  Xin vui lòng chờ trong giây lát"}
         onDismiss={dismiss}
       />
     </>

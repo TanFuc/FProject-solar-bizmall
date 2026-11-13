@@ -1,3 +1,6 @@
+import { ProductSearchForm } from '@/components/ui/ProductSearchForm';
+import { ContentSuggestions } from '@/components/blocks/ContentSuggestions';
+import { labelsForLocale } from '@/lib/api/localized-page';
 import { CmsJourney } from '@/components/blocks/CmsSections';
 import Link from 'next/link';
 import { ArrowRight, RotateCcw } from 'lucide-react';
@@ -41,9 +44,9 @@ interface Props {
 export default async function ProductsPage({ searchParams }: Props) {
   const resolvedSearchParams = (await searchParams) || {};
   const page = Math.max(1, Number(resolvedSearchParams.page) || 1);
-  const [visuals, listing, allCategories, audiences, brands] = await Promise.all([
-    getPageVisuals('products'),
-    getProducts({
+  const visuals = await getPageVisuals('products');
+  const [listing, categoryRows, audienceRows, brands, translate] = await Promise.all([
+    getProducts({ locale: visuals.page.locale,
       page,
       pageSize: 9,
       category: resolvedSearchParams.category,
@@ -55,9 +58,14 @@ export default async function ProductsPage({ searchParams }: Props) {
     getProductCategories(),
     getAudiences(),
     getBrands(),
+    labelsForLocale(visuals.page.locale),
   ]);
 
+  const allCategories = categoryRows.map(item => ({ ...item, name: translate(item.name) }));
+  const audiences = audienceRows.map(item => ({ ...item, label: translate(item.label), description: item.description && translate(item.description) }));
   const copy = visuals.copy;
+  const ui = (vi: string, en: string) => visuals.page.locale === "en-US" ? en : vi;
+
   const block = visuals.page.blocks.find((b) => b.type === 'categoryShowcase');
   const ids = Array.isArray(block?.data.categoryIds)
     ? block.data.categoryIds.filter((v): v is string => typeof v === 'string')
@@ -95,20 +103,20 @@ export default async function ProductsPage({ searchParams }: Props) {
         />
 
         <div className="solar-catalog-categories">
-          <CategoryStrip categories={categories} />
+          <CategoryStrip categories={categories} english={visuals.page.locale === "en-US"} selected={resolvedSearchParams.category} />
         </div>
 
         <div className="solar-catalog-layout">
           {/* Sidebar filters with client transitions and scroll preservation */}
-          <aside className="solar-catalog-sidebar" aria-label="Bộ lọc sản phẩm">
-            <h3>Danh mục</h3>
+          <aside className="solar-catalog-sidebar" aria-label={ui("Bộ lọc sản phẩm", "Product filters")}>
+            <h3>{ui("Danh mục", "Categories")}</h3>
             <Link
               href={href('category')}
               scroll={false}
               aria-current={!resolvedSearchParams.category ? 'page' : undefined}
               className="transition-colors"
             >
-              Tất cả
+              {ui("Tất cả", "All")}
             </Link>
             {categories.map((category) => (
               <Link
@@ -122,14 +130,14 @@ export default async function ProductsPage({ searchParams }: Props) {
               </Link>
             ))}
 
-            <h3 className="mt-7">Ứng dụng</h3>
+            <h3 className="mt-7">{ui("Ứng dụng", "Applications")}</h3>
             <Link
               href={href('audience')}
               scroll={false}
               aria-current={!resolvedSearchParams.audience ? 'page' : undefined}
               className="transition-colors"
             >
-              Tất cả
+              {ui("Tất cả", "All")}
             </Link>
             {audiences.map((audience) => (
               <Link
@@ -145,14 +153,14 @@ export default async function ProductsPage({ searchParams }: Props) {
 
             {brands && brands.length > 0 && (
               <>
-                <h3 className="mt-7">Thương hiệu</h3>
+                <h3 className="mt-7">{ui("Thương hiệu", "Brands")}</h3>
                 <Link
                   href={href('brand')}
                   scroll={false}
                   aria-current={!resolvedSearchParams.brand ? 'page' : undefined}
                   className="transition-colors"
                 >
-                  Tất cả
+                  {ui("Tất cả", "All")}
                 </Link>
                 {brands.map((brand) => (
                   <Link
@@ -176,7 +184,7 @@ export default async function ProductsPage({ searchParams }: Props) {
                   className="inline-flex items-center gap-1.5 text-xs text-ink-muted hover:text-accent-orange font-medium transition-colors"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
-                  Xóa tất cả bộ lọc
+                  {ui("Xóa tất cả bộ lọc", "Clear all filters")}
                 </Link>
               </div>
             )}
@@ -184,11 +192,14 @@ export default async function ProductsPage({ searchParams }: Props) {
 
           {/* Catalog listing area */}
           <div>
+            <div className="mb-4">
+              <ProductSearchForm id="catalog-search-query" english={visuals.page.locale === "en-US"} query={resolvedSearchParams.q} />
+            </div>
             <div className="solar-catalog-toolbar">
               <div className="flex items-center gap-3">
                 <p>
                   <strong>{copy.listTitle}</strong>
-                  <span>{listing.meta.total} sản phẩm</span>
+                  <span>{listing.meta.total} {ui("sản phẩm", "products")}</span>
                 </p>
                 <CatalogPendingIndicator />
               </div>
@@ -202,11 +213,11 @@ export default async function ProductsPage({ searchParams }: Props) {
                 <AutoSubmitSelect
                   name="sort"
                   value={resolvedSearchParams.sort || ''}
-                  label="Sắp xếp"
+                  label={ui("Sắp xếp", "Sort by")}
                   options={[
-                    { value: '', label: 'Mới nhất' },
-                    { value: 'name_asc', label: 'Tên A–Z' },
-                    { value: 'name_desc', label: 'Tên Z–A' },
+                    { value: '', label: ui("Mới nhất", "Newest") },
+                    { value: 'name_asc', label: ui("Tên A–Z", "Name A–Z") },
+                    { value: 'name_desc', label: ui("Tên Z–A", "Name Z–A") },
                   ]}
                 />
               </form>
@@ -245,10 +256,10 @@ export default async function ProductsPage({ searchParams }: Props) {
             {!listing.data.length && (
               <div className="solar-empty flex flex-col items-center justify-center py-12 px-4 rounded-xl bg-surface border border-slate-200 text-center my-6" role="status">
                 <p className="text-base font-semibold text-ink mb-1">
-                  Chưa có sản phẩm phù hợp với bộ lọc đã chọn.
+                  {ui("Chưa có sản phẩm phù hợp với bộ lọc đã chọn.", "No products match the selected filters.")}
                 </p>
                 <p className="text-xs text-ink-muted mb-4 max-w-sm">
-                  Quý khách vui lòng thử tìm kiếm với từ khóa khác hoặc xóa bộ lọc để xem toàn bộ danh mục sản phẩm.
+                  {ui("Quý khách vui lòng thử tìm kiếm với từ khóa khác hoặc xóa bộ lọc để xem toàn bộ danh mục sản phẩm.", "Try another search or clear the filters to browse the full catalog.")}
                 </p>
                 <Link
                   href="/san-pham"
@@ -256,7 +267,7 @@ export default async function ProductsPage({ searchParams }: Props) {
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-primary hover:bg-brand-dark text-white text-xs font-semibold shadow-sm transition-colors"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
-                  Xem tất cả sản phẩm
+                  {ui("Xem tất cả sản phẩm", "View all products")}
                 </Link>
               </div>
             )}
@@ -284,6 +295,7 @@ export default async function ProductsPage({ searchParams }: Props) {
       </section>
 
       <CmsJourney copy={copy} mediaUrl={visuals.media.factory} />
+      <ContentSuggestions kind="products" />
     </div>
   );
 }

@@ -22,6 +22,7 @@ import {
   getBreadcrumbSchema,
 } from '../src/lib/seo/structuredData';
 
+const canonicalOrigin = (process.env.NEXT_PUBLIC_SITE_URL || 'https://bmsolar.vn').replace(/\/$/, '');
 console.log('====================================================');
 console.log('BM SOLAR — FULL PRODUCTION TEST MATRIX (18_TEST_MATRIX.md)');
 console.log('====================================================\n');
@@ -37,7 +38,7 @@ async function testSitemap() {
 
   // Verify no synthetic "new Date()" on every run - timestamps must be stable Date objects
   for (const r of routes) {
-    assert.ok(r.url.startsWith('https://bmsolar.vn'), `URL ${r.url} must use canonical domain`);
+    assert.ok(new URL(r.url).origin === canonicalOrigin, `URL ${r.url} must use canonical domain`);
     if (r.lastModified !== undefined) {
       assert.ok(r.lastModified instanceof Date, `Route ${r.url} must have a valid lastModified Date object`);
       assert.ok(!isNaN(r.lastModified.getTime()), `Route ${r.url} lastModified Date must be valid`);
@@ -45,7 +46,7 @@ async function testSitemap() {
   }
 
   // Check specific routes
-  const home = routes.find((r) => r.url === 'https://bmsolar.vn');
+  const home = routes.find((r) => r.url === canonicalOrigin);
   assert.ok(home, 'Home route must be in sitemap');
   assert.strictEqual(home.priority, 1.0);
 }
@@ -56,7 +57,7 @@ async function testSitemap() {
 console.log('Scenario 2: Robots.txt Directives');
 function testRobots() {
   const rules = robots();
-  assert.strictEqual(rules.sitemap, 'https://bmsolar.vn/sitemap.xml');
+  assert.strictEqual(rules.sitemap, canonicalOrigin + '/sitemap.xml');
   const userRules = Array.isArray(rules.rules) ? rules.rules : [rules.rules];
   const starRule = userRules.find((r) => r.userAgent === '*');
   assert.ok(starRule, 'Wildcard userAgent rule must exist');
@@ -92,13 +93,13 @@ function testBranchContacts() {
   assert.strictEqual(qnSchema['@type'], 'LocalBusiness');
   assert.strictEqual(qnSchema.telephone, qnPhone?.target);
   assert.strictEqual(qnSchema.address?.streetAddress, qn.streetAddress);
-  assert.strictEqual(qnSchema.parentOrganization?.['@id'], 'https://bmsolar.vn/#organization');
+  assert.strictEqual(qnSchema.parentOrganization?.['@id'], canonicalOrigin + '/#organization');
 
   const hcmSchema = getLocalBusinessSchema(hcm);
   assert.strictEqual(hcmSchema['@type'], 'LocalBusiness');
   assert.strictEqual(hcmSchema.telephone, hcmPhone?.target);
   assert.strictEqual(hcmSchema.address?.streetAddress, hcm.streetAddress);
-  assert.strictEqual(hcmSchema.parentOrganization?.['@id'], 'https://bmsolar.vn/#organization');
+  assert.strictEqual(hcmSchema.parentOrganization?.['@id'], canonicalOrigin + '/#organization');
 }
 
 // ----------------------------------------------------
