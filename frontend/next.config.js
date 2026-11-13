@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  output: process.env.BMSOLAR_STANDALONE === "1" ? "standalone" : undefined,
+  poweredByHeader: false,
+  experimental: { cpus: 2 },
   distDir: process.env.NEXT_BUILD_DIR || '.next',
   images: {
     remotePatterns: [

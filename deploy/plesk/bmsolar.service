@@ -1,0 +1,17 @@
+[Unit]
+Description=BM SOLAR Go API
+After=network.target
+
+[Service]
+Type=simple
+User=REPLACE_WITH_SUBSCRIPTION_USER
+WorkingDirectory=/var/www/vhosts/REPLACE_DOMAIN/private/bmsolar/backend
+EnvironmentFile=/var/www/vhosts/REPLACE_DOMAIN/private/bmsolar/backend.env
+ExecStart=/var/www/vhosts/REPLACE_DOMAIN/private/bmsolar/backend/bmsolar-api
+Restart=on-failure
+NoNewPrivileges=true
+PrivateTmp=true
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target
