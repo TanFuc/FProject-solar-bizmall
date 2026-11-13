@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'Hệ Thống Quản Trị BM SOLAR — Admin Portal',
@@ -21,13 +20,5 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <>
-      <nav className="admin-route-nav" aria-label="Quản trị">
-        <Link href="/admin">Dashboard</Link>
-        <Link href="/admin/media">Ảnh & nội dung</Link>
-      </nav>
-      {children}
-    </>
-  );
+  return children;
 }
