@@ -7,31 +7,38 @@ import (
 
 	"bmsolar-backend/internal/common/errors"
 	"bmsolar-backend/internal/common/id"
+	"bmsolar-backend/internal/common/richcontent"
 	"bmsolar-backend/internal/database/models"
+	"bmsolar-backend/internal/modules/identity"
+	"bmsolar-backend/internal/modules/media"
 
 	"github.com/go-chi/chi/v5"
+	"gorm.io/gorm"
 )
 
 // SolutionDetailDTO matches frontend DetailedSolution interface
 type SolutionDetailDTO struct {
-	ID                      string   `json:"id"`
-	Slug                    string   `json:"slug"`
-	Title                   string   `json:"title"`
-	Subtitle                string   `json:"subtitle"`
-	AudienceCode            string   `json:"audienceCode"`
-	CapacityRange           string   `json:"capacityRange"`
-	HeroImage               string   `json:"heroImage"`
-	MonthlySavings          string   `json:"monthlySavings"`
-	RoiYears                string   `json:"roiYears"`
-	WarrantyPeriod          string   `json:"warrantyPeriod"`
-	Overview                string   `json:"overview"`
-	Benefits                any      `json:"benefits"`
-	EquipmentList           any      `json:"equipmentList"`
-	ProcessSteps            any      `json:"processSteps"`
-	RecommendedProductSlugs []string `json:"recommendedProductSlugs"`
-	RelatedProjectSlugs     []string `json:"relatedProjectSlugs"`
-	Status                  string   `json:"status"`
-	SortOrder               int      `json:"sortOrder"`
+	DocumentJSON            string                 `json:"documentJson,omitempty"`
+	HasEnglish              bool                   `json:"hasEnglish"`
+	English                 *models.EnglishContent `json:"english,omitempty"`
+	ID                      string                 `json:"id"`
+	Slug                    string                 `json:"slug"`
+	Title                   string                 `json:"title"`
+	Subtitle                string                 `json:"subtitle"`
+	AudienceCode            string                 `json:"audienceCode"`
+	CapacityRange           string                 `json:"capacityRange"`
+	HeroImage               string                 `json:"heroImage"`
+	MonthlySavings          string                 `json:"monthlySavings"`
+	RoiYears                string                 `json:"roiYears"`
+	WarrantyPeriod          string                 `json:"warrantyPeriod"`
+	Overview                string                 `json:"overview"`
+	Benefits                any                    `json:"benefits"`
+	EquipmentList           any                    `json:"equipmentList"`
+	ProcessSteps            any                    `json:"processSteps"`
+	RecommendedProductSlugs []string               `json:"recommendedProductSlugs"`
+	RelatedProjectSlugs     []string               `json:"relatedProjectSlugs"`
+	Status                  string                 `json:"status"`
+	SortOrder               int                    `json:"sortOrder"`
 }
 
 func solutionToDTO(s models.Solution) SolutionDetailDTO {
@@ -61,6 +68,7 @@ func solutionToDTO(s models.Solution) SolutionDetailDTO {
 	}
 
 	return SolutionDetailDTO{
+		HasEnglish:              s.English.Available(),
 		ID:                      s.ID,
 		Slug:                    s.Slug,
 		Title:                   s.Title,
@@ -82,6 +90,49 @@ func solutionToDTO(s models.Solution) SolutionDetailDTO {
 	}
 }
 
+func localizedSolution(s models.Solution, locale string) SolutionDetailDTO {
+	dto := solutionToDTO(s)
+	if locale != "en-US" || !dto.HasEnglish {
+		return dto
+	}
+	english := s.English
+	dto.Title = models.LocalizedText(dto.Title, english.Title)
+	dto.Subtitle = models.LocalizedText(dto.Subtitle, english.Subtitle)
+	dto.CapacityRange = models.LocalizedText(dto.CapacityRange, english.Capacity)
+	dto.MonthlySavings = models.LocalizedText(dto.MonthlySavings, english.Savings)
+	dto.RoiYears = models.LocalizedText(dto.RoiYears, english.ROI)
+	dto.WarrantyPeriod = models.LocalizedText(dto.WarrantyPeriod, english.Warranty)
+	dto.Overview = models.LocalizedText(dto.Overview, english.Body)
+	if rows := englishRows(english.BenefitsText, 2); len(rows) > 0 {
+		result := make([]englishBenefit, 0, len(rows))
+		for _, row := range rows {
+			result = append(result, englishBenefit{row[0], row[1]})
+		}
+		dto.Benefits = result
+	}
+	if rows := englishRows(english.EquipmentText, 3); len(rows) > 0 {
+		result := make([]englishEquipment, 0, len(rows))
+		for _, row := range rows {
+			result = append(result, englishEquipment{row[0], row[1], row[2]})
+		}
+		dto.EquipmentList = result
+	}
+	if rows := englishRows(english.ProcessText, 2); len(rows) > 0 {
+		result := make([]englishStep, 0, len(rows))
+		for index, row := range rows {
+			result = append(result, englishStep{index + 1, row[0], row[1]})
+		}
+		dto.ProcessSteps = result
+	}
+	return dto
+}
+
+func adminSolution(s models.Solution) SolutionDetailDTO {
+	dto := solutionToDTO(s)
+	dto.English = s.English
+	return dto
+}
+
 // ---------------- Public Solution Endpoints ----------------
 
 // ListPublicSolutions returns published solutions ordered by sort_order
@@ -94,7 +145,9 @@ func (h *Handler) ListPublicSolutions(w http.ResponseWriter, r *http.Request) {
 
 	dtos := make([]SolutionDetailDTO, 0, len(solutions))
 	for _, s := range solutions {
-		dtos = append(dtos, solutionToDTO(s))
+		dto := localizedSolution(s, r.URL.Query().Get("locale"))
+		dto.Overview, _ = richcontent.PlainText(dto.Overview)
+		dtos = append(dtos, dto)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -127,7 +180,17 @@ func (h *Handler) GetPublicSolutionBySlug(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	dto := solutionToDTO(solution)
+	dto := localizedSolution(solution, r.URL.Query().Get("locale"))
+	overview, err := media.ResolveRichContent(h.db, h.cfg, dto.Overview)
+	if err != nil {
+		errors.WriteJSON(w, r, errors.Internal("Failed to resolve document"))
+		return
+	}
+	plainOverview, hasDocument := richcontent.PlainText(overview)
+	if hasDocument {
+		dto.DocumentJSON = overview
+	}
+	dto.Overview = plainOverview
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Cache-Control", "public, max-age=60")
 	_ = json.NewEncoder(w).Encode(map[string]any{
@@ -185,7 +248,7 @@ func (h *Handler) ListAdminSolutions(w http.ResponseWriter, r *http.Request) {
 
 	dtos := make([]SolutionDetailDTO, 0, len(solutions))
 	for _, s := range solutions {
-		dtos = append(dtos, solutionToDTO(s))
+		dtos = append(dtos, adminSolution(s))
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -203,7 +266,7 @@ func (h *Handler) GetAdminSolution(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dto := solutionToDTO(solution)
+	dto := adminSolution(solution)
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{
 		"data": dto,
@@ -213,23 +276,24 @@ func (h *Handler) GetAdminSolution(w http.ResponseWriter, r *http.Request) {
 // CreateSolution creates a new solution
 func (h *Handler) CreateSolution(w http.ResponseWriter, r *http.Request) {
 	var payload struct {
-		Slug                    string `json:"slug"`
-		Title                   string `json:"title"`
-		Subtitle                string `json:"subtitle"`
-		AudienceCode            string `json:"audienceCode"`
-		CapacityRange           string `json:"capacityRange"`
-		HeroImage               string `json:"heroImage"`
-		MonthlySavings          string `json:"monthlySavings"`
-		RoiYears                string `json:"roiYears"`
-		WarrantyPeriod          string `json:"warrantyPeriod"`
-		Overview                string `json:"overview"`
-		BenefitsJSON            string `json:"benefitsJson"`
-		EquipmentJSON           string `json:"equipmentJson"`
-		ProcessJSON             string `json:"processJson"`
-		RecommendedProductSlugs string `json:"recommendedProductSlugs"`
-		RelatedProjectSlugs     string `json:"relatedProjectSlugs"`
-		Status                  string `json:"status"`
-		SortOrder               int    `json:"sortOrder"`
+		English                 *models.EnglishContent `json:"english"`
+		Slug                    string                 `json:"slug"`
+		Title                   string                 `json:"title"`
+		Subtitle                string                 `json:"subtitle"`
+		AudienceCode            string                 `json:"audienceCode"`
+		CapacityRange           string                 `json:"capacityRange"`
+		HeroImage               string                 `json:"heroImage"`
+		MonthlySavings          string                 `json:"monthlySavings"`
+		RoiYears                string                 `json:"roiYears"`
+		WarrantyPeriod          string                 `json:"warrantyPeriod"`
+		Overview                string                 `json:"overview"`
+		BenefitsJSON            string                 `json:"benefitsJson"`
+		EquipmentJSON           string                 `json:"equipmentJson"`
+		ProcessJSON             string                 `json:"processJson"`
+		RecommendedProductSlugs string                 `json:"recommendedProductSlugs"`
+		RelatedProjectSlugs     string                 `json:"relatedProjectSlugs"`
+		Status                  string                 `json:"status"`
+		SortOrder               int                    `json:"sortOrder"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
@@ -248,6 +312,7 @@ func (h *Handler) CreateSolution(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sol := models.Solution{
+		English:                 payload.English,
 		ID:                      id.New(),
 		Slug:                    strings.ToLower(strings.TrimSpace(payload.Slug)),
 		Title:                   payload.Title,
@@ -268,7 +333,16 @@ func (h *Handler) CreateSolution(w http.ResponseWriter, r *http.Request) {
 		SortOrder:               payload.SortOrder,
 	}
 
-	if err := h.db.Create(&sol).Error; err != nil {
+	if err := richcontent.Validate(sol.Overview, sol.English.ContentBody()); err != nil {
+		errors.WriteJSON(w, r, errors.Unprocessable("INVALID_DOCUMENT", err.Error()))
+		return
+	}
+	if err := h.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(&sol).Error; err != nil {
+			return err
+		}
+		return identity.AuditContentWrite(tx, r.Context(), "create", "solution", sol.ID)
+	}); err != nil {
 		errors.WriteJSON(w, r, errors.BadRequest("DUPLICATE_SLUG", "Slug may already exist"))
 		return
 	}
@@ -276,7 +350,7 @@ func (h *Handler) CreateSolution(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{
-		"data": solutionToDTO(sol),
+		"data": adminSolution(sol),
 	})
 }
 
@@ -290,23 +364,24 @@ func (h *Handler) UpdateSolution(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var payload struct {
-		Slug                    *string `json:"slug"`
-		Title                   *string `json:"title"`
-		Subtitle                *string `json:"subtitle"`
-		AudienceCode            *string `json:"audienceCode"`
-		CapacityRange           *string `json:"capacityRange"`
-		HeroImage               *string `json:"heroImage"`
-		MonthlySavings          *string `json:"monthlySavings"`
-		RoiYears                *string `json:"roiYears"`
-		WarrantyPeriod          *string `json:"warrantyPeriod"`
-		Overview                *string `json:"overview"`
-		BenefitsJSON            *string `json:"benefitsJson"`
-		EquipmentJSON           *string `json:"equipmentJson"`
-		ProcessJSON             *string `json:"processJson"`
-		RecommendedProductSlugs *string `json:"recommendedProductSlugs"`
-		RelatedProjectSlugs     *string `json:"relatedProjectSlugs"`
-		Status                  *string `json:"status"`
-		SortOrder               *int    `json:"sortOrder"`
+		English                 *models.EnglishContent `json:"english"`
+		Slug                    *string                `json:"slug"`
+		Title                   *string                `json:"title"`
+		Subtitle                *string                `json:"subtitle"`
+		AudienceCode            *string                `json:"audienceCode"`
+		CapacityRange           *string                `json:"capacityRange"`
+		HeroImage               *string                `json:"heroImage"`
+		MonthlySavings          *string                `json:"monthlySavings"`
+		RoiYears                *string                `json:"roiYears"`
+		WarrantyPeriod          *string                `json:"warrantyPeriod"`
+		Overview                *string                `json:"overview"`
+		BenefitsJSON            *string                `json:"benefitsJson"`
+		EquipmentJSON           *string                `json:"equipmentJson"`
+		ProcessJSON             *string                `json:"processJson"`
+		RecommendedProductSlugs *string                `json:"recommendedProductSlugs"`
+		RelatedProjectSlugs     *string                `json:"relatedProjectSlugs"`
+		Status                  *string                `json:"status"`
+		SortOrder               *int                   `json:"sortOrder"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
@@ -314,6 +389,9 @@ func (h *Handler) UpdateSolution(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if payload.English != nil {
+		existing.English = payload.English
+	}
 	if payload.Slug != nil {
 		existing.Slug = strings.ToLower(strings.TrimSpace(*payload.Slug))
 	}
@@ -366,14 +444,23 @@ func (h *Handler) UpdateSolution(w http.ResponseWriter, r *http.Request) {
 		existing.SortOrder = *payload.SortOrder
 	}
 
-	if err := h.db.Save(&existing).Error; err != nil {
+	if err := richcontent.Validate(existing.Overview, existing.English.ContentBody()); err != nil {
+		errors.WriteJSON(w, r, errors.Unprocessable("INVALID_DOCUMENT", err.Error()))
+		return
+	}
+	if err := h.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Save(&existing).Error; err != nil {
+			return err
+		}
+		return identity.AuditContentWrite(tx, r.Context(), "update", "solution", existing.ID)
+	}); err != nil {
 		errors.WriteJSON(w, r, errors.Internal("Failed to update solution"))
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{
-		"data": solutionToDTO(existing),
+		"data": adminSolution(existing),
 	})
 }
 
@@ -391,3 +478,37 @@ func (h *Handler) DeleteSolution(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func englishRows(value string, cells int) [][]string {
+	var output [][]string
+	for _, line := range strings.Split(value, "\n") {
+		if strings.TrimSpace(line) == "" {
+			continue
+		}
+		row := strings.SplitN(line, "|", cells)
+		for len(row) < cells {
+			row = append(row, "")
+		}
+		for i := range row {
+			row[i] = strings.TrimSpace(row[i])
+		}
+		if row[0] != "" {
+			output = append(output, row)
+		}
+	}
+	return output
+}
+
+type englishBenefit struct {
+	Title       string `json:"title"`
+	Description string `json:"desc"`
+}
+type englishEquipment struct {
+	Name     string `json:"name"`
+	Brand    string `json:"brand"`
+	Warranty string `json:"warranty"`
+}
+type englishStep struct {
+	Step        int    `json:"step"`
+	Title       string `json:"title"`
+	Description string `json:"desc"`
+}

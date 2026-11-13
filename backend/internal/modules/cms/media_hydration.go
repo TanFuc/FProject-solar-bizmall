@@ -8,6 +8,41 @@ import (
 
 func (h *Handler) hydrateMedia(blocks []Block) error {
 	for i := range blocks {
+		if blocks[i].Type == "richText" {
+			resolved, err := media.ResolveRichContent(h.db, h.cfg, string(blocks[i].Data))
+			if err != nil {
+				return err
+			}
+			blocks[i].Data = json.RawMessage(resolved)
+			if blocks[i].ID == "seed_visual_v3_copy" {
+				var payload map[string]json.RawMessage
+				if err := json.Unmarshal(blocks[i].Data, &payload); err != nil {
+					return err
+				}
+				var copy map[string]string
+				if raw := payload["copy"]; len(raw) > 0 {
+					if err := json.Unmarshal(raw, &copy); err != nil {
+						return err
+					}
+					if story := copy["brandStoryDocument"]; story != "" {
+						hydrated, err := media.ResolveRichContent(h.db, h.cfg, story)
+						if err != nil {
+							return err
+						}
+						copy["brandStoryDocument"] = hydrated
+						payload["copy"], err = json.Marshal(copy)
+						if err != nil {
+							return err
+						}
+						blocks[i].Data, err = json.Marshal(payload)
+						if err != nil {
+							return err
+						}
+					}
+				}
+			}
+			continue
+		}
 		if blocks[i].Type == "projectGallery" {
 			var gallery struct {
 				Items []struct {

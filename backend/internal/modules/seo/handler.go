@@ -10,6 +10,7 @@ import (
 	"bmsolar-backend/internal/common/errors"
 	"bmsolar-backend/internal/common/id"
 	"bmsolar-backend/internal/common/pagination"
+	"bmsolar-backend/internal/common/richcontent"
 	"bmsolar-backend/internal/common/slug"
 	"bmsolar-backend/internal/config"
 	"bmsolar-backend/internal/database/models"
@@ -260,13 +261,14 @@ func (h *Handler) GenerateDraftFromProduct(w http.ResponseWriter, r *http.Reques
 		proposedTitle = fmt.Sprintf("Đánh giá %s %s chính hãng | BM SOLAR", brandName, prod.Name)
 	}
 
+	description, _ := richcontent.PlainText(prod.Description)
 	bodyContent := map[string]any{
-		"intro":       fmt.Sprintf("Sản phẩm %s thuộc danh mục %s được cung cấp và lắp đặt chính hãng bởi BM SOLAR.", prod.Name, catName),
-		"summary":     prod.Summary,
-		"description": prod.Description,
-		"sku":         prod.SKU,
-		"brand":       brandName,
-		"category":    catName,
+		"intro":        fmt.Sprintf("Sản phẩm %s thuộc danh mục %s được cung cấp và lắp đặt chính hãng bởi BM SOLAR.", prod.Name, catName),
+		"summary":      prod.Summary,
+		"description":  description,
+		"sku":          prod.SKU,
+		"brand":        brandName,
+		"category":     catName,
 		"callToAction": "Liên hệ BM SOLAR ngay hôm nay để nhận báo giá tư vấn giải pháp tối ưu cho công trình của bạn.",
 	}
 	bodyJSON, _ := json.Marshal(bodyContent)

@@ -48,6 +48,7 @@ func (h *Handler) RegisterRoutes(r chi.Router) {
 
 		// Shell & Theme
 		pr.Get("/admin/site-settings", h.GetSiteSettings)
+		pr.With(identity.RequirePermission("cms.page.update")).Put("/admin/site-translations", h.UpdateSiteTranslations)
 		pr.With(identity.RequirePermission("cms.page.update")).Put("/admin/site-settings", h.UpdateSiteSettings)
 		pr.Get("/admin/theme", h.GetTheme)
 		pr.Put("/admin/theme", h.UpdateTheme)
@@ -189,7 +190,15 @@ func (h *Handler) GetPublicSiteShell(w http.ResponseWriter, r *http.Request) {
 		}
 		logoURL = resolved
 	}
+	var englishLabels map[string]string
+	if r.URL.Query().Get("locale") == "en-US" && siteSetting.EnglishLabelsJSON != "" {
+		if err := json.Unmarshal([]byte(siteSetting.EnglishLabelsJSON), &englishLabels); err != nil {
+			errors.WriteJSON(w, r, errors.Internal("Invalid site translations"))
+			return
+		}
+	}
 	resp := SiteShellDTO{
+		EnglishLabels: englishLabels,
 		Brand: BrandDTO{
 			Name: siteSetting.SiteName,
 			Logo: LogoDTO{
@@ -233,7 +242,7 @@ func (h *Handler) GetPublicSiteShell(w http.ResponseWriter, r *http.Request) {
 func parseHoursJSON(hoursJSON *string) any {
 	if hoursJSON == nil || strings.TrimSpace(*hoursJSON) == "" {
 		return map[string]string{
-			"T2 - T7":   "07:30 - 17:30",
+			"T2 - T7":  "07:30 - 17:30",
 			"Chủ Nhật": "Trực hotline 24/7",
 		}
 	}
@@ -512,9 +521,17 @@ func (h *Handler) GetBranchChannels(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) GetPublicPage(w http.ResponseWriter, r *http.Request) {
 	pageKey := chi.URLParam(r, "pageKey")
 	previewToken := r.URL.Query().Get("previewToken")
+	locale := r.URL.Query().Get("locale")
+	if locale == "" {
+		locale = "vi-VN"
+	}
+	if locale != "vi-VN" && locale != "en-US" {
+		errors.WriteJSON(w, r, errors.BadRequest("VALIDATION_ERROR", "Unsupported locale"))
+		return
+	}
 
 	var page models.Page
-	if err := h.db.Where("page_key = ?", pageKey).First(&page).Error; err != nil {
+	if err := h.db.Where("page_key = ? AND locale = ?", pageKey, locale).First(&page).Error; err != nil {
 		errors.WriteJSON(w, r, errors.NotFound("Page not found"))
 		return
 	}
@@ -1038,8 +1055,24 @@ func (h *Handler) CreatePage(w http.ResponseWriter, r *http.Request) {
 	if input.Locale == "" {
 		input.Locale = "vi-VN"
 	}
+	if input.Locale != "vi-VN" && input.Locale != "en-US" {
+		errors.WriteJSON(w, r, errors.BadRequest("VALIDATION_ERROR", "Unsupported locale"))
+		return
+	}
 	if input.BlocksJSON == "" {
 		input.BlocksJSON = "[]"
+	}
+
+	var blocks []Block
+	if err := json.Unmarshal([]byte(input.BlocksJSON), &blocks); err != nil {
+		errors.WriteJSON(w, r, errors.Unprocessable("INVALID_BLOCKS_JSON", "Blocks payload must be valid JSON"))
+		return
+	}
+	for _, block := range blocks {
+		if err := ValidateBlock(&block); err != nil {
+			errors.WriteJSON(w, r, errors.Unprocessable("INVALID_BLOCK_SCHEMA", err.Error()))
+			return
+		}
 	}
 
 	pageID := id.New()
@@ -1073,7 +1106,10 @@ func (h *Handler) CreatePage(w http.ResponseWriter, r *http.Request) {
 		if err := tx.Create(&page).Error; err != nil {
 			return err
 		}
-		return tx.Create(&rev).Error
+		if err := tx.Create(&rev).Error; err != nil {
+			return err
+		}
+		return identity.AuditContentWrite(tx, r.Context(), "create", "page", page.ID)
 	})
 
 	if err != nil {
@@ -1178,8 +1214,10 @@ func (h *Handler) CreatePageRevision(w http.ResponseWriter, r *http.Request) {
 		if err := tx.Create(&newRev).Error; err != nil {
 			return err
 		}
-		return tx.Model(&models.Page{}).Where("id = ?", pageID).
-			Update("current_draft_revision_id", revID).Error
+		if err := tx.Model(&models.Page{}).Where("id = ?", pageID).Update("current_draft_revision_id", revID).Error; err != nil {
+			return err
+		}
+		return identity.AuditContentWrite(tx, r.Context(), "save_revision", "page", pageID)
 	})
 
 	if err != nil {
@@ -1210,11 +1248,14 @@ func (h *Handler) PublishPage(w http.ResponseWriter, r *http.Request) {
 
 	now := time.Now().UTC()
 	err := h.db.Transaction(func(tx *gorm.DB) error {
-		return tx.Model(&page).Updates(map[string]any{
+		if err := tx.Model(&page).Updates(map[string]any{
 			"published_revision_id": page.CurrentDraftRevisionID,
 			"publication_state":     "published",
 			"updated_at":            now,
-		}).Error
+		}).Error; err != nil {
+			return err
+		}
+		return identity.AuditContentWrite(tx, r.Context(), "publish", "page", pageID)
 	})
 
 	if err != nil {

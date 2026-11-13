@@ -1,0 +1,164 @@
+{
+  "about": [
+    [
+      "BM SOLAR đồng hành từ khảo sát đến vận hành",
+      "Một giải pháp điện mặt trời bắt đầu từ cách công trình sử dụng điện. Hộ gia đình có thể muốn duy trì nguồn cho các thiết bị thiết yếu; nhà xưởng có thể cần giảm phần điện mua vào đúng lúc dây chuyền đang hoạt động. Hai mục tiêu đó dẫn đến những lựa chọn rất khác về công suất, biến tần và lưu trữ."
+    ],
+    [
+      "Khảo sát để chọn đúng cấu hình",
+      "Đội ngũ cùng khách hàng xem hóa đơn và thời điểm dùng điện, khảo sát diện tích mái, hướng nắng, vùng bóng che và vị trí đấu nối. Thông tin này giúp dự kiến sản lượng theo mùa, xác định phần điện có thể dùng tại chỗ và nhận diện các hạng mục cần chuẩn bị trước khi thi công."
+    ],
+    [
+      "Thiết kế có thể kiểm tra và đối chiếu",
+      "Hồ sơ đề xuất nên thể hiện rõ sơ đồ hệ thống, thiết bị chính, phạm vi lắp đặt và các giả định dùng để tính chi phí. Với phương án lưu trữ, cần xác định tải ưu tiên và thời gian dự phòng mong muốn. Các phương án có thể được so sánh trên cùng bộ giả định để khách hàng dễ quyết định."
+    ],
+    [
+      "Bàn giao để khách hàng chủ động vận hành",
+      "Khi nghiệm thu, khách hàng cần được hướng dẫn đọc chỉ số sản lượng, nhận biết cảnh báo và tra cứu hồ sơ thiết bị. Trong quá trình sử dụng, việc đối chiếu số liệu theo từng kỳ và ghi lại sự cố giúp đội hỗ trợ tìm đúng nguyên nhân khi sản lượng thay đổi."
+    ],
+    [
+      "Chuẩn bị cho buổi tư vấn đầu tiên",
+      "Hãy chuẩn bị hóa đơn điện các tháng gần nhất, một vài ảnh mái và khu vực lắp đặt dự kiến. Nếu cần nguồn dự phòng, liệt kê thiết bị ưu tiên và số giờ muốn duy trì. Những dữ liệu này giúp buổi tư vấn tập trung vào phương án phù hợp với công trình."
+    ]
+  ],
+  "projects": {
+    "du-an-ap-mai-biet-thu-quy-nhon-15kw": [
+      [
+        "Bài toán của công trình",
+        "Công trình biệt thự tại Quy Nhơn sử dụng hệ thống áp mái Hybrid. Mục tiêu thiết kế là kết hợp nguồn điện mặt trời sử dụng vào ban ngày với pin lưu trữ để chủ động hơn khi nhu cầu dùng điện chuyển sang buổi tối."
+      ],
+      [
+        "Cấu hình thiết bị trong hồ sơ",
+        "Hồ sơ công trình ghi nhận 30 tấm pin Jinko 550 W, biến tần Deye Hybrid ba pha 15 kW và ba bộ pin lithium Deye 5,12 kWh. Công suất biến tần và công suất danh định của mảng pin là hai thông số khác nhau; cả hai cần được xem cùng sơ đồ thiết kế khi đối chiếu hồ sơ."
+      ],
+      [
+        "Cách các phần của hệ thống phối hợp",
+        "Tấm pin tạo điện một chiều. Biến tần chuyển đổi và điều phối điện giữa tải, pin và lưới theo cấu hình vận hành. Mức điện có thể dùng từ pin phụ thuộc ngưỡng xả, tải được kết nối và thiết lập của biến tần."
+      ],
+      [
+        "Các mục cần theo dõi sau bàn giao",
+        "Nên đối chiếu sản lượng theo tháng, tỷ lệ điện mặt trời dùng tại chỗ và thời điểm pin đạt giới hạn sạc hoặc xả. So sánh cùng kỳ và ghi lại những thay đổi về tải sẽ giúp đánh giá đúng hiệu quả vận hành của công trình."
+      ]
+    ],
+    "he-thong-dien-mat-troi-hybrid-10kwp-go-vap-hcm": [
+      [
+        "Nhu cầu của hộ gia đình",
+        "Phương án Hybrid cho biệt thự tại Gò Vấp kết hợp tự dùng điện mặt trời với dự phòng cho các tải được chọn. Mức dự phòng phù hợp phụ thuộc thời điểm sử dụng và danh sách thiết bị ưu tiên."
+      ],
+      [
+        "Cấu hình của công trình",
+        "Hồ sơ ghi nhận biến tần Deye Hybrid và 18 tấm pin LONGi 550 W. Khi kiểm tra cấu hình áp mái, cần đối chiếu sơ đồ chuỗi tấm pin với giới hạn điện áp và dòng vào của biến tần."
+      ],
+      [
+        "Theo dõi sau lắp đặt",
+        "Các chỉ số hữu ích gồm sản lượng theo ngày, điện mua từ lưới và mức pin theo khung giờ. Ghi lại tải ưu tiên giúp kiểm tra thời lượng dự phòng trong điều kiện vận hành thực tế."
+      ]
+    ],
+    "du-an-dien-mat-troi-ap-mai-500kwp-kcn-nhon-hoi-quy-nhon": [
+      [
+        "Đặc điểm phụ tải nhà xưởng",
+        "Công trình áp mái tại KCN Nhơn Hội phục vụ nhà máy chế biến thủy sản. Với phụ tải sản xuất, số liệu theo ca giúp xác định phần công suất điện mặt trời có thể được sử dụng ngay tại chỗ."
+      ],
+      [
+        "Tổ chức vận hành và bảo trì",
+        "Phương án thiết kế cần tính đến lối tiếp cận để kiểm tra mái, vệ sinh mô-đun và bảo trì thiết bị. Hồ sơ bàn giao là cơ sở để đội vận hành đối chiếu từng nhóm thiết bị khi có cảnh báo."
+      ],
+      [
+        "Đánh giá sản lượng theo điều kiện thực tế",
+        "So sánh điện mua từ lưới trước và sau triển khai cần xét thay đổi giờ sản xuất, tải vận hành và thời tiết. Có thể dùng dữ liệu đo theo tháng để phát hiện suy giảm sản lượng bất thường."
+      ]
+    ]
+  },
+  "products": {
+    "inverter-hybrid-deye-5kw-1-pha": [
+      [
+        "Vai trò trong hệ thống Hybrid",
+        "Biến tần điều phối nguồn điện mặt trời, lưới và pin lưu trữ. Dòng 5 kW một pha phù hợp để xem xét cho các công trình dùng điện một pha, sau khi kiểm tra công suất tải đồng thời và giới hạn của thiết bị."
+      ],
+      [
+        "Kiểm tra trước khi chọn",
+        "Đối chiếu model trên nhãn với tài liệu kỹ thuật. Kiểm tra dải điện áp pin, giao thức giao tiếp với bộ quản lý pin và giới hạn chuỗi PV. Nếu cần dự phòng, lập danh sách tải ưu tiên và kiểm tra cả dòng khởi động của thiết bị."
+      ],
+      [
+        "Thông tin cần bàn giao",
+        "Lưu sơ đồ đấu nối, thông số cấu hình và hướng dẫn theo dõi cảnh báo. Các cài đặt như ngưỡng xả pin và lịch sạc nên phản ánh nhu cầu sử dụng thực tế."
+      ]
+    ],
+    "tam-pin-longi-550w-mono-half-cell": [
+      [
+        "Chọn tấm pin theo điều kiện mái",
+        "Công suất danh định là thông số ở điều kiện thử chuẩn. Sản lượng thực tế còn phụ thuộc hướng mái, nhiệt độ, bóng che và cách bố trí từng chuỗi."
+      ],
+      [
+        "Đối chiếu khả năng tương thích",
+        "Khi ghép với biến tần, kiểm tra điện áp hở mạch tại nhiệt độ thấp, điện áp làm việc và dòng của chuỗi. Khoảng trống giữa các hàng cần tính theo góc nghiêng và bóng đổ."
+      ],
+      [
+        "Kiểm tra trước khi nghiệm thu",
+        "Đối chiếu model, số sê-ri và tài liệu kỹ thuật của lô hàng. Kiểm tra tình trạng khung, kính và đầu nối, sau đó lưu sơ đồ bố trí để thuận tiện cho bảo trì."
+      ]
+    ],
+    "pin-luu-tru-lithium-deye-5-12kwh": [
+      [
+        "Dung lượng danh định và phần sử dụng",
+        "Dung lượng ghi trên nhãn giúp so sánh module. Năng lượng dùng được còn phụ thuộc giới hạn sạc xả, cài đặt biến tần và tổn hao trong hệ thống."
+      ],
+      [
+        "Ghép pin với biến tần",
+        "Kiểm tra đúng dải điện áp, dòng sạc xả và giao tiếp BMS theo model. Khi cần ghép nhiều module, làm theo giới hạn và sơ đồ của nhà sản xuất áp dụng cho thiết bị thực tế."
+      ],
+      [
+        "Lựa chọn theo tải dự phòng",
+        "Ước tính năng lượng bằng công suất của các thiết bị ưu tiên nhân với số giờ sử dụng. Kiểm tra thêm công suất tải đồng thời để xác định cả dung lượng pin lẫn yêu cầu đối với biến tần."
+      ]
+    ],
+    "pin-luu-tru-deye-lithium-rw-m6-1-5-12kwh": [
+      [
+        "Ứng dụng của module lưu trữ",
+        "Module lưu trữ điện để hệ thống Hybrid có thể cấp tải vào thời điểm nguồn mặt trời không đủ. Dung lượng cần chọn theo mục tiêu dùng vào buổi tối hoặc thời gian duy trì tải dự phòng."
+      ],
+      [
+        "Các mục tương thích cần kiểm tra",
+        "Đối chiếu model biến tần, giao tiếp BMS, dòng sạc xả và hướng dẫn ghép song song dành riêng cho RW-M6.1. Cần kiểm tra điều kiện môi trường lắp đặt và khoảng trống phục vụ bảo trì."
+      ],
+      [
+        "Theo dõi khi đưa vào sử dụng",
+        "Lưu giá trị cài đặt sạc xả và kiểm tra dữ liệu pin trong những chu kỳ đầu. Các cảnh báo về giao tiếp hoặc nhiệt độ nên được ghi lại để đối chiếu với hồ sơ thiết bị."
+      ]
+    ]
+  },
+  "articles": {
+    "cam-nang-chon-bien-tan-inverter-hybrid-2026": [
+      [
+        "Bắt đầu từ tải thực tế",
+        "Đừng chỉ nhìn vào tổng số điện mỗi tháng. Hãy tách tải dùng ban ngày, tải dùng buổi tối và các thiết bị cần chạy khi mất điện. Với bơm, máy lạnh hoặc động cơ, xem thêm công suất khởi động."
+      ],
+      [
+        "Đối chiếu ba nhóm thông số",
+        "Nhóm thứ nhất là đầu vào PV: giới hạn điện áp, dòng và số MPPT. Nhóm thứ hai là pin: dải điện áp, dòng sạc xả và giao tiếp BMS. Nhóm cuối là đầu ra dự phòng: công suất, loại tải được hỗ trợ và cách đấu nối."
+      ],
+      [
+        "Một cách ước tính dung lượng",
+        "Ví dụ, nhóm tải ưu tiên có công suất trung bình 600 W và cần dùng trong bốn giờ sẽ tiêu thụ khoảng 2,4 kWh. Dung lượng danh định cần cao hơn giá trị này để tính đến phần dung lượng có thể dùng và hiệu suất chuyển đổi."
+      ],
+      [
+        "Những câu hỏi nên hỏi khi nhận báo giá",
+        "Yêu cầu chỉ rõ model, danh sách pin tương thích, sơ đồ tải dự phòng và điều kiện bảo hành. Nếu muốn mở rộng hệ thống sau này, hỏi trước giới hạn ghép pin và khả năng bổ sung chuỗi PV."
+      ]
+    ],
+    "huong-dan-chon-inverter-hybrid-va-pin-luu-tru-phu-hop": [
+      [
+        "Khi nào cần pin lưu trữ?",
+        "Hòa lưới không pin phù hợp khi phần lớn nhu cầu nằm trong giờ có nắng. Pin lưu trữ nên được cân nhắc khi khách hàng muốn chuyển một phần điện mặt trời sang buổi tối hoặc duy trì một số tải khi lưới gián đoạn."
+      ],
+      [
+        "Chọn công suất và dung lượng riêng",
+        "Công suất cho biết hệ thống có thể cấp đồng thời bao nhiêu tải; dung lượng cho biết lượng điện dự kiến dùng trong một khoảng thời gian. Hãy tính hai thông số riêng để tránh một hệ thống đủ dung lượng nhưng không đủ công suất lúc tải tăng."
+      ],
+      [
+        "Xác nhận với hồ sơ thiết bị",
+        "Kiểm tra dải điện áp pin, giao thức giao tiếp BMS, giới hạn dòng và số module được phép ghép. Khi so sánh các báo giá, dùng cùng danh sách tải, thời gian dự phòng và giả định về dung lượng sử dụng."
+      ]
+    ]
+  }
+}

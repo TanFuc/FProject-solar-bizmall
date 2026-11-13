@@ -35,6 +35,7 @@ func ValidateZaloTarget(target string) string {
 }
 
 type SiteShellDTO struct {
+	EnglishLabels map[string]string   `json:"englishLabels,omitempty"`
 	Brand         BrandDTO            `json:"brand"`
 	UtilityBar    UtilityBarDTO       `json:"utilityBar"`
 	Navigation    []NavigationNodeDTO `json:"navigation"`
@@ -45,8 +46,8 @@ type SiteShellDTO struct {
 }
 
 type BrandDTO struct {
-	Name string   `json:"name"`
-	Logo LogoDTO  `json:"logo"`
+	Name string  `json:"name"`
+	Logo LogoDTO `json:"logo"`
 }
 
 type LogoDTO struct {
@@ -112,10 +113,10 @@ type NavigationNodeDTO struct {
 }
 
 type FooterDTO struct {
-	Groups       any      `json:"groups"`
-	Branches     []BranchDTO `json:"branches"`
-	LegalText    string   `json:"legalText"`
-	SocialLinks  []ChannelDTO `json:"socialLinks"`
+	Groups      any          `json:"groups"`
+	Branches    []BranchDTO  `json:"branches"`
+	LegalText   string       `json:"legalText"`
+	SocialLinks []ChannelDTO `json:"socialLinks"`
 }
 
 type MobileActionDTO struct {

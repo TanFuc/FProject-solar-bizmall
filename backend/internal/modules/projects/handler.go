@@ -9,6 +9,7 @@ import (
 	"bmsolar-backend/internal/common/errors"
 	"bmsolar-backend/internal/common/id"
 	"bmsolar-backend/internal/common/pagination"
+	"bmsolar-backend/internal/common/richcontent"
 	"bmsolar-backend/internal/common/slug"
 	"bmsolar-backend/internal/config"
 	"bmsolar-backend/internal/database/models"
@@ -79,6 +80,7 @@ func (h *Handler) GetPublicProvinces(w http.ResponseWriter, r *http.Request) {
 }
 
 type ProjectCardDTO struct {
+	HasEnglish      bool    `json:"hasEnglish"`
 	ID              string  `json:"id"`
 	Slug            string  `json:"slug"`
 	Title           string  `json:"title"`
@@ -144,7 +146,12 @@ func (h *Handler) ListPublicProjects(w http.ResponseWriter, r *http.Request) {
 			coverURL = &url
 		}
 
+		if r.URL.Query().Get("locale") == "en-US" && proj.English.Available() {
+			proj.Title = models.LocalizedText(proj.Title, proj.English.Title)
+			proj.Summary = models.LocalizedText(proj.Summary, proj.English.Summary)
+		}
 		cards = append(cards, ProjectCardDTO{
+			HasEnglish:      proj.English.Available(),
 			ID:              proj.ID,
 			Slug:            proj.Slug,
 			Title:           proj.Title,
@@ -208,6 +215,7 @@ func (h *Handler) GetPublicProjectDetail(w http.ResponseWriter, r *http.Request)
 	}
 
 	type ProjectDetailDTO struct {
+		HasEnglish  bool            `json:"hasEnglish"`
 		ID          string          `json:"id"`
 		Slug        string          `json:"slug"`
 		Title       string          `json:"title"`
@@ -221,7 +229,23 @@ func (h *Handler) GetPublicProjectDetail(w http.ResponseWriter, r *http.Request)
 		PublishedAt *time.Time      `json:"publishedAt,omitempty"`
 	}
 
+	if r.URL.Query().Get("locale") == "en-US" && proj.English.Available() {
+		proj.Title = models.LocalizedText(proj.Title, proj.English.Title)
+		proj.Summary = models.LocalizedText(proj.Summary, proj.English.Summary)
+		if translated := proj.English.BodyJSON(""); translated != "" {
+			proj.BodyJSON = &translated
+		}
+	}
+	if proj.BodyJSON != nil {
+		resolvedContent, resolveErr := media.ResolveRichContent(h.db, h.cfg, *proj.BodyJSON)
+		if resolveErr != nil {
+			errors.WriteJSON(w, r, errors.Internal("Failed to resolve document"))
+			return
+		}
+		proj.BodyJSON = &resolvedContent
+	}
 	resp := ProjectDetailDTO{
+		HasEnglish:  proj.English.Available(),
 		ID:          proj.ID,
 		Slug:        proj.Slug,
 		Title:       proj.Title,
@@ -308,6 +332,19 @@ func (h *Handler) AdminListProjects(w http.ResponseWriter, r *http.Request) {
 	h.db.Preload("ProjectType").Preload("Province").
 		Order("created_at desc").Offset(p.Offset).Limit(p.PageSize).Find(&projects)
 
+	for index := range projects {
+		row := &projects[index]
+		if row.CoverMediaID == nil {
+			continue
+		}
+		url, err := media.ResolvePublicURL(h.db, h.cfg, *row.CoverMediaID)
+		if err != nil {
+			errors.WriteJSON(w, r, errors.Internal("Failed to resolve cover media"))
+			return
+		}
+		row.CoverMediaURL = url
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(pagination.PaginatedResponse[models.Project]{
 		Data: projects,
@@ -316,21 +353,31 @@ func (h *Handler) AdminListProjects(w http.ResponseWriter, r *http.Request) {
 }
 
 type AdminCreateProjectRequest struct {
-	Title         string   `json:"title"`
-	Slug          string   `json:"slug"`
-	ProjectTypeID string   `json:"projectTypeId"`
-	ProvinceID    string   `json:"provinceId"`
-	BranchID      *string  `json:"branchId"`
-	Summary       string   `json:"summary"`
-	BodyJSON      *string  `json:"bodyJson"`
-	CoverMediaID  *string  `json:"coverMediaId"`
-	ProductIDs    []string `json:"productIds"`
+	English       *models.EnglishContent `json:"english"`
+	Title         string                 `json:"title"`
+	Slug          string                 `json:"slug"`
+	ProjectTypeID string                 `json:"projectTypeId"`
+	ProvinceID    string                 `json:"provinceId"`
+	BranchID      *string                `json:"branchId"`
+	Summary       string                 `json:"summary"`
+	BodyJSON      *string                `json:"bodyJson"`
+	CoverMediaID  *string                `json:"coverMediaId"`
+	ProductIDs    []string               `json:"productIds"`
 }
 
 func (h *Handler) AdminCreateProject(w http.ResponseWriter, r *http.Request) {
 	var req AdminCreateProjectRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		errors.WriteJSON(w, r, errors.BadRequest("INVALID_JSON", "Malformed body"))
+		return
+	}
+
+	var body string
+	if req.BodyJSON != nil {
+		body = *req.BodyJSON
+	}
+	if err := richcontent.Validate(body, req.English.ContentBody()); err != nil {
+		errors.WriteJSON(w, r, errors.Unprocessable("INVALID_DOCUMENT", err.Error()))
 		return
 	}
 
@@ -346,6 +393,7 @@ func (h *Handler) AdminCreateProject(w http.ResponseWriter, r *http.Request) {
 	}
 
 	proj := models.Project{
+		English:       req.English,
 		ID:            projID,
 		Slug:          pSlug,
 		Title:         req.Title,
@@ -365,7 +413,7 @@ func (h *Handler) AdminCreateProject(w http.ResponseWriter, r *http.Request) {
 		for _, pID := range req.ProductIDs {
 			tx.Create(&models.ProjectProduct{ProjectID: projID, ProductID: pID})
 		}
-		return nil
+		return identity.AuditContentWrite(tx, r.Context(), "create", "project", proj.ID)
 	})
 
 	if err != nil {
@@ -399,8 +447,28 @@ func (h *Handler) AdminUpdateProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_ = json.NewDecoder(r.Body).Decode(&proj)
-	h.db.Save(&proj)
+	if err := json.NewDecoder(r.Body).Decode(&proj); err != nil {
+		errors.WriteJSON(w, r, errors.BadRequest("INVALID_JSON", "Malformed body"))
+		return
+	}
+	var body string
+	if proj.BodyJSON != nil {
+		body = *proj.BodyJSON
+	}
+	if err := richcontent.Validate(body, proj.English.ContentBody()); err != nil {
+		errors.WriteJSON(w, r, errors.Unprocessable("INVALID_DOCUMENT", err.Error()))
+		return
+	}
+	proj.ID = id
+	if err := h.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Save(&proj).Error; err != nil {
+			return err
+		}
+		return identity.AuditContentWrite(tx, r.Context(), "update", "project", proj.ID)
+	}); err != nil {
+		errors.WriteJSON(w, r, errors.Internal("Failed to save content"))
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{"data": proj})

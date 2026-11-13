@@ -9,6 +9,7 @@ import (
 	"bmsolar-backend/internal/common/errors"
 	"bmsolar-backend/internal/common/id"
 	"bmsolar-backend/internal/common/pagination"
+	"bmsolar-backend/internal/common/richcontent"
 	"bmsolar-backend/internal/common/slug"
 	"bmsolar-backend/internal/config"
 	"bmsolar-backend/internal/database/models"
@@ -128,6 +129,7 @@ func (h *Handler) GetPublicAudiences(w http.ResponseWriter, r *http.Request) {
 }
 
 type ProductCardDTO struct {
+	HasEnglish   bool     `json:"hasEnglish"`
 	ID           string   `json:"id"`
 	SKU          string   `json:"sku"`
 	Slug         string   `json:"slug"`
@@ -218,7 +220,12 @@ func (h *Handler) ListPublicProducts(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
+		if r.URL.Query().Get("locale") == "en-US" && prod.English.Available() {
+			prod.Name = models.LocalizedText(prod.Name, prod.English.Title)
+			prod.Summary = models.LocalizedText(prod.Summary, prod.English.Summary)
+		}
 		cards = append(cards, ProductCardDTO{
+			HasEnglish:   prod.English.Available(),
 			ID:           prod.ID,
 			SKU:          prod.SKU,
 			Slug:         prod.Slug,
@@ -285,6 +292,8 @@ func (h *Handler) GetPublicProductDetail(w http.ResponseWriter, r *http.Request)
 	}
 
 	type ProductDetailResponse struct {
+		DocumentJSON   string     `json:"documentJson,omitempty"`
+		HasEnglish     bool       `json:"hasEnglish"`
 		ID             string     `json:"id"`
 		SKU            string     `json:"sku"`
 		Slug           string     `json:"slug"`
@@ -319,13 +328,30 @@ func (h *Handler) GetPublicProductDetail(w http.ResponseWriter, r *http.Request)
 		}
 	}
 
+	if r.URL.Query().Get("locale") == "en-US" && prod.English.Available() {
+		prod.Name = models.LocalizedText(prod.Name, prod.English.Title)
+		prod.Summary = models.LocalizedText(prod.Summary, prod.English.Summary)
+		prod.Description = models.LocalizedText(prod.Description, prod.English.Body)
+	}
+	resolvedContent, resolveErr := media.ResolveRichContent(h.db, h.cfg, prod.Description)
+	if resolveErr != nil {
+		errors.WriteJSON(w, r, errors.Internal("Failed to resolve document"))
+		return
+	}
+	plainDescription, hasDocument := richcontent.PlainText(resolvedContent)
+	var documentJSON string
+	if hasDocument {
+		documentJSON = resolvedContent
+	}
 	resp := ProductDetailResponse{
+		HasEnglish:     prod.English.Available(),
 		ID:             prod.ID,
 		SKU:            prod.SKU,
 		Slug:           prod.Slug,
 		Name:           prod.Name,
 		Summary:        prod.Summary,
-		Description:    prod.Description,
+		Description:    plainDescription,
+		DocumentJSON:   documentJSON,
 		CoverURL:       coverURL,
 		Category:       prod.Category,
 		Brand:          prod.Brand,
@@ -479,6 +505,19 @@ func (h *Handler) AdminListProducts(w http.ResponseWriter, r *http.Request) {
 	h.db.Preload("Category").Preload("Brand").
 		Order("created_at desc").Offset(p.Offset).Limit(p.PageSize).Find(&products)
 
+	for index := range products {
+		row := &products[index]
+		if row.CoverMediaID == nil {
+			continue
+		}
+		url, err := media.ResolvePublicURL(h.db, h.cfg, *row.CoverMediaID)
+		if err != nil {
+			errors.WriteJSON(w, r, errors.Internal("Failed to resolve cover media"))
+			return
+		}
+		row.CoverMediaURL = url
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(pagination.PaginatedResponse[models.Product]{
 		Data: products,
@@ -487,23 +526,29 @@ func (h *Handler) AdminListProducts(w http.ResponseWriter, r *http.Request) {
 }
 
 type AdminCreateProductRequest struct {
-	SKU               string   `json:"sku"`
-	Name              string   `json:"name"`
-	Slug              string   `json:"slug"`
-	CategoryID        string   `json:"categoryId"`
-	BrandID           *string  `json:"brandId"`
-	Summary           string   `json:"summary"`
-	Description       string   `json:"description"`
-	CoverMediaID      *string  `json:"coverMediaId"`
-	SpecificationJSON *string  `json:"specificationJson"`
-	AudienceCodes     []string `json:"audienceCodes"`
-	MediaIDs          []string `json:"mediaIds"`
+	English           *models.EnglishContent `json:"english"`
+	SKU               string                 `json:"sku"`
+	Name              string                 `json:"name"`
+	Slug              string                 `json:"slug"`
+	CategoryID        string                 `json:"categoryId"`
+	BrandID           *string                `json:"brandId"`
+	Summary           string                 `json:"summary"`
+	Description       string                 `json:"description"`
+	CoverMediaID      *string                `json:"coverMediaId"`
+	SpecificationJSON *string                `json:"specificationJson"`
+	AudienceCodes     []string               `json:"audienceCodes"`
+	MediaIDs          []string               `json:"mediaIds"`
 }
 
 func (h *Handler) AdminCreateProduct(w http.ResponseWriter, r *http.Request) {
 	var req AdminCreateProductRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		errors.WriteJSON(w, r, errors.BadRequest("INVALID_JSON", "Malformed body"))
+		return
+	}
+
+	if err := richcontent.Validate(req.Description, req.English.ContentBody()); err != nil {
+		errors.WriteJSON(w, r, errors.Unprocessable("INVALID_DOCUMENT", err.Error()))
 		return
 	}
 
@@ -519,6 +564,7 @@ func (h *Handler) AdminCreateProduct(w http.ResponseWriter, r *http.Request) {
 	}
 
 	prod := models.Product{
+		English:           req.English,
 		ID:                prodID,
 		SKU:               req.SKU,
 		Slug:              pSlug,
@@ -552,7 +598,7 @@ func (h *Handler) AdminCreateProduct(w http.ResponseWriter, r *http.Request) {
 				SortOrder: idx,
 			})
 		}
-		return nil
+		return identity.AuditContentWrite(tx, r.Context(), "create", "product", prod.ID)
 	})
 
 	if err != nil {
@@ -586,8 +632,24 @@ func (h *Handler) AdminUpdateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_ = json.NewDecoder(r.Body).Decode(&prod)
-	h.db.Save(&prod)
+	if err := json.NewDecoder(r.Body).Decode(&prod); err != nil {
+		errors.WriteJSON(w, r, errors.BadRequest("INVALID_JSON", "Malformed body"))
+		return
+	}
+	if err := richcontent.Validate(prod.Description, prod.English.ContentBody()); err != nil {
+		errors.WriteJSON(w, r, errors.Unprocessable("INVALID_DOCUMENT", err.Error()))
+		return
+	}
+	prod.ID = prodID
+	if err := h.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Save(&prod).Error; err != nil {
+			return err
+		}
+		return identity.AuditContentWrite(tx, r.Context(), "update", "product", prod.ID)
+	}); err != nil {
+		errors.WriteJSON(w, r, errors.Internal("Failed to save content"))
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{"data": prod})

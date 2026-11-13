@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -31,6 +32,13 @@ import (
 
 func main() {
 	cfg := config.Load()
+	if cfg.Env == "production" {
+		access := os.Getenv("JWT_ACCESS_SECRET")
+		refresh := os.Getenv("JWT_REFRESH_SECRET")
+		if len(access) < 32 || len(refresh) < 32 || access == refresh {
+			panic("production requires two distinct JWT secrets of at least 32 characters")
+		}
+	}
 
 	// Initialize structured JSON logger
 	logHandler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
@@ -92,8 +100,10 @@ func main() {
 	}
 
 	// Baseline seeding for solutions, contact channels & navigation submenus
-	if err := seed.SeedAll(db, cfg); err != nil {
-		logger.Warn("seed_baseline_warning", slog.Any("error", err))
+	if cfg.Env != "production" {
+		if err := seed.SeedAll(db, cfg); err != nil {
+			logger.Warn("seed_baseline_warning", slog.Any("error", err))
+		}
 	}
 
 	// 4. Redis Client & Caching Store
@@ -199,7 +209,7 @@ func main() {
 	})
 
 	// Server instance
-	addr := fmt.Sprintf(":%s", cfg.Port)
+	addr := net.JoinHostPort(os.Getenv("BMSOLAR_BIND_ADDRESS"), cfg.Port)
 	server := &http.Server{
 		Addr:         addr,
 		Handler:      r,

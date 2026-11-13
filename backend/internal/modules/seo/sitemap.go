@@ -58,7 +58,7 @@ func GenerateSitemap(db *gorm.DB, cfg *config.Config) ([]byte, error) {
 
 	// Published dynamic CMS pages
 	var pages []models.Page
-	db.Where("publication_state = 'published'").Find(&pages)
+	db.Where("publication_state = ? AND locale = ?", "published", "vi-VN").Find(&pages)
 	for _, p := range pages {
 		if p.RouteSlug != "/" {
 			urls = append(urls, URL{

@@ -56,6 +56,9 @@ paths:
           in: path
           required: true
           schema: { type: string }
+        - name: locale
+          in: query
+          schema: { type: string, enum: [vi-VN, en-US], default: vi-VN }
         - name: previewToken
           in: query
           schema: { type: string }
@@ -93,6 +96,9 @@ paths:
       tags: [Public]
       summary: Filtered and paginated product list
       parameters:
+        - name: locale
+          in: query
+          schema: { type: string, enum: [vi-VN, en-US], default: vi-VN }
         - name: category
           in: query
           schema: { type: string }
@@ -126,6 +132,9 @@ paths:
       tags: [Public]
       summary: Get product detail by slug
       parameters:
+        - name: locale
+          in: query
+          schema: { type: string, enum: [vi-VN, en-US], default: vi-VN }
         - name: slug
           in: path
           required: true
@@ -157,6 +166,9 @@ paths:
       tags: [Public]
       summary: Filtered project showcase list
       parameters:
+        - name: locale
+          in: query
+          schema: { type: string, enum: [vi-VN, en-US], default: vi-VN }
         - name: projectType
           in: query
           schema: { type: string }
@@ -181,6 +193,9 @@ paths:
       tags: [Public]
       summary: Project detail by slug
       parameters:
+        - name: locale
+          in: query
+          schema: { type: string, enum: [vi-VN, en-US], default: vi-VN }
         - name: slug
           in: path
           required: true
@@ -196,6 +211,9 @@ paths:
       tags: [Public]
       summary: Published news and educational articles
       parameters:
+        - name: locale
+          in: query
+          schema: { type: string, enum: [vi-VN, en-US], default: vi-VN }
         - name: tag
           in: query
           schema: { type: string }
@@ -214,6 +232,9 @@ paths:
       tags: [Public]
       summary: Article detail by slug
       parameters:
+        - name: locale
+          in: query
+          schema: { type: string, enum: [vi-VN, en-US], default: vi-VN }
         - name: slug
           in: path
           required: true
@@ -312,11 +333,38 @@ paths:
     post:
       operationId: adminCreatePage
       tags: [Admin CMS]
+      description: blocksJson accepts a serialized list of CMS blocks. A richText block may store the RichDocument schema in data.document.
       security:
         - BearerAuth: []
       responses:
         '201':
           description: Page created in draft
+  /admin/pages/{id}/revisions:
+    post:
+      operationId: adminCreatePageRevision
+      tags: [Admin CMS]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [blocksJson]
+              properties:
+                blocksJson:
+                  type: string
+                  description: Serialized CMS blocks. Store the rich document as data.document of a richText block.
+                seoJson: { type: string, nullable: true }
+      responses:
+        "201": { description: Draft revision created }
+        "422": { description: Invalid content block or document }
   /admin/pages/{id}/publish:
     post:
       operationId: adminPublishPage
@@ -471,6 +519,52 @@ components:
       bearerFormat: JWT
 
   schemas:
+    RichDocument:
+      type: object
+      required: [type]
+      properties:
+        type: { type: string, enum: [doc] }
+        content:
+          type: array
+          items: { $ref: "#/components/schemas/RichDocumentNode" }
+    RichDocumentNode:
+      type: object
+      required: [type]
+      properties:
+        type:
+          type: string
+          enum: [doc, paragraph, heading, bulletList, orderedList, listItem, blockquote, hardBreak, horizontalRule, codeBlock, image, text]
+        attrs:
+          type: object
+          properties:
+            textAlign: { type: string, enum: [left, center, right, justify] }
+            level: { type: integer, enum: [2, 3, 4] }
+            start: { type: integer }
+            src: { type: string }
+            alt: { type: string }
+            title: { type: string }
+            caption: { type: string }
+            mediaId: { type: string }
+            placement: { type: string, enum: [left, center, right, float-left, float-right] }
+            widthPercent: { type: number, minimum: 20, maximum: 100 }
+        text: { type: string }
+        marks:
+          type: array
+          items:
+            type: object
+            required: [type]
+            properties:
+              type: { type: string, enum: [bold, italic, underline, strike, code, link, textFormat] }
+              attrs:
+                type: object
+                properties:
+                  href: { type: string }
+                  font: { type: string, enum: [inter, arial, georgia, times, courier] }
+                  size: { type: integer, minimum: 10, maximum: 72 }
+                  color: { type: string, pattern: "^#[0-9a-fA-F]{6}$" }
+        content:
+          type: array
+          items: { $ref: "#/components/schemas/RichDocumentNode" }
     SiteShellResponse:
       type: object
       required: [data]

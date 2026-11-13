@@ -6,6 +6,7 @@ import (
 
 // SiteSetting singleton configuration
 type SiteSetting struct {
+	EnglishLabelsJSON   string    `gorm:"type:text" json:"englishLabelsJson"`
 	LogoMediaID         *string   `gorm:"size:26" json:"logoMediaId"`
 	ID                  string    `gorm:"primaryKey;size:26" json:"id"`
 	DefaultBranchID     *string   `gorm:"size:26" json:"defaultBranchId"`
@@ -190,6 +191,8 @@ func (Brand) TableName() string { return "brands" }
 
 // Product solar equipment and components
 type Product struct {
+	CoverMediaURL     string            `gorm:"-" json:"coverMediaUrl,omitempty"`
+	English           *EnglishContent   `gorm:"serializer:json;type:text" json:"english,omitempty"`
 	ID                string            `gorm:"primaryKey;size:26" json:"id"`
 	SKU               string            `gorm:"size:50;not null;uniqueIndex" json:"sku"`
 	Slug              string            `gorm:"size:150;not null;uniqueIndex" json:"slug"`
@@ -258,6 +261,8 @@ func (Province) TableName() string { return "provinces" }
 
 // Project completed installations showcase
 type Project struct {
+	CoverMediaURL string           `gorm:"-" json:"coverMediaUrl,omitempty"`
+	English       *EnglishContent  `gorm:"serializer:json;type:text" json:"english,omitempty"`
 	ID            string           `gorm:"primaryKey;size:26" json:"id"`
 	Slug          string           `gorm:"size:150;not null;uniqueIndex" json:"slug"`
 	Title         string           `gorm:"size:255;not null" json:"title"`
@@ -292,20 +297,22 @@ func (ProjectProduct) TableName() string { return "project_products" }
 
 // Article news, knowledge base, educational articles
 type Article struct {
-	ID              string     `gorm:"primaryKey;size:26" json:"id"`
-	Slug            string     `gorm:"size:150;not null;uniqueIndex" json:"slug"`
-	Title           string     `gorm:"size:255;not null" json:"title"`
-	Excerpt         string     `gorm:"type:text;not null" json:"excerpt"`
-	BodyJSON        string     `gorm:"type:text;not null" json:"bodyJson"`
-	CategoryID      *string    `gorm:"size:26" json:"categoryId"`
-	Status          string     `gorm:"size:20;not null;default:'draft';index:idx_article_filter" json:"status"`
-	CoverMediaID    *string    `gorm:"size:26" json:"coverMediaId"`
-	AuthorID        *string    `gorm:"size:26" json:"authorId"`
-	SourceProductID *string    `gorm:"size:26" json:"sourceProductId"`
-	SeoID           *string    `gorm:"size:26" json:"seoId"`
-	PublishedAt     *time.Time `gorm:"index:idx_article_filter" json:"publishedAt"`
-	CreatedAt       time.Time  `json:"createdAt"`
-	UpdatedAt       time.Time  `json:"updatedAt"`
+	CoverMediaURL   string          `gorm:"-" json:"coverMediaUrl,omitempty"`
+	English         *EnglishContent `gorm:"serializer:json;type:text" json:"english,omitempty"`
+	ID              string          `gorm:"primaryKey;size:26" json:"id"`
+	Slug            string          `gorm:"size:150;not null;uniqueIndex" json:"slug"`
+	Title           string          `gorm:"size:255;not null" json:"title"`
+	Excerpt         string          `gorm:"type:text;not null" json:"excerpt"`
+	BodyJSON        string          `gorm:"type:text;not null" json:"bodyJson"`
+	CategoryID      *string         `gorm:"size:26" json:"categoryId"`
+	Status          string          `gorm:"size:20;not null;default:'draft';index:idx_article_filter" json:"status"`
+	CoverMediaID    *string         `gorm:"size:26" json:"coverMediaId"`
+	AuthorID        *string         `gorm:"size:26" json:"authorId"`
+	SourceProductID *string         `gorm:"size:26" json:"sourceProductId"`
+	SeoID           *string         `gorm:"size:26" json:"seoId"`
+	PublishedAt     *time.Time      `gorm:"index:idx_article_filter" json:"publishedAt"`
+	CreatedAt       time.Time       `json:"createdAt"`
+	UpdatedAt       time.Time       `json:"updatedAt"`
 }
 
 func (Article) TableName() string { return "articles" }
@@ -566,27 +573,27 @@ func (OutboxEvent) TableName() string { return "outbox_events" }
 
 // Solution renewable solar energy solution packages
 type Solution struct {
-	ID                      string    `gorm:"primaryKey;size:26" json:"id"`
-	Slug                    string    `gorm:"size:100;not null;uniqueIndex" json:"slug"`
-	Title                   string    `gorm:"size:200;not null" json:"title"`
-	Subtitle                string    `gorm:"type:text;not null" json:"subtitle"`
-	AudienceCode            string    `gorm:"size:50;not null;index" json:"audienceCode"` // household, business, industrial
-	CapacityRange           string    `gorm:"size:100;not null" json:"capacityRange"`
-	HeroImage               string    `gorm:"size:500;not null" json:"heroImage"`
-	MonthlySavings          string    `gorm:"size:100;not null" json:"monthlySavings"`
-	RoiYears                string    `gorm:"size:50;not null" json:"roiYears"`
-	WarrantyPeriod          string    `gorm:"size:100;not null" json:"warrantyPeriod"`
-	Overview                string    `gorm:"type:text;not null" json:"overview"`
-	BenefitsJSON            string    `gorm:"type:text;not null" json:"benefitsJson"`
-	EquipmentJSON           string    `gorm:"type:text;not null" json:"equipmentJson"`
-	ProcessJSON             string    `gorm:"type:text;not null" json:"processJson"`
-	RecommendedProductSlugs string    `gorm:"type:text" json:"recommendedProductSlugs"`
-	RelatedProjectSlugs     string    `gorm:"type:text" json:"relatedProjectSlugs"`
-	Status                  string    `gorm:"size:20;not null;default:'published';index" json:"status"`
-	SortOrder               int       `gorm:"not null;default:0" json:"sortOrder"`
-	CreatedAt               time.Time `json:"createdAt"`
-	UpdatedAt               time.Time `json:"updatedAt"`
+	English                 *EnglishContent `gorm:"serializer:json;type:text" json:"english,omitempty"`
+	ID                      string          `gorm:"primaryKey;size:26" json:"id"`
+	Slug                    string          `gorm:"size:100;not null;uniqueIndex" json:"slug"`
+	Title                   string          `gorm:"size:200;not null" json:"title"`
+	Subtitle                string          `gorm:"type:text;not null" json:"subtitle"`
+	AudienceCode            string          `gorm:"size:50;not null;index" json:"audienceCode"` // household, business, industrial
+	CapacityRange           string          `gorm:"size:100;not null" json:"capacityRange"`
+	HeroImage               string          `gorm:"size:500;not null" json:"heroImage"`
+	MonthlySavings          string          `gorm:"size:100;not null" json:"monthlySavings"`
+	RoiYears                string          `gorm:"size:50;not null" json:"roiYears"`
+	WarrantyPeriod          string          `gorm:"size:100;not null" json:"warrantyPeriod"`
+	Overview                string          `gorm:"type:text;not null" json:"overview"`
+	BenefitsJSON            string          `gorm:"type:text;not null" json:"benefitsJson"`
+	EquipmentJSON           string          `gorm:"type:text;not null" json:"equipmentJson"`
+	ProcessJSON             string          `gorm:"type:text;not null" json:"processJson"`
+	RecommendedProductSlugs string          `gorm:"type:text" json:"recommendedProductSlugs"`
+	RelatedProjectSlugs     string          `gorm:"type:text" json:"relatedProjectSlugs"`
+	Status                  string          `gorm:"size:20;not null;default:'published';index" json:"status"`
+	SortOrder               int             `gorm:"not null;default:0" json:"sortOrder"`
+	CreatedAt               time.Time       `json:"createdAt"`
+	UpdatedAt               time.Time       `json:"updatedAt"`
 }
 
 func (Solution) TableName() string { return "solutions" }
-

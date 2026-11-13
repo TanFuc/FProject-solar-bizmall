@@ -1,0 +1,312 @@
+{
+  "common": {
+    "journeyAccent": "your clean energy future",
+    "journeyEyebrow": "CONNECT WITH BM SOLAR",
+    "journeyPrimary": "Request a consultation",
+    "journeySecondary": "Explore projects",
+    "journeySubtitle": "Tell us what you need and our team will help you choose a suitable solution.",
+    "journeyTitle": "Start building",
+    "process1Text": "Understand your goals and needs",
+    "process1Title": "Listen",
+    "process2Text": "Review the installation conditions",
+    "process2Title": "Survey",
+    "process3Text": "Recommend a system and equipment",
+    "process3Title": "Propose",
+    "process4Text": "Help you operate the system",
+    "process4Title": "Support",
+    "process5Text": "Handle after-sales requests",
+    "process5Title": "Aftercare",
+    "processEyebrow": "04 / HOW WE WORK",
+    "processLink": "See our process",
+    "processTitle": "A clear, transparent process."
+  },
+  "pages": {
+    "home": {
+      "title": "BM SOLAR — Solar Power and Energy Storage",
+      "hero": "Clean energy",
+      "accent": "solutions for every site",
+      "copy": {
+        "consultation": "Request a consultation",
+        "consultationSubtitle": "Find a system that fits your site",
+        "features": "Why choose BM SOLAR?",
+        "news": "The latest in clean energy",
+        "products": "Genuine equipment with high performance",
+        "projects": "Projects we have delivered",
+        "solutions": "Find the right solution for you"
+      }
+    },
+    "about": {
+      "title": "About BM SOLAR",
+      "hero": "Building a",
+      "accent": "clean energy future",
+      "copy": {
+        "content001": "01 / ABOUT US",
+        "content002": "BM SOLAR — Technology that meets real needs",
+        "content003": "Explore our ecosystem",
+        "content004": "→",
+        "content005": "FROM IDEA TO A COMPLETE SOLUTION",
+        "content006": "Equipment and engineering for a complete solution",
+        "content007": "BM SOLAR develops cleaner energy solutions and continuously improves how we deliver them.",
+        "content008": "We believe the future of energy comes from matching modern technology to each customer’s needs.",
+        "content009": "From agricultural operations to rooftops",
+        "content010": "Turnkey solutions",
+        "content011": "Experienced engineers",
+        "content012": "Learn more about us",
+        "content013": "→",
+        "content014": "Integrated solutions",
+        "content015": "Illustrative image",
+        "content016": "✓",
+        "content017": "02 / CORE VALUES",
+        "content018": "Vision, mission and core values",
+        "content019": "Read our statement",
+        "content020": "→",
+        "content021": "01 / VISION",
+        "content022": "Vision",
+        "content023": "To advance intelligent energy solutions in Vietnam and put modern technology to work.",
+        "content024": "02 / MISSION",
+        "content025": "Mission",
+        "content026": "To bring clean energy to households and businesses through sound engineering and long-term value.",
+        "content027": "03 / CORE VALUES",
+        "content028": "Core values",
+        "content029": "Quality, innovation and customer care guide our work throughout the life of a project.",
+        "content030": "03 / DELIVERY CAPABILITIES",
+        "content031": "One system, multiple benefits",
+        "content032": "Explore all solutions",
+        "content033": "→",
+        "content034": "Lower electricity costs",
+        "content035": "More sustainable operations",
+        "content036": "Greater energy independence",
+        "content037": "05 / PROJECT IMAGES",
+        "content038": "Explore BM SOLAR in photos",
+        "content039": "See the gallery",
+        "content040": "→"
+      },
+      "long": [
+        [
+          "From site survey to operation",
+          "We start with how your site uses electricity. A household may need backup for essential appliances, while a factory may aim to cut grid purchases during production hours."
+        ],
+        [
+          "Design based on actual demand",
+          "We review electricity bills, roof area, shade and the grid connection. A proposal should specify equipment, installation scope and the assumptions behind estimated costs."
+        ],
+        [
+          "Handover and support",
+          "At handover, customers should know how to read production figures, recognize alerts and find equipment documentation. Bring recent electricity bills and photos of the roof to the first consultation."
+        ]
+      ]
+    },
+    "solutions": {
+      "title": "Clean Energy Solutions",
+      "hero": "Clean energy solutions",
+      "accent": "for every type of site",
+      "copy": {
+        "content001": "PV modules",
+        "content002": "Capture sunlight",
+        "content003": "Inverter",
+        "content004": "Convert DC to AC",
+        "content005": "Battery energy storage",
+        "content006": "Store electricity",
+        "content007": "Electrical loads",
+        "content008": "Where electricity is used",
+        "content009": "01 / SOLUTION PACKAGES",
+        "content010": "Solutions tailored to your site",
+        "content011": "Explore all packages",
+        "content012": "→",
+        "content013": "Residential solutions",
+        "content014": "Business solutions",
+        "content015": "Industrial solutions",
+        "content016": "02 / SYSTEM CONSULTATION",
+        "content017": "From your needs to the right system",
+        "content018": "Request a consultation",
+        "content019": "→",
+        "content020": "01 / RESIDENTIAL",
+        "content021": "Rooftop solar for your home",
+        "content022": "Reduce household electricity costs with a system sized for your usage.",
+        "content023": "Lower household electricity costs",
+        "content024": "Greater energy independence",
+        "content025": "A lower environmental impact",
+        "content026": "Explore the solution",
+        "content027": "→",
+        "content028": "02 / BUSINESS",
+        "content029": "Manage electricity costs for your business",
+        "content030": "Reduce operating costs for offices, hotels and commercial premises.",
+        "content031": "Reduce electricity expenses",
+        "content032": "Support sustainability goals",
+        "content033": "Plan investment more effectively",
+        "content034": "Explore the solution",
+        "content035": "→",
+        "content036": "03 / INDUSTRIAL",
+        "content037": "Industrial-scale energy systems",
+        "content038": "Large systems help manufacturers manage energy use and support sustainability targets.",
+        "content039": "Reduce demand from the grid",
+        "content040": "Support international sustainability requirements",
+        "content041": "Greater energy independence",
+        "content042": "Explore the solution",
+        "content043": "→",
+        "content044": "03 / HOW IT WORKS",
+        "content045": "From generation to consumption",
+        "content046": "Learn more",
+        "content047": "→"
+      }
+    },
+    "products": {
+      "title": "Solar Equipment",
+      "hero": "Clean energy equipment",
+      "accent": "genuine and compatible",
+      "copy": {
+        "detailLink": "View details",
+        "listTitle": "Product catalog",
+        "relatedEyebrow": "02 / INTEGRATED SOLUTIONS",
+        "relatedTitle": "Find the right solution",
+        "sectionEyebrow": "01 / ENERGY EQUIPMENT",
+        "sectionLink": "Get product advice",
+        "sectionTitle": "Genuine equipment with high performance"
+      }
+    },
+    "projects": {
+      "title": "Completed Projects",
+      "hero": "Projects we have delivered",
+      "accent": "lasting clean energy value",
+      "copy": {
+        "imageNote": "Illustrative image.",
+        "sectionEyebrow": "01 / FEATURED PROJECTS",
+        "sectionLink": "Discuss your project",
+        "sectionTitle": "Projects we have delivered"
+      }
+    },
+    "news": {
+      "title": "News and Insights",
+      "hero": "News and insights",
+      "accent": "on clean energy",
+      "copy": {
+        "latestEyebrow": "02 / LATEST ARTICLES",
+        "latestTitle": "The latest in clean energy",
+        "newsletterConsent": "I agree to receive emails from BM SOLAR.",
+        "newsletterMessage": "I am interested in information and clean energy solutions.",
+        "newsletterSubtitle": "Leave your email so we can contact you about topics you are interested in.",
+        "newsletterTitle": "Connect with BM SOLAR",
+        "sectionEyebrow": "01 / FEATURED NEWS",
+        "sectionTitle": "Energy news and practical guidance"
+      }
+    },
+    "contact": {
+      "title": "Contact BM SOLAR",
+      "hero": "Contact BM SOLAR",
+      "accent": "we are ready to help",
+      "copy": {
+        "branchTitle": "Branch network",
+        "branches": "BM SOLAR near you",
+        "consent": "I agree to be contacted about this request.",
+        "contact": "Choose how to reach us",
+        "faq": "Quick support",
+        "faq1a": "Share the site location, your electricity needs and your contact details. Our team can then recommend suitable options.",
+        "faq1q": "What should I prepare before requesting a consultation?",
+        "faq2a": "Contact the branch handling your request and provide the details of your previous enquiry.",
+        "faq2q": "Can I update a request after submitting it?",
+        "faq3a": "Explore our solutions and product catalog, then send us your requirements for more guidance.",
+        "faq3q": "Can I learn about solutions before contacting you?",
+        "faq4a": "Share the equipment name, model number, photos of its current condition and how you use it.",
+        "faq4q": "What information should I share about existing equipment?",
+        "faqEyebrow": "02 / QUESTIONS AND ANSWERS",
+        "faqTitle": "Frequently asked questions",
+        "form": "Tell us what you need",
+        "formSubtitle": "Share your requirements so our team can contact you.",
+        "formTitle": "Request a consultation",
+        "sectionEyebrow": "01 / GET IN TOUCH",
+        "sectionTitle": "We are ready to listen"
+      }
+    }
+  },
+  "entities": {
+    "products": {
+      "inverter-hybrid-deye-5kw-1-pha": [
+        "Deye 5 kW Single-Phase Hybrid Inverter (SUN-5K-SG04LP1-EU)",
+        "A 5 kW single-phase hybrid inverter with generator and battery connections.",
+        "Check your simultaneous loads, PV string voltage and battery communication protocol before selecting a system. List essential backup loads and account for motor startup current."
+      ],
+      "tam-pin-longi-550w-mono-half-cell": [
+        "LONGi Hi-MO 5 550 W Mono Half-Cell Solar Panel",
+        "A mono PERC solar panel rated at 550 W.",
+        "Check roof orientation, shading and string voltage against the inverter’s limits. Verify the model and serial numbers before installation."
+      ],
+      "pin-luu-tru-lithium-deye-5-12kwh": [
+        "Deye 5.12 kWh Lithium Storage Battery",
+        "A 51.2 V, 100 Ah battery for compatible hybrid systems.",
+        "Compare nominal capacity with usable energy, and confirm the battery voltage and BMS protocol against the inverter specifications."
+      ],
+      "pin-luu-tru-deye-lithium-rw-m6-1-5-12kwh": [
+        "Deye RW-M6.1 5.12 kWh LiFePO4 Battery",
+        "A lithium iron phosphate storage module for hybrid power systems.",
+        "Size storage for evening use or essential backup loads. Check the RW-M6.1 pairing instructions, charge and discharge limits, and installation clearances."
+      ]
+    },
+    "projects": {
+      "du-an-ap-mai-biet-thu-quy-nhon-15kw": [
+        "Hybrid Rooftop Solar at a Quy Nhon Villa",
+        "A residential system that combines rooftop solar with battery storage.",
+        "The project file records 30 Jinko 550 W panels, a Deye 15 kW three-phase hybrid inverter and three 5.12 kWh Deye battery modules. The inverter and solar array have distinct rated capacities. Monitor monthly generation and when the batteries reach their charge or discharge limits."
+      ],
+      "he-thong-dien-mat-troi-hybrid-10kwp-go-vap-hcm": [
+        "Hybrid Solar at a Go Vap Villa, Ho Chi Minh City",
+        "Residential hybrid solar for self-consumption and selected backup loads.",
+        "The project uses a Deye hybrid inverter and 18 LONGi 550 W panels. The system should be monitored for daytime generation, grid purchases and battery charge during periods of high demand."
+      ],
+      "du-an-dien-mat-troi-ap-mai-500kwp-kcn-nhon-hoi-quy-nhon": [
+        "500 kWp Industrial Rooftop Solar at Nhon Hoi",
+        "Rooftop solar for a seafood processing facility in Nhon Hoi Industrial Park.",
+        "Shift-by-shift power readings help determine how much solar generation can be consumed on site. Compare energy figures across similar production hours and weather conditions when reviewing performance."
+      ]
+    },
+    "articles": {
+      "cam-nang-chon-bien-tan-inverter-hybrid-2026": [
+        "How to Choose a Hybrid Inverter for Your Home",
+        "A practical guide to solar input, compatible batteries and essential backup loads.",
+        "Start by separating daytime loads, evening loads and appliances that must run during an outage. Then check PV input limits, battery voltage and BMS compatibility, and backup output capacity. A 600 W load running for four hours uses about 2.4 kWh before losses or reserve capacity are taken into account."
+      ],
+      "huong-dan-chon-inverter-hybrid-va-pin-luu-tru-phu-hop": [
+        "Choosing a Hybrid Inverter and Battery for Your Home",
+        "How to compare grid-tied and hybrid systems and estimate battery size.",
+        "Battery power determines how much equipment can run at once. Battery capacity determines how long it can run. Compare quotes using the same list of loads, required backup duration and assumptions about usable energy."
+      ]
+    }
+  },
+  "solutions": {
+    "ho-gia-dinh": {
+      "title": "Residential and Villa Solar",
+      "subtitle": "Rooftop solar for household self-consumption and optional backup power.",
+      "capacity": "3–10 kW",
+      "savings": "Depends on daytime usage and system size",
+      "roi": "Estimate based on the site and electricity bills",
+      "warranty": "See the manufacturer’s panel warranty",
+      "body": "Start with the household’s daytime and evening electricity use. A grid-tied system can serve daytime loads. A compatible hybrid inverter and battery can provide backup to selected appliances if the electrical design includes a dedicated backup circuit.",
+      "benefitsText": "Lower grid purchases | Use solar energy directly when household loads are active.\nBackup for essential loads | Size storage around the appliances that need to keep running.\nRoof shading | The array reduces direct sun exposure on the covered portion of the roof.\nRemote monitoring | Track generation and battery charge in the monitoring app.",
+      "equipmentText": "550 W half-cell solar panels | Canadian Solar | Verify model warranty\nSingle- or three-phase hybrid inverter | Deye | Verify model warranty\nLiFePO4 battery storage | Dyness | Verify model warranty\nProtective switchgear enclosure | Schneider or Chint | Verify model warranty\nAnodized aluminium mounting rails | BM SOLAR | See project terms",
+      "processText": "Initial consultation | Review recent electricity bills and priorities.\nSite survey | Assess roof orientation, shading and structure.\nEngineering and pricing | Present the layout and cost assumptions.\nInstallation and commissioning | Verify wiring and test the system.\nHandover and aftercare | Explain monitoring and support procedures."
+    },
+    "doanh-nghiep": {
+      "title": "Solar for Business and Commercial Buildings",
+      "subtitle": "Manage electricity use at offices, hotels and commercial premises.",
+      "capacity": "20–100 kWp",
+      "savings": "Depends on the daytime load profile",
+      "roi": "Estimate based on tariffs, production and project costs",
+      "warranty": "See the manufacturer’s panel warranty",
+      "body": "Commercial sites benefit most when solar production overlaps with operating hours. Reviewing recent bills and a measured load profile helps size the array and estimate on-site consumption before committing to a design.",
+      "benefitsText": "Manage daytime grid demand | Use on-site generation during business hours.\nEvaluate returns | Compare cash flows using the same assumptions across proposals.\nSupport sustainability goals | Record on-site generation for reporting.\nPlan installation around operations | Coordinate work with the site team.",
+      "equipmentText": "550–660 W PV modules | Canadian Solar or LONGi | Verify model warranty\nThree-phase grid-connected inverter | Huawei, Solis or Deye | Verify model warranty\nDistribution and surge protection | Schneider or ABB | Verify model warranty\nRemote monitoring system | BM Smart Energy | See project terms\nRoof mounting and clamps | BM SOLAR | See project terms",
+      "processText": "Load assessment | Review bills and measure the demand profile.\nRoof and electrical survey | Inspect structure and connection points.\nFeasibility and financial estimate | Explain costs, production and payback assumptions.\nEPC delivery | Coordinate installation and safety measures.\nCommissioning and monitoring | Verify connection and train site operators."
+    },
+    "nha-xuong-cong-nghiep": {
+      "title": "Solar for Factories and Industrial Sites",
+      "subtitle": "Large rooftop systems for industrial loads and on-site generation.",
+      "capacity": "100 kWp to 1 MWp and above",
+      "savings": "Depends on production shifts and grid purchases",
+      "roi": "Estimate after a site and load assessment",
+      "warranty": "See the manufacturer’s panel warranty",
+      "body": "Industrial rooftop projects start with structural capacity, fire safety, and the site’s electrical demand by shift. Maintenance access, metering and any export limits should be documented in the engineering and handover plan.",
+      "benefitsText": "Reduce grid purchases | Use on-site generation against production loads.\nSupport emissions reporting | Track measured solar production for reporting.\nShade covered roof sections | Reduce direct sunlight on parts of the roof.\nPlan for maintenance | Leave access for inspection, cleaning and service.",
+      "equipmentText": "High-power TOPCon PV modules | Canadian Solar, Jinko or LONGi | Verify model warranty\nIndustrial string inverter | Huawei or Solis | Verify model warranty\nExport control and metering | SmartLogger and current transformers | Verify model warranty\nSurge protection and switchgear | Schneider or Phoenix Contact | Verify model warranty\nRoof clamps and mounting rails | BM SOLAR | See project terms",
+      "processText": "Review structure and safety | Check building and electrical documentation.\nModel system production | Assess layout, shade and expected output.\nPrepare connection documentation | Coordinate approvals and safety requirements.\nInstall in stages | Protect production schedules and follow site safety rules.\nTest and hand over | Verify equipment, monitoring and operating instructions."
+    }
+  }
+}

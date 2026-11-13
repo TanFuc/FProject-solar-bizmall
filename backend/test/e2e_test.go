@@ -3,8 +3,13 @@ package test
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"image"
+	"image/png"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -710,5 +715,186 @@ func TestPhase11_SEOGenerationsAndDraftPipeline(t *testing.T) {
 	app.ServeHTTP(recResolve, reqResolve)
 	if recResolve.Code != http.StatusOK {
 		t.Errorf("expected 200 on resolve redirect, got %d", recResolve.Code)
+	}
+}
+
+func TestOptionalEnglishPage(t *testing.T) {
+	app, _, _ := setupTestApp(t)
+	token := getAdminToken(t, app)
+	request := func(method, path string, body []byte, status int) *httptest.ResponseRecorder {
+		t.Helper()
+		req := httptest.NewRequest(method, "/api/v1"+path, bytes.NewReader(body))
+		req.Header.Set("Authorization", "Bearer "+token)
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
+		app.ServeHTTP(rec, req)
+		if rec.Code != status {
+			t.Fatalf("%s %s: want %d, got %d: %s", method, path, status, rec.Code, rec.Body.String())
+		}
+		return rec
+	}
+	create := func(locale, title string) string {
+		t.Helper()
+		body, err := json.Marshal(map[string]string{
+			"pageKey": "locale-test", "routeSlug": "/locale-test", "title": title, "locale": locale,
+			"blocksJson": `[{"id":"title","type":"richText","version":1,"enabled":true,"data":{}}]`,
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		rec := request("POST", "/admin/pages", body, http.StatusCreated)
+		var created struct {
+			Data struct {
+				ID string `json:"id"`
+			} `json:"data"`
+		}
+		if err := json.NewDecoder(rec.Body).Decode(&created); err != nil || created.Data.ID == "" {
+			t.Fatalf("missing created page ID: %v", err)
+		}
+		return created.Data.ID
+	}
+	vi := create("vi-VN", "Bản tiếng Việt")
+	request("POST", "/admin/pages/"+vi+"/publish", nil, http.StatusOK)
+	path := "/public/pages/locale-test"
+	request("GET", path+"?locale=en-US", nil, http.StatusNotFound)
+
+	en := create("en-US", "English edition")
+	request("GET", path+"?locale=en-US", nil, http.StatusNotFound)
+	request("POST", "/admin/pages/"+en+"/publish", nil, http.StatusOK)
+	for query, title := range map[string]string{"": "Bản tiếng Việt", "?locale=en-US": "English edition"} {
+		rec := request("GET", path+query, nil, http.StatusOK)
+		if !bytes.Contains(rec.Body.Bytes(), []byte(title)) {
+			t.Fatalf("incorrect locale response for %q: %s", query, rec.Body.String())
+		}
+	}
+	request("POST", "/admin/pages/"+en+"/unpublish", nil, http.StatusOK)
+	request("GET", path+"?locale=en-US", nil, http.StatusNotFound)
+	request("GET", path, nil, http.StatusOK)
+}
+
+func TestAdminUploadPersistsAsArticleCover(t *testing.T) {
+	app, db, _ := setupTestApp(t)
+	token := getAdminToken(t, app)
+	var body bytes.Buffer
+	form := multipart.NewWriter(&body)
+	part, err := form.CreateFormFile("file", "cover.png")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := png.Encode(part, image.NewRGBA(image.Rect(0, 0, 20, 20))); err != nil {
+		t.Fatal(err)
+	}
+	if err := form.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	upload := httptest.NewRequest("POST", "/api/v1/admin/media/upload", &body)
+	upload.Header.Set("Authorization", "Bearer "+token)
+	upload.Header.Set("Content-Type", form.FormDataContentType())
+	result := httptest.NewRecorder()
+	app.ServeHTTP(result, upload)
+	if result.Code != http.StatusCreated {
+		t.Fatalf("upload failed: %d %s", result.Code, result.Body.String())
+	}
+	var uploaded struct {
+		Data struct {
+			ID  string `json:"id"`
+			URL string `json:"url"`
+		} `json:"data"`
+	}
+	if err := json.NewDecoder(result.Body).Decode(&uploaded); err != nil || uploaded.Data.ID == "" || uploaded.Data.URL == "" {
+		t.Fatalf("invalid upload response: %v", err)
+	}
+
+	article := models.Article{
+		ID: id.New(), Slug: "media-cover-test", Title: "Media cover test",
+		Excerpt: "Test", BodyJSON: `{"content":"Test"}`, Status: "published",
+	}
+	if err := db.Create(&article).Error; err != nil {
+		t.Fatal(err)
+	}
+	document := fmt.Sprintf(`{"type":"doc","content":[{"type":"paragraph","attrs":{"textAlign":"center"},"content":[{"type":"text","text":"English article body","marks":[{"type":"bold"}]}]},{"type":"image","attrs":{"src":"https://example.test/old.png","mediaId":%q,"placement":"float-right","widthPercent":40,"caption":"Document photo"}}]}`, uploaded.Data.ID)
+	payload, err := json.Marshal(struct {
+		CoverMediaID string                `json:"coverMediaId"`
+		English      models.EnglishContent `json:"english"`
+	}{CoverMediaID: uploaded.Data.ID, English: models.EnglishContent{Title: "English cover article", Summary: "English summary", Body: document}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	update := httptest.NewRequest("PUT", "/api/v1/admin/articles/"+article.ID, bytes.NewReader(payload))
+	update.Header.Set("Authorization", "Bearer "+token)
+	update.Header.Set("Content-Type", "application/json")
+	saved := httptest.NewRecorder()
+	app.ServeHTTP(saved, update)
+	if saved.Code != http.StatusOK {
+		t.Fatalf("cover save failed: %d %s", saved.Code, saved.Body.String())
+	}
+	public := httptest.NewRecorder()
+	app.ServeHTTP(public, httptest.NewRequest("GET", "/api/v1/public/articles/"+article.Slug, nil))
+	if public.Code != http.StatusOK || !bytes.Contains(public.Body.Bytes(), []byte(uploaded.Data.URL)) {
+		t.Fatalf("public article lacks uploaded cover: %d %s", public.Code, public.Body.String())
+	}
+	if !bytes.Contains(public.Body.Bytes(), []byte("Media cover test")) {
+		t.Fatal("English edit replaced Vietnamese title")
+	}
+	english := httptest.NewRecorder()
+	app.ServeHTTP(english, httptest.NewRequest("GET", "/api/v1/public/articles/"+article.Slug+"?locale=en-US", nil))
+	if english.Code != http.StatusOK || !bytes.Contains(english.Body.Bytes(), []byte("English article body")) || !bytes.Contains(english.Body.Bytes(), []byte(uploaded.Data.URL)) {
+		t.Fatalf("English edition failed: %d %s", english.Code, english.Body.String())
+	}
+	var publicEnglish struct {
+		Data struct {
+			BodyJSON string `json:"bodyJson"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(english.Body.Bytes(), &publicEnglish); err != nil {
+		t.Fatal(err)
+	}
+	for _, expected := range []string{uploaded.Data.URL, "float-right", "Document photo", "center", "bold"} {
+		if !strings.Contains(publicEnglish.Data.BodyJSON, expected) {
+			t.Fatalf("public document did not retain %q: %s", expected, publicEnglish.Data.BodyJSON)
+		}
+	}
+	if strings.Contains(publicEnglish.Data.BodyJSON, "example.test/old.png") {
+		t.Fatal("document ignored uploaded media ID")
+	}
+
+}
+
+func TestSiteEnglishLabelsAreIndependent(t *testing.T) {
+	app, _, _ := setupTestApp(t)
+	input := []byte(`{"labels":{"Trang chủ":"Start","Tin tức":"Updates"}}`)
+	call := func(method, path, token string, payload []byte, want int) []byte {
+		t.Helper()
+		req := httptest.NewRequest(method, "/api/v1"+path, bytes.NewReader(payload))
+		req.Header.Set("Content-Type", "application/json")
+		if token != "" {
+			req.Header.Set("Authorization", "Bearer "+token)
+		}
+		rec := httptest.NewRecorder()
+		app.ServeHTTP(rec, req)
+		if rec.Code != want {
+			t.Fatalf("%s %s: got %d, expected %d: %s", method, path, rec.Code, want, rec.Body.String())
+		}
+		return rec.Body.Bytes()
+	}
+	call("PUT", "/admin/site-translations", "", input, http.StatusUnauthorized)
+	token := getAdminToken(t, app)
+	call("PUT", "/admin/site-translations", token, input, http.StatusOK)
+	vietnamese := call("GET", "/public/site-shell", "", nil, http.StatusOK)
+	if bytes.Contains(vietnamese, []byte("englishLabels")) {
+		t.Fatal("Vietnamese response includes English labels")
+	}
+	english := call("GET", "/public/site-shell?locale=en-US", "", nil, http.StatusOK)
+	var result struct {
+		Data struct {
+			EnglishLabels map[string]string `json:"englishLabels"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(english, &result); err != nil {
+		t.Fatal(err)
+	}
+	if result.Data.EnglishLabels["Trang chủ"] != "Start" || result.Data.EnglishLabels["Tin tức"] != "Updates" {
+		t.Fatalf("English translations were not persisted: %+v", result.Data.EnglishLabels)
 	}
 }

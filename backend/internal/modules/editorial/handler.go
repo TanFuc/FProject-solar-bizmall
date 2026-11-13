@@ -8,6 +8,7 @@ import (
 	"bmsolar-backend/internal/common/errors"
 	"bmsolar-backend/internal/common/id"
 	"bmsolar-backend/internal/common/pagination"
+	"bmsolar-backend/internal/common/richcontent"
 	"bmsolar-backend/internal/common/slug"
 	"bmsolar-backend/internal/config"
 	"bmsolar-backend/internal/database/models"
@@ -58,6 +59,7 @@ func (h *Handler) RegisterRoutes(r chi.Router) {
 // ---------------- Public Endpoints ----------------
 
 type ArticleCardDTO struct {
+	HasEnglish  bool       `json:"hasEnglish"`
 	ID          string     `json:"id"`
 	Slug        string     `json:"slug"`
 	Title       string     `json:"title"`
@@ -97,7 +99,12 @@ func (h *Handler) ListPublicArticles(w http.ResponseWriter, r *http.Request) {
 			coverURL = &url
 		}
 
+		if r.URL.Query().Get("locale") == "en-US" && a.English.Available() {
+			a.Title = models.LocalizedText(a.Title, a.English.Title)
+			a.Excerpt = models.LocalizedText(a.Excerpt, a.English.Summary)
+		}
 		cards = append(cards, ArticleCardDTO{
+			HasEnglish:  a.English.Available(),
 			ID:          a.ID,
 			Slug:        a.Slug,
 			Title:       a.Title,
@@ -137,6 +144,7 @@ func (h *Handler) GetPublicArticleDetail(w http.ResponseWriter, r *http.Request)
 	h.db.Raw(`SELECT t.* FROM tags t JOIN content_tags ct ON ct.tag_id = t.id WHERE ct.entity_type = 'article' AND ct.entity_id = ?`, article.ID).Scan(&tags)
 
 	type ArticleDetailDTO struct {
+		HasEnglish      bool         `json:"hasEnglish"`
 		ID              string       `json:"id"`
 		Slug            string       `json:"slug"`
 		Title           string       `json:"title"`
@@ -149,7 +157,19 @@ func (h *Handler) GetPublicArticleDetail(w http.ResponseWriter, r *http.Request)
 		PublishedAt     *time.Time   `json:"publishedAt,omitempty"`
 	}
 
+	if r.URL.Query().Get("locale") == "en-US" && article.English.Available() {
+		article.Title = models.LocalizedText(article.Title, article.English.Title)
+		article.Excerpt = models.LocalizedText(article.Excerpt, article.English.Summary)
+		article.BodyJSON = article.English.BodyJSON(article.BodyJSON)
+	}
+	resolvedContent, resolveErr := media.ResolveRichContent(h.db, h.cfg, article.BodyJSON)
+	if resolveErr != nil {
+		errors.WriteJSON(w, r, errors.Internal("Failed to resolve document"))
+		return
+	}
+	article.BodyJSON = resolvedContent
 	resp := ArticleDetailDTO{
+		HasEnglish:      article.English.Available(),
 		ID:              article.ID,
 		Slug:            article.Slug,
 		Title:           article.Title,
@@ -252,6 +272,19 @@ func (h *Handler) AdminListArticles(w http.ResponseWriter, r *http.Request) {
 	var articles []models.Article
 	h.db.Order("created_at desc").Offset(p.Offset).Limit(p.PageSize).Find(&articles)
 
+	for index := range articles {
+		row := &articles[index]
+		if row.CoverMediaID == nil {
+			continue
+		}
+		url, err := media.ResolvePublicURL(h.db, h.cfg, *row.CoverMediaID)
+		if err != nil {
+			errors.WriteJSON(w, r, errors.Internal("Failed to resolve cover media"))
+			return
+		}
+		row.CoverMediaURL = url
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(pagination.PaginatedResponse[models.Article]{
 		Data: articles,
@@ -260,20 +293,26 @@ func (h *Handler) AdminListArticles(w http.ResponseWriter, r *http.Request) {
 }
 
 type AdminCreateArticleRequest struct {
-	Title           string   `json:"title"`
-	Slug            string   `json:"slug"`
-	Excerpt         string   `json:"excerpt"`
-	BodyJSON        string   `json:"bodyJson"`
-	CategoryID      *string  `json:"categoryId"`
-	CoverMediaID    *string  `json:"coverMediaId"`
-	SourceProductID *string  `json:"sourceProductId"`
-	TagIDs          []string `json:"tagIds"`
+	English         *models.EnglishContent `json:"english"`
+	Title           string                 `json:"title"`
+	Slug            string                 `json:"slug"`
+	Excerpt         string                 `json:"excerpt"`
+	BodyJSON        string                 `json:"bodyJson"`
+	CategoryID      *string                `json:"categoryId"`
+	CoverMediaID    *string                `json:"coverMediaId"`
+	SourceProductID *string                `json:"sourceProductId"`
+	TagIDs          []string               `json:"tagIds"`
 }
 
 func (h *Handler) AdminCreateArticle(w http.ResponseWriter, r *http.Request) {
 	var req AdminCreateArticleRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		errors.WriteJSON(w, r, errors.BadRequest("INVALID_JSON", "Malformed body"))
+		return
+	}
+
+	if err := richcontent.Validate(req.BodyJSON, req.English.ContentBody()); err != nil {
+		errors.WriteJSON(w, r, errors.Unprocessable("INVALID_DOCUMENT", err.Error()))
 		return
 	}
 
@@ -295,6 +334,7 @@ func (h *Handler) AdminCreateArticle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	article := models.Article{
+		English:         req.English,
 		ID:              artID,
 		Slug:            aSlug,
 		Title:           req.Title,
@@ -319,7 +359,7 @@ func (h *Handler) AdminCreateArticle(w http.ResponseWriter, r *http.Request) {
 				TagID:      tID,
 			})
 		}
-		return nil
+		return identity.AuditContentWrite(tx, r.Context(), "create", "article", article.ID)
 	})
 
 	if err != nil {
@@ -360,8 +400,24 @@ func (h *Handler) AdminUpdateArticle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_ = json.NewDecoder(r.Body).Decode(&article)
-	h.db.Save(&article)
+	if err := json.NewDecoder(r.Body).Decode(&article); err != nil {
+		errors.WriteJSON(w, r, errors.BadRequest("INVALID_JSON", "Malformed body"))
+		return
+	}
+	if err := richcontent.Validate(article.BodyJSON, article.English.ContentBody()); err != nil {
+		errors.WriteJSON(w, r, errors.Unprocessable("INVALID_DOCUMENT", err.Error()))
+		return
+	}
+	article.ID = id
+	if err := h.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Save(&article).Error; err != nil {
+			return err
+		}
+		return identity.AuditContentWrite(tx, r.Context(), "update", "article", article.ID)
+	}); err != nil {
+		errors.WriteJSON(w, r, errors.Internal("Failed to save content"))
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{"data": article})

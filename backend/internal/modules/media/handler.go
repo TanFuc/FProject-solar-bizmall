@@ -106,7 +106,7 @@ func (h *Handler) Upload(w http.ResponseWriter, r *http.Request) {
 				return err
 			}
 		}
-		return nil
+		return identity.AuditContentWrite(tx, r.Context(), "upload", "media", result.Asset.ID)
 	}); err != nil {
 		errors.WriteJSON(w, r, errors.Internal("Failed to persist uploaded media"))
 		return

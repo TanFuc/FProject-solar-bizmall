@@ -1,6 +1,7 @@
 package cms
 
 import (
+	"bmsolar-backend/internal/common/richcontent"
 	"encoding/json"
 	"fmt"
 )
@@ -123,5 +124,16 @@ func ValidateBlock(b *Block) error {
 		return fmt.Errorf("unsupported block type: %s", b.Type)
 	}
 
+	if b.Type == "richText" {
+		var copyBlock struct {
+			Copy struct {
+				BrandStoryDocument string `json:"brandStoryDocument"`
+			} `json:"copy"`
+		}
+		if err := json.Unmarshal(b.Data, &copyBlock); err != nil {
+			return err
+		}
+		return richcontent.Validate(string(b.Data), copyBlock.Copy.BrandStoryDocument)
+	}
 	return nil
 }
